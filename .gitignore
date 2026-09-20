@@ -1,0 +1,25 @@
+﻿# Node modules
+node_modules/
+performance-portal-main/node_modules/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE / Editor
+.vscode/
+.idea/
+
+# Build output
+dist/
+build/

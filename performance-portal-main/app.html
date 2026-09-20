@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ascend – Student Dashboard</title>
+  <meta name="description" content="Your personal Ascend dashboard — track achievements, goals, and mentor feedback.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <style>
+    /* Profile tab bar */
+    .tabs { scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .tabs::-webkit-scrollbar { display: none; }
+
+    /* Smooth view transitions */
+    #app-content-area {
+      animation: viewFadeIn 0.18s var(--ease);
+    }
+    @keyframes viewFadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Notification panel (Google Menu Dropdown) ── */
+    .notif-panel {
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
+      width: 360px;
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-xl);
+      box-shadow: var(--shadow-md);
+      z-index: 300;
+      overflow: hidden;
+    }
+    .notif-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--c-border-subtle);
+      font-family: var(--font-display);
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: var(--c-text);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .notif-item {
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--c-border-subtle);
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      cursor: pointer;
+      transition: background var(--dur-fast) var(--ease);
+    }
+    .notif-item:hover { background: var(--c-surface-hover); }
+    .notif-item:last-child { border-bottom: none; }
+    .notif-icon { width: 36px; height: 36px; border-radius: var(--r-full); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .notif-text { flex: 1; }
+    .notif-title { font-size: var(--text-sm); font-weight: 500; color: var(--c-text); }
+    .notif-sub { font-size: var(--text-xs); color: var(--c-text-3); margin-top: 2px; }
+
+    /* ── Welcome overlay (Google Dialog style) ── */
+    .welcome-overlay {
+      position: fixed; inset: 0; background: rgba(32, 33, 36, 0.5);
+      z-index: 500; display: flex; align-items: center; justify-content: center;
+      padding: 24px;
+    }
+    .welcome-card {
+      background: var(--c-surface); border-radius: 28px; box-shadow: var(--shadow-lg); border: 1px solid var(--c-border);
+      padding: 48px 36px; text-align: center; max-width: 440px;
+      animation: welcomeIn 0.25s var(--ease) forwards;
+    }
+    @keyframes welcomeIn {
+      from { opacity: 0; transform: translateY(12px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── App Shell ───────────────────────────────────────────── -->
+<div class="app-shell">
+
+  <!-- Desktop / Mobile Drawer Sidebar -->
+  <aside class="sidebar" id="app-sidebar" role="navigation" aria-label="Sidebar navigation">
+    <!-- Built by app.js -->
+  </aside>
+  <!-- Backdrop for off-canvas mobile drawer -->
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="AscendApp.toggleSidebar(false)" aria-hidden="true"></div>
+
+  <!-- Main Content -->
+  <div class="app-main">
+
+    <!-- Mobile Top Bar -->
+    <header class="mobile-topbar" id="mobile-topbar" role="banner">
+      <!-- Built by app.js -->
+    </header>
+
+    <!-- Desktop Top Bar -->
+    <header class="topbar" id="desktop-topbar" role="banner">
+      <!-- Built by app.js -->
+    </header>
+
+    <!-- Content Area -->
+    <main class="app-content" id="app-content-area" role="main" tabindex="-1">
+      <!-- Rendered by router -->
+      <div style="display:flex;align-items:center;justify-content:center;height:200px;">
+        <div class="spinner spinner-primary" style="width:32px;height:32px;border-width:3px;"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="bottom-nav" id="bottom-nav" aria-label="Mobile navigation">
+    <!-- Built by app.js -->
+  </nav>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container"></div>
+
+<!-- ── Scripts: Data → Faculty Data → HOD Data → Utils → Views → App ── -->
+<script src="js/data.js"></script>
+<script src="js/faculty-data.js"></script>
+<script src="js/hod-data.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/views/dashboard.js"></script>
+<script src="js/views/profile.js"></script>
+<script src="js/views/achievements.js"></script>
+<script src="js/views/projects.js"></script>
+<script src="js/views/goals.js"></script>
+<script src="js/views/feedback.js"></script>
+<script src="js/views/settings.js"></script>
+<script src="js/views/faculty-dashboard.js"></script>
+<script src="js/views/faculty-students.js"></script>
+<script src="js/views/faculty-student-detail.js"></script>
+<script src="js/views/faculty-goals-feedback.js"></script>
+<script src="js/views/faculty-evaluations.js"></script>
+<script src="js/views/faculty-analytics.js"></script>
+<script src="js/views/hod-dashboard.js"></script>
+<script src="js/views/hod-cohort-insights.js"></script>
+<script src="js/views/hod-classes.js"></script>
+<script src="js/views/hod-faculty-assignments.js"></script>
+<script src="js/views/hod-evaluation-monitoring.js"></script>
+<script src="js/views/hod-settings.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+/* ── Welcome overlay for new registrations ─────────────────── */
+window.addEventListener('DOMContentLoaded', () => {
+  if (sessionStorage.getItem('ascend_just_registered') === 'true') {
+    sessionStorage.removeItem('ascend_just_registered');
+    const overlay = document.createElement('div');
+    overlay.className = 'welcome-overlay';
+    overlay.innerHTML = `
+      <div class="welcome-card">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--c-primary-light);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:var(--c-primary);">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div style="font-size:22px;font-weight:700;letter-spacing:-0.025em;margin-bottom:8px;">Welcome to Ascend!</div>
+        <div style="font-size:15px;color:var(--c-text-2);line-height:1.7;margin-bottom:24px;">
+          Your profile is ready. Start by adding your first achievement to build your professional portfolio record.
+        </div>
+        <button class="btn btn-primary btn-lg btn-full" onclick="
+          this.closest('.welcome-overlay').remove();
+          document.body.style.overflow='';
+          AscendApp.navigate('achievements');
+          setTimeout(()=>AscendUI.openModal('add-achievement-modal'),300);">
+          Add my first achievement
+        </button>
+        <button class="btn btn-ghost" style="margin-top:12px;width:100%;" onclick="this.closest('.welcome-overlay').remove();document.body.style.overflow='';">
+          Explore dashboard first
+        </button>
+      </div>`;
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
+  }
+
+  /* ── Notification dropdown ─────────────────────────────── */
+  // Attach after app.js has built the topbar
+  setTimeout(() => {
+    const notifBtns = document.querySelectorAll('.icon-btn[aria-label="Notifications"]');
+    notifBtns.forEach(btn => {
+      btn.style.position = 'relative';
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const existing = document.querySelector('.notif-panel');
+        if (existing) { existing.remove(); return; }
+        const feedbackList = (window.AscendData && Array.isArray(window.AscendData.feedback)) ? window.AscendData.feedback : [];
+        const newFb = feedbackList.filter(f => !f.isRead);
+        const panel = document.createElement('div');
+        panel.className = 'notif-panel';
+        panel.innerHTML = `
+          <div class="notif-header">
+            <span>Notifications</span>
+            ${newFb.length > 0 ? `<span class="badge badge-feedback">${newFb.length} new</span>` : '<span style="font-size:var(--text-xs);color:var(--c-text-3);">All caught up</span>'}
+          </div>
+          ${newFb.length > 0 ? newFb.map(f => `
+            <div class="notif-item" onclick="AscendApp.navigate('feedback');document.querySelector('.notif-panel')?.remove();">
+              <div class="notif-icon" style="background:var(--c-feedback-bg);color:var(--c-feedback);">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+              </div>
+              <div class="notif-text">
+                <div class="notif-title">${f.mentorName}</div>
+                <div class="notif-sub">${f.subject}</div>
+              </div>
+            </div>`).join('') : `
+            <div style="padding:32px 16px;text-align:center;color:var(--c-text-3);font-size:var(--text-sm);">
+              No new notifications
+            </div>`}`;
+        btn.appendChild(panel);
+        setTimeout(() => document.addEventListener('click', () => panel.remove(), { once: true }), 0);
+      });
+    });
+  }, 500);
+});
+</script>
+</body>
+</html>

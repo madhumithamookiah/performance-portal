@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ascend – Build a professional record of your growth</title>
+  <meta name="description"
+    content="Ascend helps students build a professional portfolio by recording completed achievements, receiving faculty guidance, and sharing a credible profile with the world.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/landing.css">
+  <style>
+    /* Landing-page accent overrides */
+    .highlight {
+      color: var(--c-primary);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ── Navigation ──────────────────────────────────────────── -->
+  <header>
+    <nav class="landing-nav" role="navigation" aria-label="Main navigation">
+      <a href="index.html" class="nav-brand" aria-label="Ascend home">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="28" height="28" rx="8" fill="#1A73E8" />
+          <path d="M7 20L12 10L17 16L20 12" stroke="white" stroke-width="2.2" stroke-linecap="round"
+            stroke-linejoin="round" />
+          <circle cx="20" cy="10" r="2" fill="white" />
+        </svg>
+        Asc<span>end</span>
+      </a>
+
+      <div class="nav-links" id="nav-links">
+        <a href="#features" class="nav-link">Features</a>
+        <a href="#how-it-works" class="nav-link">How it works</a>
+        <a href="#" class="nav-link">For institutions</a>
+      </div>
+
+      <div class="nav-actions">
+        <a href="auth.html" class="btn btn-ghost" id="nav-signin">Sign in</a>
+        <a href="auth.html?tab=register" class="btn btn-primary" id="nav-cta">Get started</a>
+      </div>
+
+      <button class="nav-mobile-menu" id="mobile-menu-btn" aria-label="Open menu" onclick="toggleMobileMenu()">
+        <span></span><span></span><span></span>
+      </button>
+    </nav>
+
+    <!-- Mobile nav drawer -->
+    <div id="mobile-nav-drawer"
+      style="display:none;background:var(--c-surface);border-bottom:1px solid var(--c-border);padding:var(--sp-4) var(--sp-4) var(--sp-6);">
+      <div style="display:flex;flex-direction:column;gap:var(--sp-3);">
+        <a href="#features" class="nav-link" style="padding:var(--sp-2) 0;" onclick="toggleMobileMenu()">Features</a>
+        <a href="#how-it-works" class="nav-link" style="padding:var(--sp-2) 0;" onclick="toggleMobileMenu()">How it
+          works</a>
+        <a href="#" class="nav-link" style="padding:var(--sp-2) 0;">For institutions</a>
+        <div class="divider"></div>
+        <a href="auth.html" class="btn btn-ghost btn-full">Sign in</a>
+        <a href="auth.html?tab=register" class="btn btn-primary btn-full">Get started</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Hero ──────────────────────────────────────────────────── -->
+  <main>
+    <section class="hero" aria-labelledby="hero-headline">
+      <div class="hero-eyebrow">
+        <svg width="10" height="10" viewBox="0 0 10 10">
+          <circle cx="5" cy="5" r="5" fill="#1A73E8" />
+        </svg>
+        Student professional growth platform
+      </div>
+      <h1 class="hero-headline" id="hero-headline">
+        Build a <span class="accent">professional record</span> of your growth.
+      </h1>
+      <p class="hero-sub">
+        Ascend gives students a single place to record completed achievements, receive faculty guidance, and share a
+        credible, comprehensive portfolio with recruiters and institutions.
+      </p>
+      <div class="hero-ctas">
+        <a href="auth.html?tab=register" class="btn btn-primary btn-lg" id="cta-create-profile">
+          Create your profile
+        </a>
+        <a href="#how-it-works" class="btn btn-outline btn-lg" id="cta-how-it-works">
+          Explore how it works
+        </a>
+      </div>
+    </section>
+
+    <!-- App Preview -->
+    <div class="preview-wrap">
+      <div class="preview-card">
+        <div class="preview-bar">
+          <div class="preview-dot" style="background:#F87171;"></div>
+          <div class="preview-dot" style="background:#FBBF24;"></div>
+          <div class="preview-dot" style="background:#C2E7FF;"></div>
+          <div style="flex:1;height:18px;background:var(--c-border);border-radius:var(--r-full);margin:0 var(--sp-4);">
+          </div>
+        </div>
+        <div class="preview-body">
+          <div class="preview-sidebar-mini">
+            <div
+              style="display:flex;align-items:center;gap:8px;padding:0 0 12px;border-bottom:1px solid var(--c-border);margin-bottom:8px;">
+              <svg width="20" height="20" viewBox="0 0 28 28" fill="none">
+                <rect width="28" height="28" rx="8" fill="#1A73E8" />
+                <path d="M7 20L12 10L17 16L20 12" stroke="white" stroke-width="2.2" stroke-linecap="round"
+                  stroke-linejoin="round" />
+                <circle cx="20" cy="10" r="2" fill="white" />
+              </svg>
+              <span style="font-size:13px;font-weight:700;">Ascend</span>
+            </div>
+            <div class="preview-nav-item active"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Dashboard</div>
+            <div class="preview-nav-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</div>
+            <div class="preview-nav-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>Achievements</div>
+            <div class="preview-nav-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>Portfolio Overview</div>
+            <div class="preview-nav-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>Feedback</div>
+          </div>
+          <div class="preview-content-mini">
+            <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Good morning, Aarav</div>
+            <div style="font-size:11px;color:var(--c-text-3);margin-bottom:12px;">Keep building your professional
+              portfolio.</div>
+            <div class="preview-stat-row">
+              <div class="preview-stat-mini">
+                <div class="preview-stat-num" style="color:var(--c-primary)">5</div>
+                <div class="preview-stat-lbl">Achievements</div>
+              </div>
+              <div class="preview-stat-mini">
+                <div class="preview-stat-num" style="color:var(--c-secondary)">3</div>
+                <div class="preview-stat-lbl">Projects</div>
+              </div>
+              <div class="preview-stat-mini">
+                <div class="preview-stat-num" style="color:var(--c-accent)">17</div>
+                <div class="preview-stat-lbl">Skills</div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:12px;font-weight:600;margin-bottom:8px;">Recent activity</div>
+              <div class="preview-list-item">
+                <span style="width:20px;height:20px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;background:#FF990015;color:#FF9900;flex-shrink:0;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/></svg></span>
+                <div style="flex:1;">
+                  <div style="font-weight:500;">AWS Cloud Practitioner</div>
+                  <div style="color:var(--c-text-3);">Certification</div>
+                </div>
+                <span
+                  style="font-size:10px;color:var(--c-primary);font-weight:600;background:var(--c-primary-bg);padding:2px 7px;border-radius:12px;">Portfolio</span>
+              </div>
+              <div class="preview-list-item">
+                <span style="width:20px;height:20px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;background:#F59E0B15;color:#F59E0B;flex-shrink:0;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 010-5H6"/><path d="M18 9h1.5a2.5 2.5 0 000-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0012 0V2z"/></svg></span>
+                <div style="flex:1;">
+                  <div style="font-weight:500;">National Hackathon 2026</div>
+                  <div style="color:var(--c-text-3);">Award</div>
+                </div>
+                <span
+                  style="font-size:10px;color:var(--c-secondary);font-weight:600;background:var(--c-secondary-bg);padding:2px 7px;border-radius:12px;">Featured</span>
+              </div>
+              <div class="preview-list-item">
+                <span style="width:20px;height:20px;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;background:#2563EB15;color:#2563EB;flex-shrink:0;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span>
+                <div style="flex:1;">
+                  <div style="font-weight:500;">Mentor feedback</div>
+                  <div style="color:var(--c-text-3);">From Dr. Priya Nair</div>
+                </div>
+                <span
+                  style="font-size:10px;color:var(--c-feedback);font-weight:600;background:var(--c-feedback-bg);padding:2px 7px;border-radius:12px;">New</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Benefits ──────────────────────────────────────────── -->
+    <section class="benefits-section" id="features" aria-labelledby="benefits-title">
+      <div class="section-eyebrow">Why Ascend</div>
+      <h2 class="benefits-headline" id="benefits-title">Everything you need to grow professionally</h2>
+      <p class="benefits-sub">
+        From your first certificate to your final placement, Ascend helps you build a credible, comprehensive record of your
+        journey.
+      </p>
+      <div class="benefits-grid">
+        <div class="benefit-card">
+          <div class="benefit-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8" r="6" />
+              <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
+            </svg>
+          </div>
+          <h3 class="benefit-title">Build your portfolio</h3>
+          <p class="benefit-desc">
+            Centralise all your achievements in one place — certifications, awards, projects, internships, workshops,
+            and publications — with rich detail and proof of completion.
+          </p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+          </div>
+          <h3 class="benefit-title">Faculty guidance & evaluation</h3>
+          <p class="benefit-desc">
+            Faculty and mentors review your submissions and provide qualitative guidance, helping you strengthen your practical skills and career readiness.
+          </p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+            </svg>
+          </div>
+          <h3 class="benefit-title">Portfolio feedback and faculty guidance</h3>
+          <p class="benefit-desc">
+            Receive qualitative feedback and actionable next steps from your assigned faculty or mentors, helping you
+            strengthen your practical skills and career readiness.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── How It Works ──────────────────────────────────────── -->
+    <section class="how-section" id="how-it-works" aria-labelledby="how-title">
+      <div class="how-inner">
+        <div class="section-eyebrow">How it works</div>
+        <h2 id="how-title"
+          style="font-size:clamp(1.5rem,3vw,2.25rem);font-weight:700;letter-spacing:-0.025em;max-width:480px;margin-bottom:0;">
+          From profile to career-ready portfolio in four steps
+        </h2>
+        <div class="how-steps">
+          <div class="how-step">
+            <div class="how-step-num">1</div>
+            <h3 class="how-step-title">Create your profile</h3>
+            <p class="how-step-desc">Register with your institution email and add your academic details to set up
+              your Ascend profile.</p>
+          </div>
+          <div class="how-step">
+            <div class="how-step-num">2</div>
+            <h3 class="how-step-title">Add completed achievements</h3>
+            <p class="how-step-desc">Record certifications, awards, internships, hackathons, and projects with
+              supporting links and evidence.</p>
+          </div>
+          <div class="how-step">
+            <div class="how-step-num">3</div>
+            <h3 class="how-step-title">Faculty guidance</h3>
+            <p class="how-step-desc">Your assigned faculty or mentor reviews your portfolio, evaluates progress, and
+              adds professional guidance.</p>
+          </div>
+          <div class="how-step">
+            <div class="how-step-num">4</div>
+            <h3 class="how-step-title">Share your portfolio</h3>
+            <p class="how-step-desc">Share your comprehensive Ascend profile with recruiters, universities, and industry
+              partners.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── CTA ──────────────────────────────────────────────── -->
+    <section class="cta-section" aria-labelledby="cta-title">
+      <h2 class="cta-headline" id="cta-title">Start building your professional record today.</h2>
+      <p class="cta-sub">Join students who are using Ascend to stand out with a credible, comprehensive portfolio of
+        completed achievements and practical projects.</p>
+      <a href="auth.html?tab=register" class="btn btn-primary btn-lg" id="cta-bottom">
+        Create your free profile
+      </a>
+    </section>
+  </main>
+
+  <!-- ── Footer ────────────────────────────────────────────────── -->
+  <footer class="landing-footer" role="contentinfo">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a href="index.html" class="nav-brand" style="font-size:var(--text-xl);">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <rect width="28" height="28" rx="8" fill="#1A73E8" />
+            <path d="M7 20L12 10L17 16L20 12" stroke="white" stroke-width="2.2" stroke-linecap="round"
+              stroke-linejoin="round" />
+            <circle cx="20" cy="10" r="2" fill="white" />
+          </svg>
+          Asc<span>end</span>
+        </a>
+        <p class="footer-tagline">Build a professional record of your growth. Trusted by students and institutions.</p>
+      </div>
+      <div class="footer-links-grid">
+        <div class="footer-link-group">
+          <div class="footer-link-heading">Product</div>
+          <a href="#features" class="footer-link">Features</a>
+          <a href="#how-it-works" class="footer-link">How it works</a>
+          <a href="auth.html" class="footer-link">Sign in</a>
+          <a href="auth.html?tab=register" class="footer-link">Get started</a>
+        </div>
+        <div class="footer-link-group">
+          <div class="footer-link-heading">Roles</div>
+          <a href="#" class="footer-link">Students</a>
+          <a href="#" class="footer-link">Faculty</a>
+          <a href="#" class="footer-link">Mentors</a>
+        </div>
+        <div class="footer-link-group">
+          <div class="footer-link-heading">Company</div>
+          <a href="#" class="footer-link">About</a>
+          <a href="#" class="footer-link">Privacy policy</a>
+          <a href="#" class="footer-link">Terms of service</a>
+          <a href="#" class="footer-link">Contact</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Ascend. All rights reserved.</span>
+      <span>Built for the academic community.</span>
+    </div>
+  </footer>
+
+  <script>
+    function toggleMobileMenu() {
+      const drawer = document.getElementById('mobile-nav-drawer');
+      drawer.style.display = drawer.style.display === 'none' ? 'block' : 'none';
+    }
+    // Smooth scroll for hash links
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        const id = a.getAttribute('href').slice(1);
+        const el = document.getElementById(id);
+        if (el) { e.preventDefault(); el.scrollIntoView({ behavior: 'smooth' }); }
+      });
+    });
+  </script>
+</body>
+
+</html>
