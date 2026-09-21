@@ -5,24 +5,43 @@
 
 /* ── Faculty User Default ────────────────────────────────────── */
 let FACULTY_USER = {
-  id: 'usr-fac-001',
-  name: 'Dr. Rakesh Mehta',
-  firstName: 'Rakesh',
-  title: 'Dr.',
-  email: 'dr.mehta@university.edu',
+  id: 'usr-fac',
+  name: 'Faculty Advisor',
+  firstName: 'Faculty',
+  title: '',
+  email: '',
   password: '',
-  initials: 'RM',
+  initials: 'FA',
   role: 'faculty',
-  designation: 'Associate Professor & Faculty Advisor',
+  designation: 'Faculty Advisor',
   department: 'Computer Science & Engineering',
-  institution: 'Delhi Institute of Technology',
-  assignedCohort: 'B.Tech CSE · Semester 5 · Section A',
-  assignedStudents: 48,
-  expertise: ['Software Engineering', 'Algorithms', 'Capstones'],
+  institution: 'University',
+  assignedCohort: '',
+  assignedStudents: 0,
+  expertise: [],
 };
 
 /* ── Classes / Cohorts Model ─────────────────────────────────── */
-let FACULTY_CLASSES = [
+const FACULTY_CLASSES_STORAGE_KEY = 'ascend_faculty_classes';
+
+function saveClassesToStorage(classes) {
+  try {
+    localStorage.setItem(FACULTY_CLASSES_STORAGE_KEY, JSON.stringify(classes));
+  } catch (e) {}
+}
+
+function loadClassesFromStorage() {
+  try {
+    const raw = localStorage.getItem(FACULTY_CLASSES_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch (e) {}
+  return null;
+}
+
+let FACULTY_CLASSES = loadClassesFromStorage() || [
   {
     id: 'all',
     name: 'All Registered Students',
@@ -88,9 +107,16 @@ window.AscendFacultyData = {
       if (data.facultyUser) {
         Object.assign(FACULTY_USER, data.facultyUser);
       }
-      if (Array.isArray(data.classes)) {
+      if (Array.isArray(data.classes) && data.classes.length > 0) {
         FACULTY_CLASSES.length = 0;
         data.classes.forEach(c => FACULTY_CLASSES.push(c));
+        saveClassesToStorage(FACULTY_CLASSES);
+      } else {
+        const stored = loadClassesFromStorage();
+        if (stored && stored.length > 0) {
+          FACULTY_CLASSES.length = 0;
+          stored.forEach(c => FACULTY_CLASSES.push(c));
+        }
       }
       if (Array.isArray(data.students)) {
         FACULTY_STUDENTS = data.students;
@@ -99,7 +125,19 @@ window.AscendFacultyData = {
         EVALUATIONS = data.evaluations;
       }
       if (Array.isArray(data.feedbackHistory)) {
-        FACULTY_FEEDBACK_SENT = data.feedbackHistory;
+        // Normalize legacy records that used old field names
+        FACULTY_FEEDBACK_SENT = data.feedbackHistory.map(fb => {
+          const n = { ...fb };
+          if (!n.toStudentId && n.studentId) n.toStudentId = n.studentId;
+          if (!n.toStudentName && n.studentName) n.toStudentName = n.studentName;
+          if (!n.fromName && n.mentorName) n.fromName = n.mentorName;
+          if (!n.fromRole && n.mentorTitle) n.fromRole = n.mentorTitle;
+          if (!n.recommendedNextStep && n.nextSteps) n.recommendedNextStep = n.nextSteps;
+          if (!n.message && n.feedbackText) n.message = n.feedbackText;
+          if (!n.classId) n.classId = 'class-cse-5a';
+          if (!n.followUpState) n.followUpState = n.followUpDate ? 'scheduled' : 'none';
+          return n;
+        });
       }
       if (Array.isArray(data.recentUpdates)) {
         RECENT_STUDENT_UPDATES = data.recentUpdates;
@@ -162,6 +200,90 @@ window.AscendFacultyData = {
     }
   },
 
+  async addClass(classData) {
+    const payload = classData || {};
+    const newClass = {
+      id: payload.id || `class-${Date.now()}`,
+      name: payload.name || 'New Class',
+      shortName: payload.shortName || payload.name || 'New Class',
+      program: payload.program || 'General',
+      department: payload.department || FACULTY_USER.department || 'Computer Science & Engineering',
+      semester: payload.semester !== undefined ? payload.semester : 1,
+      section: payload.section || 'Section A',
+      academicYear: payload.academicYear || '2026–27',
+      studentCount: 0,
+    };
+
+    FACULTY_CLASSES.push(newClass);
+    saveClassesToStorage(FACULTY_CLASSES);
+
+    try {
+      const res = await fetch('/api/faculty/classes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newClass),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.class && data.class.id) {
+          const idx = FACULTY_CLASSES.findIndex(c => c.id === newClass.id);
+          if (idx !== -1) {
+            FACULTY_CLASSES[idx] = data.class;
+            saveClassesToStorage(FACULTY_CLASSES);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Could not sync new class to server:', e);
+    }
+    return newClass;
+  },
+
+  async updateClass(classId, updates) {
+    const idx = FACULTY_CLASSES.findIndex(c => c.id === classId);
+    if (idx === -1) throw new Error('Class not found');
+
+    const updated = {
+      ...FACULTY_CLASSES[idx],
+      ...updates,
+      id: FACULTY_CLASSES[idx].id,
+    };
+    FACULTY_CLASSES[idx] = updated;
+    saveClassesToStorage(FACULTY_CLASSES);
+
+    try {
+      await fetch(`/api/faculty/classes/${encodeURIComponent(classId)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates),
+      });
+    } catch (e) {
+      console.warn('Could not sync updated class to server:', e);
+    }
+    return updated;
+  },
+
+  async deleteClass(classId) {
+    if (classId === 'all') throw new Error('Cannot delete primary All Students scope');
+    const idx = FACULTY_CLASSES.findIndex(c => c.id === classId);
+    if (idx === -1) throw new Error('Class not found');
+
+    FACULTY_CLASSES.splice(idx, 1);
+    if (activeSelectedClassId === classId) {
+      activeSelectedClassId = 'all';
+    }
+    saveClassesToStorage(FACULTY_CLASSES);
+
+    try {
+      await fetch(`/api/faculty/classes/${encodeURIComponent(classId)}`, {
+        method: 'DELETE',
+      });
+    } catch (e) {
+      console.warn('Could not sync deleted class to server:', e);
+    }
+    return true;
+  },
+
   getStudents(classId) {
     const cid = classId || activeSelectedClassId;
     if (!cid || cid === 'all') return FACULTY_STUDENTS;
@@ -201,8 +323,8 @@ window.AscendFacultyData = {
     const followUpState = feedbackData.followUpDate ? 'scheduled' : 'none';
     const fb = {
       id: `ffb-${Date.now()}`,
-      fromId: FACULTY_USER.id || 'usr-fac-001',
-      fromName: FACULTY_USER.name || 'Dr. Rakesh Mehta',
+      fromId: FACULTY_USER.id || 'usr-fac',
+      fromName: FACULTY_USER.name || 'Faculty Advisor',
       fromRole: FACULTY_USER.designation || 'Associate Professor & Faculty Advisor',
       date: new Date().toISOString().slice(0, 10),
       isRead: false,
@@ -221,6 +343,8 @@ window.AscendFacultyData = {
         feedbackText: feedbackData.message,
         category: feedbackData.category,
         nextSteps: feedbackData.recommendedNextStep,
+        classId: feedbackData.classId || activeSelectedClassId || 'class-cse-5a',
+        followUpDate: feedbackData.followUpDate || null,
       }),
     }).catch(e => console.warn('Could not persist feedback:', e));
 
@@ -240,6 +364,23 @@ window.AscendFacultyData = {
     return fb;
   },
 
+  /* Delete feedback */
+  async deleteFeedback(feedbackId) {
+    const idx = FACULTY_FEEDBACK_SENT.findIndex(f => f.id === feedbackId);
+    let removed = null;
+    if (idx !== -1) {
+      removed = FACULTY_FEEDBACK_SENT.splice(idx, 1)[0];
+    }
+    try {
+      await fetch(`/api/faculty/feedback/${encodeURIComponent(feedbackId)}`, {
+        method: 'DELETE',
+      });
+    } catch (e) {
+      console.warn('Could not delete feedback from server:', e);
+    }
+    return removed;
+  },
+
   /* Save evaluation (draft or publish) */
   saveEvaluation(id, scoreData, isPublish) {
     let evalItem = EVALUATIONS.find(e => e.id === id);
@@ -250,8 +391,8 @@ window.AscendFacultyData = {
         studentName: scoreData.studentName || 'Student',
         studentProgram: scoreData.studentProgram || 'B.Tech CSE',
         classId: scoreData.classId || activeSelectedClassId,
-        evaluatorId: FACULTY_USER.id || 'usr-fac-001',
-        evaluatorName: FACULTY_USER.name || 'Dr. Rakesh Mehta',
+        evaluatorId: FACULTY_USER.id || 'usr-fac',
+        evaluatorName: FACULTY_USER.name || 'Faculty Advisor',
         evaluationPeriod: scoreData.period || 'Semester 5 (Jul – Nov 2026)',
         deadline: '2026-09-30',
         status: isPublish ? 'published' : 'draft',
@@ -303,6 +444,48 @@ window.AscendFacultyData = {
         }
       }
     }
+
+    // ── Live push to student portal (same browser session) ──────
+    // If this evaluation is published and AscendData (student data store)
+    // is loaded in the same session, sync the evaluation immediately.
+    if (isPublish && evalItem && window.AscendData && Array.isArray(window.AscendData.evaluations)) {
+      const existIdx = window.AscendData.evaluations.findIndex(e => e.id === evalItem.id);
+      if (existIdx !== -1) {
+        window.AscendData.evaluations[existIdx] = evalItem;
+      } else {
+        window.AscendData.evaluations.unshift(evalItem);
+      }
+      // Refresh student evaluation list if it is currently visible
+      if (window.AscendViews && typeof window.AscendViews.refreshStudentEvalList === 'function') {
+        window.AscendViews.refreshStudentEvalList();
+      }
+    }
+  },
+
+
+  /* Delete evaluation */
+  async deleteEvaluation(evalId) {
+    const idx = EVALUATIONS.findIndex(e => e.id === evalId);
+    let removed = null;
+    if (idx !== -1) {
+      removed = EVALUATIONS.splice(idx, 1)[0];
+    }
+    if (removed && removed.studentId) {
+      const student = FACULTY_STUDENTS.find(s => s.id === removed.studentId);
+      if (student) {
+        const hasPublished = EVALUATIONS.some(e => e.studentId === student.id && e.status === 'published');
+        const hasDraft = EVALUATIONS.some(e => e.studentId === student.id && e.status === 'draft');
+        student.evaluationStatus = hasPublished ? 'evaluated' : (hasDraft ? 'draft' : 'pending');
+      }
+    }
+    try {
+      await fetch(`/api/faculty/evaluations/${encodeURIComponent(evalId)}`, {
+        method: 'DELETE',
+      });
+    } catch (e) {
+      console.warn('Could not delete evaluation from server:', e);
+    }
+    return removed;
   },
 
   /* Cohort Insights Data Generator for Selected Class */

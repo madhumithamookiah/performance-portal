@@ -123,10 +123,9 @@
 <!-- Toast Container -->
 <div id="toast-container"></div>
 
-<!-- ── Scripts: Data → Faculty Data → HOD Data → Utils → Views → App ── -->
+<!-- ── Scripts: Data → Faculty Data → Utils → Views → App ── -->
 <script src="js/data.js"></script>
 <script src="js/faculty-data.js"></script>
-<script src="js/hod-data.js"></script>
 <script src="js/utils.js"></script>
 <script src="js/views/dashboard.js"></script>
 <script src="js/views/profile.js"></script>
@@ -135,18 +134,14 @@
 <script src="js/views/goals.js"></script>
 <script src="js/views/feedback.js"></script>
 <script src="js/views/settings.js"></script>
+<script src="js/views/student-evaluations.js"></script>
 <script src="js/views/faculty-dashboard.js"></script>
 <script src="js/views/faculty-students.js"></script>
 <script src="js/views/faculty-student-detail.js"></script>
 <script src="js/views/faculty-goals-feedback.js"></script>
 <script src="js/views/faculty-evaluations.js"></script>
 <script src="js/views/faculty-analytics.js"></script>
-<script src="js/views/hod-dashboard.js"></script>
-<script src="js/views/hod-cohort-insights.js"></script>
-<script src="js/views/hod-classes.js"></script>
-<script src="js/views/hod-faculty-assignments.js"></script>
-<script src="js/views/hod-evaluation-monitoring.js"></script>
-<script src="js/views/hod-settings.js"></script>
+<script src="js/views/admin-dashboard.js"></script>
 <script src="js/app.js"></script>
 
 <script>
@@ -191,26 +186,24 @@ window.addEventListener('DOMContentLoaded', () => {
         const existing = document.querySelector('.notif-panel');
         if (existing) { existing.remove(); return; }
         const feedbackList = (window.AscendData && Array.isArray(window.AscendData.feedback)) ? window.AscendData.feedback : [];
-        const newFb = feedbackList.filter(f => !f.isRead);
         const panel = document.createElement('div');
         panel.className = 'notif-panel';
         panel.innerHTML = `
           <div class="notif-header">
             <span>Notifications</span>
-            ${newFb.length > 0 ? `<span class="badge badge-feedback">${newFb.length} new</span>` : '<span style="font-size:var(--text-xs);color:var(--c-text-3);">All caught up</span>'}
           </div>
-          ${newFb.length > 0 ? newFb.map(f => `
+          ${feedbackList.length > 0 ? feedbackList.slice(0, 5).map(f => `
             <div class="notif-item" onclick="AscendApp.navigate('feedback');document.querySelector('.notif-panel')?.remove();">
-              <div class="notif-icon" style="background:var(--c-feedback-bg);color:var(--c-feedback);">
+              <div class="notif-icon" style="background:var(--c-primary-light);color:var(--c-primary);">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
               </div>
               <div class="notif-text">
-                <div class="notif-title">${f.mentorName}</div>
-                <div class="notif-sub">${f.subject}</div>
+                <div class="notif-title">${f.mentorName || 'Faculty Advisor'}</div>
+                <div class="notif-sub">${f.subject || 'Feedback message'}</div>
               </div>
             </div>`).join('') : `
             <div style="padding:32px 16px;text-align:center;color:var(--c-text-3);font-size:var(--text-sm);">
-              No new notifications
+              No notifications
             </div>`}`;
         btn.appendChild(panel);
         setTimeout(() => document.addEventListener('click', () => panel.remove(), { once: true }), 0);

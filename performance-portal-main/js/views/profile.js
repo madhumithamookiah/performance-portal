@@ -2,7 +2,7 @@
  * ASCEND – Student Profile View & Public Portfolio Experience
  * Includes:
  * - Student Profile header with achievements and projects overview
- * - Compact, flat Public Portfolio card with demo link (ascend.app/p/aarav-sharma)
+ * - Compact, flat Public Portfolio card with public link (ascend.app/p/portfolio)
  * - Copy link, preview, and publish/unpublish actions
  * - Interactive Public Portfolio preview modal with device toggles (Desktop/Tablet/Mobile)
  * - Standalone public portfolio route support (#public-portfolio)
@@ -702,7 +702,7 @@ function renderProfile() {
 
             <div class="form-group">
               <label class="form-label" for="edit-name">Full Name <span class="required">*</span></label>
-              <input class="form-input" id="edit-name" type="text" value="${student.name || ''}" placeholder="Aarav Sharma">
+              <input class="form-input" id="edit-name" type="text" value="${student.name || ''}" placeholder="Full Name">
             </div>
 
             <div class="form-group">

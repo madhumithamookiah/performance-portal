@@ -395,7 +395,7 @@ function generateCertificateDataUrl(ach, studentName) {
     <text x="450" y="150" font-family="'Google Sans',Arial,sans-serif" font-size="12" font-weight="600" fill="#5F6368" text-anchor="middle" letter-spacing="2">OFFICIAL CERTIFICATE OF ACHIEVEMENT</text>
     <line x1="300" y1="170" x2="600" y2="170" stroke="#E8EAED" stroke-width="2"/>
     <text x="450" y="220" font-family="'Google Sans',Arial,sans-serif" font-size="15" fill="#3C4043" text-anchor="middle">This is to officially certify that</text>
-    <text x="450" y="270" font-family="'Google Sans',Arial,sans-serif" font-size="28" font-weight="bold" fill="#202124" text-anchor="middle">${studentName || 'Aarav Sharma'}</text>
+    <text x="450" y="270" font-family="'Google Sans',Arial,sans-serif" font-size="28" font-weight="bold" fill="#202124" text-anchor="middle">${studentName || 'Student'}</text>
     <text x="450" y="320" font-family="'Google Sans',Arial,sans-serif" font-size="15" fill="#3C4043" text-anchor="middle">has successfully completed and demonstrated verified competency in</text>
     <text x="450" y="375" font-family="'Google Sans',Arial,sans-serif" font-size="24" font-weight="bold" fill="${catColor}" text-anchor="middle">${title}</text>
     <text x="450" y="430" font-family="'Google Sans',Arial,sans-serif" font-size="13" fill="#5F6368" text-anchor="middle">Category: ${ach.category || 'Achievement'} · Completed: ${date} · Digitally Signed &amp; Sealed</text>
@@ -491,7 +491,7 @@ function openProofFile(achOrId) {
 
   // If no dataUrl, synthesize authentic certificate PDF dataUrl
   if (!dataUrl && (fileName || proofLink)) {
-    const student = (window.AscendData && window.AscendData.student) || { name: 'Aarav Sharma' };
+    const student = (window.AscendData && window.AscendData.student) || { name: 'Student' };
     dataUrl = generateCertificateDataUrl(ach, student.name);
     ach.proofData = dataUrl;
     if (window.AscendData && window.AscendData.saveAchievement) {
@@ -503,14 +503,11 @@ function openProofFile(achOrId) {
     if (dataUrl.startsWith('data:')) {
       try {
         const parts = dataUrl.split(',');
-        const mime = parts[0].match(/:(.*?);/)?.[1] || 'application/octet-stream';
-        const bstr = (typeof atob !== 'undefined') ? atob(parts[1]) : (typeof Buffer !== 'undefined' ? Buffer.from(parts[1], 'base64').toString('binary') : '');
-        let n = bstr.length;
-        const u8arr = new Uint8Array(n);
-        while (n--) {
-          u8arr[n] = bstr.charCodeAt(n);
-        }
-        const blob = new Blob([u8arr], { type: mime });
+        const mime = parts[0].match(/:(.*?);/)?.[1] || 'application/pdf';
+        const binary = atob(parts[1]);
+        const array = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) array[i] = binary.charCodeAt(i);
+        const blob = new Blob([array], { type: mime });
         const blobUrl = URL.createObjectURL(blob);
         const win = window.open(blobUrl, '_blank');
         if (!win || win.closed || typeof win.closed === 'undefined') {
@@ -622,7 +619,7 @@ function openProofViewerModal(ach) {
   }
 
   const { Icons, formatDate, skillTag } = window.AscendUI;
-  const student = (window.AscendData && window.AscendData.student) || { name: 'Aarav Sharma' };
+  const student = (window.AscendData && window.AscendData.student) || { name: 'Student' };
   const cardColor = ach.color || '#1A73E8';
 
   const modalTitle = document.getElementById('proof-modal-title');
@@ -809,7 +806,7 @@ function openProofViewerModal(ach) {
           </h2>
 
           <div style="font-size:13px;color:var(--c-text-2);margin-bottom:14px;">
-            Officially verified and awarded to <strong>${student.name || 'Aarav Sharma'}</strong>
+            Officially verified and awarded to <strong>${student.name || 'Student'}</strong>
           </div>
 
           <div style="display:inline-flex;align-items:center;gap:6px;background:#E6F4EA;border:1px solid #CEEAD6;color:#137333;font-size:12px;font-weight:600;padding:4px 14px;border-radius:20px;margin-bottom:16px;">

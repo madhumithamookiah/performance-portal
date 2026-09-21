@@ -25,7 +25,7 @@ function renderGoals() {
   const totalCount = safeAchievements.length;
   const totalProjects = safeProjects.length;
 
-  // Primary and Optional Additional Categories (Achievements)
+  // Primary and Additional Categories (Achievements)
   const primaryCats = (portfolioInsights && portfolioInsights.primaryCategories) || [
     { key: 'Certification', name: 'Certification', label: 'Certifications', iconKey: 'award', description: 'Industry-recognized credentials and certifications' },
     { key: 'Hackathon', name: 'Hackathon', label: 'Hackathons', iconKey: 'lightbulb', description: 'Development sprints, hackathons, and design challenges' },
@@ -47,7 +47,6 @@ function renderGoals() {
     return ac === cn || ac === cl || ac === ck ||
       (cn && ac.startsWith(cn.slice(0, 4))) ||
       (cl && cl.includes(ac)) ||
-      (ac.includes('lead') && (cn.includes('lead') || cl.includes('lead'))) ||
       (ac.includes('research') && (cn.includes('research') || cl.includes('research'))) ||
       (ac.includes('publicat') && (cn.includes('publicat') || cl.includes('publicat'))) ||
       (ac.includes('award') && (cn.includes('award') || cl.includes('award')));
@@ -314,7 +313,7 @@ function renderGoals() {
       ${remainingCollapsibleHTML}
     </div>
 
-    <!-- Small Category Overview (Primary & Optional Additional) -->
+    <!-- Category Overview -->
     <div class="card" style="padding:var(--sp-5);margin-bottom:var(--sp-6);">
       <div class="section-header" style="margin-bottom:var(--sp-4);">
         <div>

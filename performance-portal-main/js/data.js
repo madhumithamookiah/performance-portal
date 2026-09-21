@@ -50,6 +50,7 @@
     portfolioInsights: { views: 0, downloads: 0, shares: 0 },
     goals: [],
     feedback: [],
+    evaluations: [],
     activity: [],
     monthlyData: [0, 0, 0, 0, 0, 0],
     profileChecklist: [],
@@ -73,6 +74,7 @@
         this.portfolioInsights = data.portfolioInsights || this.portfolioInsights;
         this.goals = Array.isArray(data.goals) ? data.goals : [];
         this.feedback = Array.isArray(data.feedback) ? data.feedback : [];
+        this.evaluations = Array.isArray(data.evaluations) ? data.evaluations : [];
         this.activity = Array.isArray(data.activity) ? data.activity : [];
         this.monthlyData = Array.isArray(data.monthlyData) ? data.monthlyData : [0, 0, 0, 0, 0, 0];
         this.profileChecklist = Array.isArray(data.profileChecklist) ? data.profileChecklist : [];
@@ -85,6 +87,7 @@
         return this;
       }
     },
+
 
     // Dynamic Persistence APIs
     async saveAchievement(ach) {

@@ -6,7 +6,7 @@
 (function () {
   /* ── Current Role State ───────────────────────────────────── */
   let currentRole = sessionStorage.getItem('ascend_role') || 'student';
-  if (currentRole === 'admin') currentRole = 'hod';
+  if (currentRole !== 'faculty' && currentRole !== 'admin') currentRole = 'student';
   let currentView = null;
 
   /* ── Master Route Registry ───────────────────────────────── */
@@ -54,12 +54,25 @@
       title: 'Feedback',
       role: 'all',
     },
-    settings: {
-      render: () => (currentRole === 'faculty')
-        ? (window.FacultyViews && window.FacultyViews.settings ? window.FacultyViews.settings() : window.AscendViews.settings())
-        : window.AscendViews.settings(),
+    evaluations: {
+      render: () => window.AscendViews.studentEvaluations ? window.AscendViews.studentEvaluations() : '<div class="card" style="padding:var(--sp-6);">Loading Evaluations…</div>',
       init: () => {},
-      title: () => (currentRole === 'faculty' ? 'Faculty Settings' : 'Settings'),
+      title: 'My Evaluations',
+      role: 'student',
+    },
+
+    settings: {
+      render: () => {
+        if (currentRole === 'admin') {
+          return (window.AdminViews && window.AdminViews.settings) ? window.AdminViews.settings() : window.AscendViews.settings();
+        }
+        if (currentRole === 'faculty') {
+          return (window.FacultyViews && window.FacultyViews.settings) ? window.FacultyViews.settings() : window.AscendViews.settings();
+        }
+        return window.AscendViews.settings();
+      },
+      init: () => {},
+      title: () => (currentRole === 'admin' ? 'Admin Settings' : (currentRole === 'faculty' ? 'Faculty Settings' : 'Settings')),
       role: 'all',
     },
     'public-portfolio': {
@@ -101,48 +114,51 @@
       role: 'faculty',
     },
     'faculty-analytics': {
-      render: () => window.FacultyViews.analytics(),
+      render: () => {
+        setTimeout(() => window.AscendApp?.navigate('faculty-dashboard'), 0);
+        return '<div class="card p-6">Redirecting to Dashboard…</div>';
+      },
       init: () => {},
-      title: 'Cohort Insights',
+      title: 'Faculty Dashboard',
       role: 'faculty',
     },
 
-    // HOD / Department Coordinator Routes
-    'hod-dashboard': {
-      render: () => window.HODViews ? window.HODViews.dashboard() : '<div class="card p-6">Loading HOD Dashboard…</div>',
+    // Admin Routes
+    'admin-dashboard': {
+      render: () => window.AdminViews ? window.AdminViews.dashboard() : '<div class="card p-6">Loading Academic Overview…</div>',
       init: () => {},
-      title: 'Department Dashboard',
-      role: 'hod',
+      title: 'Academic Oversight Overview',
+      role: 'admin',
     },
-    'hod-cohort-insights': {
-      render: () => window.HODViews ? window.HODViews.cohortInsights() : '<div class="card p-6">Loading Cohort Insights…</div>',
+    'admin-projects': {
+      render: () => window.AdminViews ? window.AdminViews.projects() : '<div class="card p-6">Loading Student Projects…</div>',
       init: () => {},
-      title: 'Cohort Insights',
-      role: 'hod',
+      title: 'Student Projects Directory',
+      role: 'admin',
     },
-    'hod-classes': {
-      render: () => window.HODViews ? window.HODViews.classes() : '<div class="card p-6">Loading Classes…</div>',
+    'admin-achievements': {
+      render: () => window.AdminViews ? window.AdminViews.achievements() : '<div class="card p-6">Loading Student Achievements…</div>',
       init: () => {},
-      title: 'Classes Directory',
-      role: 'hod',
+      title: 'Student Achievements & Credentials',
+      role: 'admin',
     },
-    'hod-faculty-assignments': {
-      render: () => window.HODViews ? window.HODViews.facultyAssignments() : '<div class="card p-6">Loading Faculty Assignments…</div>',
+    'admin-faculty': {
+      render: () => window.AdminViews ? window.AdminViews.faculty() : '<div class="card p-6">Loading Faculty Oversight…</div>',
       init: () => {},
-      title: 'Faculty Assignments',
-      role: 'hod',
+      title: 'Faculty Responsiveness & Monitoring',
+      role: 'admin',
     },
-    'hod-evaluation-monitoring': {
-      render: () => window.HODViews ? window.HODViews.evaluationMonitoring() : '<div class="card p-6">Loading Evaluation Monitoring…</div>',
+    'admin-students': {
+      render: () => window.AdminViews ? window.AdminViews.students() : '<div class="card p-6">Loading Student Directory…</div>',
       init: () => {},
-      title: 'Evaluation Monitoring',
-      role: 'hod',
+      title: 'Student Directory & Portfolios',
+      role: 'admin',
     },
-    'hod-settings': {
-      render: () => window.HODViews ? window.HODViews.settings() : '<div class="card p-6">Loading Department Settings…</div>',
+    'admin-users': {
+      render: () => window.AdminViews ? window.AdminViews.users() : '<div class="card p-6">Loading User Accounts…</div>',
       init: () => {},
-      title: 'Department Settings',
-      role: 'hod',
+      title: 'Institutional User Accounts',
+      role: 'admin',
     },
   };
 
@@ -157,6 +173,7 @@
         { id: 'achievements', label: 'Achievements', iconKey: 'award' },
         { id: 'goals', label: 'Portfolio Overview', iconKey: 'target' },
         { id: 'feedback', label: 'Feedback', iconKey: 'messageSquare' },
+        { id: 'evaluations', label: 'My Evaluations', iconKey: 'clipboardList' },
         { id: 'settings', label: 'Settings', iconKey: 'settings' },
       ],
       bottomItems: [
@@ -174,7 +191,6 @@
         { id: 'faculty-students', label: 'Students', iconKey: 'users' },
         { id: 'faculty-goals-feedback', label: 'Feedback', iconKey: 'messageSquare' },
         { id: 'faculty-evaluations', label: 'Evaluations', iconKey: 'fileText' },
-        { id: 'faculty-analytics', label: 'Cohort Insights', iconKey: 'barChart' },
         { id: 'settings', label: 'Settings', iconKey: 'settings' },
       ],
       bottomItems: [
@@ -182,25 +198,26 @@
         { id: 'faculty-students', label: 'Students', iconKey: 'users' },
         { id: 'faculty-goals-feedback', label: 'Feedback', iconKey: 'messageSquare' },
         { id: 'faculty-evaluations', label: 'Evaluations', iconKey: 'fileText' },
-        { id: 'faculty-analytics', label: 'Insights', iconKey: 'barChart' },
+        { id: 'settings', label: 'Settings', iconKey: 'settings' },
       ],
     },
-    hod: {
-      sectionLabel: 'HOD Department Oversight',
+    admin: {
+      sectionLabel: 'Institution Administration',
       items: [
-        { id: 'hod-dashboard', label: 'Department Dashboard', iconKey: 'grid' },
-        { id: 'hod-cohort-insights', label: 'Cohort Insights', iconKey: 'barChart' },
-        { id: 'hod-classes', label: 'Classes', iconKey: 'layers' },
-        { id: 'hod-faculty-assignments', label: 'Faculty Assignments', iconKey: 'users' },
-        { id: 'hod-evaluation-monitoring', label: 'Evaluation Monitoring', iconKey: 'fileText' },
-        { id: 'hod-settings', label: 'Settings', iconKey: 'settings' },
+        { id: 'admin-dashboard', label: 'Academic Overview', iconKey: 'grid' },
+        { id: 'admin-projects', label: 'Student Projects', iconKey: 'folder' },
+        { id: 'admin-achievements', label: 'Achievements & Certs', iconKey: 'award' },
+        { id: 'admin-faculty', label: 'Faculty Oversight', iconKey: 'users' },
+        { id: 'admin-students', label: 'Student Directory', iconKey: 'graduationCap' },
+        { id: 'admin-users', label: 'User Accounts', iconKey: 'shieldCheck' },
+        { id: 'settings', label: 'Admin Settings', iconKey: 'settings' },
       ],
       bottomItems: [
-        { id: 'hod-dashboard', label: 'Dashboard', iconKey: 'grid' },
-        { id: 'hod-cohort-insights', label: 'Insights', iconKey: 'barChart' },
-        { id: 'hod-classes', label: 'Classes', iconKey: 'layers' },
-        { id: 'hod-faculty-assignments', label: 'Faculty', iconKey: 'users' },
-        { id: 'hod-evaluation-monitoring', label: 'Evaluations', iconKey: 'fileText' },
+        { id: 'admin-dashboard', label: 'Overview', iconKey: 'grid' },
+        { id: 'admin-projects', label: 'Projects', iconKey: 'folder' },
+        { id: 'admin-achievements', label: 'Certs', iconKey: 'award' },
+        { id: 'admin-faculty', label: 'Faculty', iconKey: 'users' },
+        { id: 'admin-users', label: 'Users', iconKey: 'shieldCheck' },
       ],
     },
   };
@@ -212,17 +229,14 @@
       sessionUser = JSON.parse(sessionStorage.getItem('ascend_user') || 'null');
     } catch (e) {}
 
-    if (currentRole === 'hod') {
-      const h = window.AscendHODData ? window.AscendHODData.hodUser : { name: 'Prof. Sunita Rao, Ph.D.', initials: 'SR', designation: 'Head of Department' };
-      const name = (sessionUser && (sessionUser.role === 'hod' || sessionUser.role === 'admin')) ? sessionUser.name : h.name;
-      const initials = name.split(' ').filter(Boolean).map(p => p[0]).slice(0, 2).join('').toUpperCase() || 'SR';
-      return { name, initials, sub: 'Head of Department' };
+    if (currentRole === 'admin') {
+      const name = (sessionUser && sessionUser.role === 'admin') ? sessionUser.name : 'System Administrator';
+      return { name, initials: 'AD', sub: 'Administrator' };
     }
-
     if (currentRole === 'faculty') {
-      const f = window.AscendFacultyData ? window.AscendFacultyData.facultyUser : { name: 'Dr. Rakesh Mehta', initials: 'RM', designation: 'Faculty Advisor' };
+      const f = window.AscendFacultyData ? window.AscendFacultyData.facultyUser : { name: 'Faculty Advisor', initials: 'FA', designation: 'Faculty Advisor' };
       const name = (sessionUser && sessionUser.role === 'faculty') ? sessionUser.name : f.name;
-      const initials = name.split(' ').filter(Boolean).map(p => p[0]).slice(0, 2).join('').toUpperCase() || 'RM';
+      const initials = name.split(' ').filter(Boolean).map(p => p[0]).slice(0, 2).join('').toUpperCase() || 'FA';
       return { name, initials, sub: 'Faculty Advisor' };
     }
     const s = window.AscendData ? window.AscendData.student : { name: 'Student', initials: 'ST' };
@@ -249,25 +263,18 @@
 
   /* ── Navigate Function ───────────────────────────────────── */
   function navigate(viewId) {
-    if (viewId === 'admin' || viewId === 'admin-dashboard') {
-      viewId = 'hod-dashboard';
-    }
-    if (currentRole === 'hod' && viewId === 'settings') {
-      viewId = 'hod-settings';
-    }
-
     if (!routes[viewId]) {
       console.warn(`AscendApp: unknown view "${viewId}"`);
       // Fallback
-      viewId = (currentRole === 'hod') ? 'hod-dashboard' : ((currentRole === 'faculty') ? 'faculty-dashboard' : 'dashboard');
+      viewId = (currentRole === 'admin') ? 'admin-dashboard' : ((currentRole === 'faculty') ? 'faculty-dashboard' : 'dashboard');
     }
 
     // Role synchronization based on route:
     const targetRole = routes[viewId].role;
     let roleChanged = false;
-    if (targetRole === 'hod' && currentRole !== 'hod') {
-      currentRole = 'hod';
-      sessionStorage.setItem('ascend_role', 'hod');
+    if (targetRole === 'admin' && currentRole !== 'admin') {
+      currentRole = 'admin';
+      sessionStorage.setItem('ascend_role', 'admin');
       roleChanged = true;
     } else if (targetRole === 'faculty' && currentRole !== 'faculty') {
       currentRole = 'faculty';
@@ -317,11 +324,9 @@
     // Update topbar title
     const titleEl = document.getElementById('topbar-title');
     if (titleEl) {
-      const routeTitle = (viewId === 'hod-settings')
-        ? 'Department Settings'
-        : ((viewId === 'settings' && currentRole === 'faculty')
-          ? 'Faculty Settings'
-          : (typeof routes[viewId].title === 'function' ? routes[viewId].title() : routes[viewId].title));
+      const routeTitle = (viewId === 'settings' && currentRole === 'faculty')
+        ? 'Faculty Settings'
+        : (typeof routes[viewId].title === 'function' ? routes[viewId].title() : routes[viewId].title);
       titleEl.textContent = routeTitle;
     }
 
@@ -344,6 +349,8 @@
       await window.AscendData.loadStudentData(sessionUser?.id);
     } else if (role === 'faculty' && window.AscendFacultyData && window.AscendFacultyData.loadFacultyData) {
       await window.AscendFacultyData.loadFacultyData();
+    } else if (role === 'admin' && window.AdminViews && window.AdminViews.loadAdminData) {
+      await window.AdminViews.loadAdminData();
     }
 
     // Rebuild shell elements for new role
@@ -352,9 +359,9 @@
     buildBottomNav();
     buildTopbar();
 
-    const defaultView = (role === 'hod') ? 'hod-dashboard' : ((role === 'faculty') ? 'faculty-dashboard' : 'dashboard');
+    const defaultView = (role === 'admin') ? 'admin-dashboard' : ((role === 'faculty') ? 'faculty-dashboard' : 'dashboard');
     navigate(defaultView);
-    window.AscendUI.showToast(`Switched to ${role === 'hod' ? 'HOD' : role.toUpperCase()} mode`, 'info');
+    window.AscendUI.showToast(`Switched to ${role.toUpperCase()} mode`, 'info');
   }
 
   function toggleRoleDropdown(e) {
@@ -389,19 +396,13 @@
     const { Icons, ascendLogo } = window.AscendUI;
     const user = getUserInfo();
     const navConfig = NAV_CONFIGS[currentRole] || NAV_CONFIGS.student;
-    const activeView = currentView || ((currentRole === 'hod') ? 'hod-dashboard' : ((currentRole === 'faculty') ? 'faculty-dashboard' : 'dashboard'));
+    const activeView = currentView || ((currentRole === 'faculty') ? 'faculty-dashboard' : 'dashboard');
 
     const sidebar = document.getElementById('app-sidebar');
     if (!sidebar) return;
 
-    // Get badges
-    let fbCount = 0;
-    if (window.AscendData?.feedback) {
-      fbCount = window.AscendData.feedback.filter(f => !f.isRead).length;
-    }
-
-    const userTargetView = currentRole === 'hod' ? 'hod-settings' : (currentRole === 'student' ? 'profile' : 'settings');
-    const userAria = currentRole === 'hod' ? 'Department settings' : (currentRole === 'student' ? 'Go to profile' : 'Faculty settings');
+    const userTargetView = currentRole === 'student' ? 'profile' : 'settings';
+    const userAria = currentRole === 'student' ? 'Go to profile' : 'Faculty settings';
 
     sidebar.innerHTML = `
       <div class="sidebar-logo" style="display:flex;align-items:center;justify-content:space-between;">
@@ -415,19 +416,12 @@
       </div>
       <nav class="sidebar-nav" role="navigation" aria-label="Main navigation">
         <div class="sidebar-section-label">${navConfig.sectionLabel}</div>
-        ${navConfig.items.map(item => {
-          let badge = '';
-          if (item.id === 'feedback' && fbCount > 0) {
-            badge = `<span class="nav-badge">${fbCount}</span>`;
-          }
-          return `
+        ${navConfig.items.map(item => `
             <button type="button" class="nav-item ${activeView === item.id ? 'active' : ''}" data-view="${item.id}"
               aria-label="${item.label}" aria-current="${activeView === item.id ? 'page' : 'false'}" onclick="AscendApp.navigate('${item.id}')">
               <span class="nav-icon">${Icons[item.iconKey] || '•'}</span>
               <span>${item.label}</span>
-              ${badge}
-            </button>`;
-        }).join('')}
+            </button>`).join('')}
       </nav>
       <div class="sidebar-footer">
         <button type="button" class="sidebar-user" onclick="AscendApp.navigate('${userTargetView}')" aria-label="${userAria}">
@@ -474,7 +468,7 @@
   function buildBottomNav() {
     const { Icons } = window.AscendUI;
     const navConfig = NAV_CONFIGS[currentRole] || NAV_CONFIGS.student;
-    const activeView = currentView || ((currentRole === 'hod') ? 'hod-dashboard' : ((currentRole === 'faculty') ? 'faculty-dashboard' : 'dashboard'));
+    const activeView = currentView || ((currentRole === 'faculty') ? 'faculty-dashboard' : 'dashboard');
 
     const nav = document.getElementById('bottom-nav');
     if (!nav) return;
@@ -493,18 +487,28 @@
   function buildTopbar() {
     const { Icons } = window.AscendUI;
     const user = getUserInfo();
-    const activeView = currentView || ((currentRole === 'hod') ? 'hod-dashboard' : ((currentRole === 'faculty') ? 'faculty-dashboard' : 'dashboard'));
+    const activeView = currentView || ((currentRole === 'faculty') ? 'faculty-dashboard' : 'dashboard');
 
     const bar = document.getElementById('desktop-topbar');
     if (!bar) return;
-    const currentTitle = (activeView === 'hod-settings')
-      ? 'Department Settings'
+    const currentTitle = (activeView === 'settings' && currentRole === 'admin')
+      ? 'Admin Settings'
       : ((activeView === 'settings' && currentRole === 'faculty')
         ? 'Faculty Settings'
         : (routes[activeView] ? (typeof routes[activeView].title === 'function' ? routes[activeView].title() : routes[activeView].title) : 'Dashboard'));
 
-    const notifTargetView = currentRole === 'hod' ? 'hod-dashboard' : (currentRole === 'student' ? 'feedback' : 'faculty-goals-feedback');
+    const notifTargetView = currentRole === 'admin' ? 'admin-dashboard' : (currentRole === 'student' ? 'feedback' : 'faculty-goals-feedback');
     const showSearch = (currentRole !== 'student');
+
+    let searchPlaceholder = 'Search students, cohorts, feedback…';
+    if (currentRole === 'admin') {
+      if (activeView === 'admin-projects') searchPlaceholder = 'Search projects by title, author, tech stack…';
+      else if (activeView === 'admin-achievements') searchPlaceholder = 'Search achievements, credentials, student…';
+      else if (activeView === 'admin-faculty') searchPlaceholder = 'Search faculty advisors, department…';
+      else if (activeView === 'admin-students') searchPlaceholder = 'Search students by name, roll no, degree…';
+      else if (activeView === 'admin-users') searchPlaceholder = 'Search user accounts, email, role…';
+      else searchPlaceholder = 'Search students, projects, faculty, certs…';
+    }
 
     bar.innerHTML = `
       <div class="topbar-title" id="topbar-title">${currentTitle}</div>
@@ -513,7 +517,7 @@
         <div class="search-input-wrap">
           ${Icons.search}
           <input type="search" class="form-input search-input" id="topbar-search-input"
-            placeholder="Search ${currentRole === 'hod' ? 'department classes, faculty mentors, cohorts…' : 'students, cohorts, feedback…'}"
+            placeholder="${searchPlaceholder}"
             aria-label="Search" oninput="AscendApp.handleTopSearch(this.value)">
         </div>
       </div>` : ''}
@@ -532,18 +536,25 @@
   /* ── Google-style Topbar Search Handler ──────────────────── */
   function handleTopSearch(query) {
     const q = (query || '').trim();
-    if (currentRole === 'hod') {
-      if (currentView !== 'hod-classes' && q.length > 0) {
-        navigate('hod-classes');
-      }
-      const clsSearch = document.getElementById('class-search-input');
-      if (clsSearch) {
-        clsSearch.value = q;
-        if (window.HODViews && window.HODViews.onClassesFilterChange) {
-          window.HODViews.onClassesFilterChange();
+    if (currentRole === 'admin') {
+      if (window.AdminViews) {
+        if (currentView === 'admin-projects') {
+          window.AdminViews.onProjectSearch && window.AdminViews.onProjectSearch(q);
+        } else if (currentView === 'admin-achievements') {
+          window.AdminViews.onAchievementSearch && window.AdminViews.onAchievementSearch(q);
+        } else if (currentView === 'admin-faculty') {
+          window.AdminViews.onFacultySearch && window.AdminViews.onFacultySearch(q);
+        } else if (currentView === 'admin-students') {
+          window.AdminViews.onStudentSearch && window.AdminViews.onStudentSearch(q);
+        } else if (currentView === 'admin-users') {
+          window.AdminViews.onUserSearch && window.AdminViews.onUserSearch(q);
+        } else {
+          window.AdminViews.onGlobalSearch && window.AdminViews.onGlobalSearch(q);
         }
       }
-    } else if (currentRole === 'student') {
+      return;
+    }
+    if (currentRole === 'student') {
       if (currentView !== 'achievements' && q.length > 0) {
         navigate('achievements');
       }
@@ -603,15 +614,15 @@
         </div>
       </div>
       <div class="account-dropdown-divider"></div>
-      <button class="account-dropdown-item" onclick="AscendApp.navigate('${currentRole === 'hod' ? 'hod-settings' : 'settings'}');document.querySelector('.account-dropdown')?.remove();">
-        ${Icons.settings} ${currentRole === 'hod' ? 'Department Settings' : (currentRole === 'faculty' ? 'Faculty Settings' : 'Settings')}
+      <button class="account-dropdown-item" onclick="AscendApp.navigate('settings');document.querySelector('.account-dropdown')?.remove();">
+        ${Icons.settings} ${currentRole === 'admin' ? 'Admin Settings' : (currentRole === 'faculty' ? 'Faculty Settings' : 'Settings')}
       </button>
-      ${currentRole === 'student' ? `
+      ${currentRole === 'admin' ? `
+      <button class="account-dropdown-item" onclick="AscendApp.navigate('admin-dashboard');document.querySelector('.account-dropdown')?.remove();">
+        ${Icons.grid} Academic Oversight
+      </button>` : (currentRole === 'student' ? `
       <button class="account-dropdown-item" onclick="AscendApp.navigate('profile');document.querySelector('.account-dropdown')?.remove();">
         ${Icons.user} My Profile
-      </button>` : (currentRole === 'hod' ? `
-      <button class="account-dropdown-item" onclick="AscendApp.navigate('hod-dashboard');document.querySelector('.account-dropdown')?.remove();">
-        ${Icons.grid || Icons.home} Department Dashboard
       </button>` : `
       <button class="account-dropdown-item" onclick="AscendApp.navigate('faculty-dashboard');document.querySelector('.account-dropdown')?.remove();">
         ${Icons.home} Faculty Dashboard
@@ -654,17 +665,7 @@
       }
     }
 
-    if (hash === 'admin' || hash === 'admin-dashboard') {
-      navigate('hod-dashboard');
-      return;
-    }
-
-    if (currentRole === 'hod' && hash === 'settings') {
-      navigate('hod-settings');
-      return;
-    }
-
-    const defaultView = (currentRole === 'hod') ? 'hod-dashboard' : ((currentRole === 'faculty') ? 'faculty-dashboard' : 'dashboard');
+    const defaultView = (currentRole === 'admin') ? 'admin-dashboard' : ((currentRole === 'faculty') ? 'faculty-dashboard' : 'dashboard');
     const targetView = (hash && routes[hash]) ? hash : defaultView;
 
     // Render whenever view changes OR if content area still displays placeholder spinner / is unrendered
@@ -690,6 +691,8 @@
         dataLoaders.push(window.AscendData.loadStudentData(sessionUser?.id));
       } else if (currentRole === 'faculty' && window.AscendFacultyData && window.AscendFacultyData.loadFacultyData) {
         dataLoaders.push(window.AscendFacultyData.loadFacultyData());
+      } else if (currentRole === 'admin' && window.AdminViews && window.AdminViews.loadAdminData) {
+        dataLoaders.push(window.AdminViews.loadAdminData());
       }
       if (dataLoaders.length > 0) {
         await Promise.race([

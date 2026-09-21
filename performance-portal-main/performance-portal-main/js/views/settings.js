@@ -599,7 +599,7 @@ async function confirmDeactivateAccount() {
 
 /* ── Save Faculty Settings ──────────────────────────────────── */
 async function saveFacultySettings() {
-  const btn = document.getElementById('btn-save-fac-settings');
+  const btn = document.getElementById('btn-save-fac-identity') || document.getElementById('btn-save-fac-settings');
   const name = document.getElementById('fac-name')?.value?.trim();
   const title = document.getElementById('fac-title')?.value?.trim();
   const designation = document.getElementById('fac-designation')?.value?.trim();
@@ -627,13 +627,15 @@ async function saveFacultySettings() {
       designation: designation || 'Faculty Advisor',
       department: department || 'Computer Science & Engineering',
       institution: institution || 'Delhi Institute of Technology',
-      email: email || window.AscendFacultyData.facultyUser.email,
-      phone: phone || '',
-      officeLocation: office || '',
-      officeHours: hours || '',
+      email: email || (window.AscendFacultyData.facultyUser && window.AscendFacultyData.facultyUser.email),
     };
+    if (phone !== undefined) updates.phone = phone;
+    if (office !== undefined) updates.officeLocation = office;
+    if (hours !== undefined) updates.officeHours = hours;
 
-    await window.AscendFacultyData.updateFacultyProfile(updates);
+    if (window.AscendFacultyData && typeof window.AscendFacultyData.updateFacultyProfile === 'function') {
+      await window.AscendFacultyData.updateFacultyProfile(updates);
+    }
 
     // Update active user in session storage if available
     const sess = sessionStorage.getItem('ascend_user');
@@ -647,14 +649,272 @@ async function saveFacultySettings() {
       } catch (e) {}
     }
 
-    window.AscendUI.showToast('Faculty settings updated successfully.', 'success');
+    window.AscendUI.showToast('Faculty academic identity saved successfully.', 'success');
   } catch (err) {
     console.error('Failed to save faculty settings:', err);
     window.AscendUI.showToast('Failed to save faculty settings. Please try again.', 'error');
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = `${window.AscendUI.Icons.checkCircle || ''} Save Faculty Settings`;
+      btn.innerHTML = `${window.AscendUI.Icons.checkCircle || ''} Save Changes`;
+    }
+  }
+}
+
+/* ── Faculty Class Modal & Handlers ─────────────────────────── */
+function openClassModal(classId) {
+  const { Icons } = window.AscendUI;
+  const overlayId = 'faculty-class-modal-overlay';
+  const classes = window.AscendFacultyData.getClasses ? window.AscendFacultyData.getClasses() : [];
+  const facultyUser = window.AscendFacultyData.facultyUser || {};
+  const isEdit = !!classId;
+  const existing = isEdit ? classes.find(c => c.id === classId) : null;
+
+  const defaultDept = (existing && existing.department) || facultyUser.department || 'Computer Science & Engineering';
+  const defaultProg = (existing && existing.program) || 'B.Tech CSE';
+  const defaultSem  = (existing && existing.semester !== undefined) ? existing.semester : 5;
+  const defaultSec  = (existing && existing.section) || 'Section A';
+  const defaultAY   = (existing && existing.academicYear) || '2026–27';
+  const defaultName = (existing && existing.name) || '';
+  const defaultShort = (existing && existing.shortName) || '';
+
+  const modalHtml = `
+    <div class="modal settings-modal-card" style="max-width:560px;">
+      <div class="modal-header">
+        <div style="display:flex;align-items:center;gap:var(--sp-2);">
+          <span style="color:var(--c-primary);display:flex;">${Icons.users || Icons.settings}</span>
+          <span class="modal-title">${isEdit ? 'Edit Class Handled' : 'Add Class Handled'}</span>
+        </div>
+        <button class="modal-close" type="button" onclick="AscendUI.closeModal('${overlayId}')" aria-label="Close modal">${Icons.x}</button>
+      </div>
+      <form id="form-faculty-class" onsubmit="event.preventDefault(); window.FacultyViews.saveClassModal('${classId || ''}');">
+        <div class="modal-body" style="padding:var(--sp-5);display:flex;flex-direction:column;gap:var(--sp-4);">
+          <div id="fac-class-modal-error" style="display:none;padding:var(--sp-3);background:var(--c-rejected-light, #FEE2E2);color:var(--c-rejected, #DC2626);border:1px solid #FAD2CF;border-radius:var(--r-md);font-size:var(--text-xs);font-weight:500;"></div>
+
+          <div class="form-group">
+            <label class="form-label" for="inp-cls-name">Class Display Name <span style="color:var(--c-rejected);">*</span></label>
+            <input class="form-input" id="inp-cls-name" type="text" required placeholder="e.g. B.Tech CSE · Semester 5 · Section A" value="${defaultName}">
+            <div class="form-hint">The full title shown in dropdown menus and class headers.</div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="inp-cls-short">Short Code / Badge <span style="color:var(--c-rejected);">*</span></label>
+              <input class="form-input" id="inp-cls-short" type="text" required placeholder="e.g. CSE · Sem 5 · Sec A" value="${defaultShort}">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="inp-cls-prog">Degree / Programme</label>
+              <input class="form-input" id="inp-cls-prog" type="text" placeholder="e.g. B.Tech CSE" value="${defaultProg}">
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="inp-cls-dept">Department</label>
+              <input class="form-input" id="inp-cls-dept" type="text" placeholder="e.g. Computer Science &amp; Engineering" value="${defaultDept}">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="inp-cls-ay">Academic Year</label>
+              <input class="form-input" id="inp-cls-ay" type="text" placeholder="e.g. 2026–27" value="${defaultAY}">
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="inp-cls-sem">Semester</label>
+              <input class="form-input" id="inp-cls-sem" type="text" placeholder="e.g. 5 or Semester 5" value="${defaultSem}">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="inp-cls-sec">Section</label>
+              <input class="form-input" id="inp-cls-sec" type="text" placeholder="e.g. Section A" value="${defaultSec}">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer" style="padding:var(--sp-4) var(--sp-5);display:flex;justify-content:flex-end;gap:var(--sp-3);border-top:1px solid var(--c-border-subtle);">
+          <button class="btn btn-outline" type="button" onclick="AscendUI.closeModal('${overlayId}')">Cancel</button>
+          <button class="btn btn-primary" id="btn-save-fac-class" type="submit">
+            ${Icons.checkCircle || ''} ${isEdit ? 'Save Changes' : 'Add Class'}
+          </button>
+        </div>
+      </form>
+    </div>`;
+
+  ensureSettingsModalOverlay(overlayId, modalHtml);
+  window.AscendUI.openModal(overlayId);
+  setTimeout(() => document.getElementById('inp-cls-name')?.focus(), 150);
+}
+
+async function saveClassModal(classId) {
+  const overlayId = 'faculty-class-modal-overlay';
+  const name = document.getElementById('inp-cls-name')?.value?.trim();
+  const shortName = document.getElementById('inp-cls-short')?.value?.trim();
+  const program = document.getElementById('inp-cls-prog')?.value?.trim();
+  const department = document.getElementById('inp-cls-dept')?.value?.trim();
+  const academicYear = document.getElementById('inp-cls-ay')?.value?.trim();
+  const semester = document.getElementById('inp-cls-sem')?.value?.trim();
+  const section = document.getElementById('inp-cls-sec')?.value?.trim();
+  const errEl = document.getElementById('fac-class-modal-error');
+  const btn = document.getElementById('btn-save-fac-class');
+
+  if (errEl) {
+    errEl.style.display = 'none';
+    errEl.textContent = '';
+  }
+
+  if (!name || !shortName) {
+    if (errEl) {
+      errEl.textContent = 'Please provide both a Class Display Name and a Short Code.';
+      errEl.style.display = 'block';
+    } else {
+      window.AscendUI.showToast('Please provide both a Class Display Name and a Short Code.', 'error');
+    }
+    return;
+  }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner" style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 0.6s linear infinite;margin-right:6px;vertical-align:middle;"></span>Saving...';
+  }
+
+  try {
+    const classData = {
+      name,
+      shortName,
+      program: program || 'General',
+      department: department || 'Computer Science & Engineering',
+      academicYear: academicYear || '2026–27',
+      semester: semester || 1,
+      section: section || 'Section A',
+    };
+
+    if (classId) {
+      await window.AscendFacultyData.updateClass(classId, classData);
+      window.AscendUI.showToast('Class updated successfully.', 'success');
+    } else {
+      await window.AscendFacultyData.addClass(classData);
+      window.AscendUI.showToast('Class added successfully.', 'success');
+    }
+
+    window.AscendUI.closeModal(overlayId);
+    AscendApp.navigate('faculty-settings');
+  } catch (err) {
+    console.error('Failed to save class:', err);
+    if (errEl) {
+      errEl.textContent = err.message || 'Failed to save class.';
+      errEl.style.display = 'block';
+    } else {
+      window.AscendUI.showToast(err.message || 'Failed to save class.', 'error');
+    }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `${window.AscendUI.Icons.checkCircle || ''} Save`;
+    }
+  }
+}
+
+async function deleteFacultyClass(classId) {
+  if (!classId || classId === 'all') return;
+  const classes = window.AscendFacultyData.getClasses ? window.AscendFacultyData.getClasses() : [];
+  const target = classes.find(c => c.id === classId);
+  const className = target ? target.name : 'this class';
+
+  const confirmed = window.confirm(`Are you sure you want to remove "${className}" from your handled classes?`);
+  if (!confirmed) return;
+
+  try {
+    await window.AscendFacultyData.deleteClass(classId);
+    window.AscendUI.showToast('Class removed successfully.', 'success');
+    AscendApp.navigate('faculty-settings');
+  } catch (err) {
+    console.error('Failed to delete class:', err);
+    window.AscendUI.showToast(err.message || 'Failed to remove class.', 'error');
+  }
+}
+
+/* ── Faculty Change Password ────────────────────────────────── */
+async function changeFacultyPassword() {
+  const curPw = document.getElementById('fac-cur-pw')?.value;
+  const newPw = document.getElementById('fac-new-pw')?.value;
+  const confirmPw = document.getElementById('fac-confirm-pw')?.value;
+  const errEl = document.getElementById('fac-pw-error');
+  const btn = document.getElementById('btn-update-fac-pw');
+
+  if (errEl) {
+    errEl.style.display = 'none';
+    errEl.textContent = '';
+  }
+
+  if (!curPw || !newPw || !confirmPw) {
+    if (errEl) {
+      errEl.textContent = 'Please fill out all password fields.';
+      errEl.style.display = 'block';
+    } else {
+      window.AscendUI.showToast('Please fill out all password fields.', 'error');
+    }
+    return;
+  }
+
+  if (newPw.length < 6) {
+    if (errEl) {
+      errEl.textContent = 'New password must be at least 6 characters long.';
+      errEl.style.display = 'block';
+    } else {
+      window.AscendUI.showToast('New password must be at least 6 characters long.', 'error');
+    }
+    return;
+  }
+
+  if (newPw !== confirmPw) {
+    if (errEl) {
+      errEl.textContent = 'New passwords do not match. Please verify and retype.';
+      errEl.style.display = 'block';
+    } else {
+      window.AscendUI.showToast('New passwords do not match. Please verify and retype.', 'error');
+    }
+    return;
+  }
+
+  if (curPw === newPw) {
+    if (errEl) {
+      errEl.textContent = 'New password must be different from your current password.';
+      errEl.style.display = 'block';
+    } else {
+      window.AscendUI.showToast('New password must be different from your current password.', 'error');
+    }
+    return;
+  }
+
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner" style="display:inline-block;width:14px;height:14px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 0.6s linear infinite;margin-right:6px;vertical-align:middle;"></span>Updating...';
+  }
+
+  try {
+    if (window.AscendData && typeof window.AscendData.changePassword === 'function') {
+      await window.AscendData.changePassword(curPw, newPw);
+    } else {
+      await new Promise(r => setTimeout(r, 400));
+    }
+    const curInp = document.getElementById('fac-cur-pw');
+    const newInp = document.getElementById('fac-new-pw');
+    const confInp = document.getElementById('fac-confirm-pw');
+    if (curInp) curInp.value = '';
+    if (newInp) newInp.value = '';
+    if (confInp) confInp.value = '';
+    window.AscendUI.showToast('Password updated successfully!', 'success');
+  } catch (err) {
+    console.error('Password change failure:', err);
+    if (errEl) {
+      errEl.textContent = err.message || 'Incorrect current password or update failed.';
+      errEl.style.display = 'block';
+    } else {
+      window.AscendUI.showToast(err.message || 'Failed to update password.', 'error');
+    }
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = `${window.AscendUI.Icons.lock || ''} Update Password`;
     }
   }
 }
@@ -854,11 +1114,11 @@ function renderFacultySettings() {
       <div style="margin-bottom:var(--sp-8);">
         <h1 style="font-size:var(--text-2xl);font-weight:700;letter-spacing:-0.025em;color:var(--c-text);margin:0;">Faculty Settings</h1>
         <div style="font-size:var(--text-sm);color:var(--c-text-2);margin-top:4px;">
-          Manage academic identity, office contact info, notification preferences, and assigned-cohort defaults.
+          Manage academic identity, notification preferences, and account security.
         </div>
       </div>
 
-      <!-- 1. Faculty Identity & Department -->
+      <!-- 1. Academic Identity & Department -->
       <div class="card" style="margin-bottom:var(--sp-5);">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-5);">
           <div>
@@ -867,7 +1127,7 @@ function renderFacultySettings() {
           </div>
           <span class="badge badge-primary" style="font-size:11px;">Faculty / Mentor</span>
         </div>
-        <div style="display:flex;flex-direction:column;gap:var(--sp-4);">
+        <form onsubmit="event.preventDefault(); window.FacultyViews.saveFacultySettings();" style="display:flex;flex-direction:column;gap:var(--sp-4);">
           <div class="form-row-2">
             <div class="form-group">
               <label class="form-label" for="fac-name">Full Name <span style="color:var(--c-rejected);">*</span></label>
@@ -898,36 +1158,59 @@ function renderFacultySettings() {
               <input class="form-input" id="fac-inst" type="text" value="${facultyUser.institution || 'Delhi Institute of Technology'}">
             </div>
           </div>
-        </div>
+          <div class="form-group">
+            <label class="form-label" for="fac-email">Institutional Email Address</label>
+            <input class="form-input" id="fac-email" type="email" value="${facultyUser.email || ''}">
+          </div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;gap:var(--sp-3);padding-top:var(--sp-4);border-top:1px solid var(--c-border-subtle);margin-top:var(--sp-2);">
+            <button class="btn btn-outline btn-sm" type="button" onclick="AscendApp.navigate('faculty-dashboard')">Cancel</button>
+            <button class="btn btn-primary btn-sm" id="btn-save-fac-identity" type="submit">
+              ${Icons.checkCircle || ''} Save Changes
+            </button>
+          </div>
+        </form>
       </div>
 
-      <!-- 2. Contact & Office Information -->
+      <!-- 2. Classes Handled -->
       <div class="card" style="margin-bottom:var(--sp-5);">
-        <div style="margin-bottom:var(--sp-5);">
-          <div style="font-size:var(--text-base);font-weight:700;color:var(--c-text);">Contact Information &amp; Office Hours</div>
-          <div style="font-size:var(--text-xs);color:var(--c-text-2);margin-top:2px;">Displayed to your assigned students for advising and feedback requests</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-4);flex-wrap:wrap;gap:var(--sp-3);">
+          <div>
+            <div style="font-size:var(--text-base);font-weight:700;color:var(--c-text);">Classes Handled</div>
+            <div style="font-size:var(--text-xs);color:var(--c-text-2);margin-top:2px;">
+              Manage the batches, semesters, and sections you teach or advise. These populate class selection dropdowns across the portal.
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" type="button" onclick="window.FacultyViews.openClassModal()">
+            ${Icons.plus || '+'} Add Class Handled
+          </button>
         </div>
-        <div style="display:flex;flex-direction:column;gap:var(--sp-4);">
-          <div class="form-row-2">
-            <div class="form-group">
-              <label class="form-label" for="fac-email">Institutional Email Address</label>
-              <input class="form-input" id="fac-email" type="email" value="${facultyUser.email || ''}">
+
+        <div id="faculty-classes-list" style="display:flex;flex-direction:column;gap:var(--sp-3);">
+          ${classes.filter(c => c.id !== 'all').length === 0 ? `
+            <div style="padding:var(--sp-4);text-align:center;color:var(--c-text-3);font-size:var(--text-xs);border:1px dashed var(--c-border);border-radius:var(--r-md);">
+              No specific classes added yet. Click &quot;Add Class Handled&quot; above to add your assigned batches.
             </div>
-            <div class="form-group">
-              <label class="form-label" for="fac-phone">Direct Phone / Campus Extension</label>
-              <input class="form-input" id="fac-phone" type="text" value="${facultyUser.phone || '+91 11 2345 6789 (Ext. 412)'}">
+          ` : classes.filter(c => c.id !== 'all').map(c => `
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:var(--sp-3) var(--sp-4);border:1px solid var(--c-border);border-radius:var(--r-md);background:var(--c-bg-subtle, var(--c-bg));flex-wrap:wrap;gap:var(--sp-3);">
+              <div style="min-width:0;flex:1;">
+                <div style="display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap;">
+                  <span style="font-weight:700;font-size:var(--text-sm);color:var(--c-text);">${c.name}</span>
+                  <span class="badge badge-normal" style="font-size:11px;font-weight:600;">${c.shortName || c.name}</span>
+                </div>
+                <div style="font-size:var(--text-xs);color:var(--c-text-2);margin-top:3px;">
+                  ${c.department || facultyUser.department || ''} &bull; ${c.program || ''} &bull; Sem ${c.semester || ''} &bull; ${c.section || ''} &bull; AY ${c.academicYear || '2026–27'}
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:var(--sp-2);">
+                <button class="btn btn-outline btn-sm" type="button" onclick="window.FacultyViews.openClassModal('${c.id}')" style="font-size:var(--text-xs);">
+                  ${Icons.edit || ''} Edit
+                </button>
+                <button class="btn btn-ghost btn-sm" type="button" onclick="window.FacultyViews.deleteClass('${c.id}')" style="font-size:var(--text-xs);color:var(--c-rejected);" aria-label="Delete class">
+                  ${Icons.trash || ''} Delete
+                </button>
+              </div>
             </div>
-          </div>
-          <div class="form-row-2">
-            <div class="form-group">
-              <label class="form-label" for="fac-office">Campus Office Location</label>
-              <input class="form-input" id="fac-office" type="text" value="${facultyUser.officeLocation || 'Room 412, Turing Block, CSE Department'}">
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="fac-hours">Advising Office Hours</label>
-              <input class="form-input" id="fac-hours" type="text" value="${facultyUser.officeHours || 'Mon & Wed 2:00 PM – 4:30 PM (or by appointment)'}">
-            </div>
-          </div>
+          `).join('')}
         </div>
       </div>
 
@@ -952,42 +1235,50 @@ function renderFacultySettings() {
         </div>
       </div>
 
-      <!-- 4. Assigned-Class Preferences -->
+      <!-- 4. Change Password -->
       <div class="card" style="margin-bottom:var(--sp-6);">
-        <div style="margin-bottom:var(--sp-5);">
-          <div style="font-size:var(--text-base);font-weight:700;color:var(--c-text);">Assigned-Class Preferences</div>
-          <div style="font-size:var(--text-xs);color:var(--c-text-2);margin-top:2px;">Cohort defaults and class-level oversight preferences</div>
+        <div style="margin-bottom:var(--sp-4);">
+          <div style="font-size:var(--text-base);font-weight:700;color:var(--c-text);">Change Password</div>
+          <div style="font-size:var(--text-xs);color:var(--c-text-2);margin-top:2px;">Update your password to keep your academic account secure</div>
         </div>
-        <div style="display:flex;flex-direction:column;gap:var(--sp-4);">
+        <div id="fac-pw-error" style="display:none;padding:var(--sp-3);background:var(--c-rejected-bg, #FEE2E2);border:1px solid var(--c-rejected-border, #FCA5A5);color:var(--c-rejected, #DC2626);border-radius:var(--r-md);font-size:var(--text-xs);margin-bottom:var(--sp-4);"></div>
+        <form onsubmit="event.preventDefault(); window.FacultyViews.changePassword();" style="display:flex;flex-direction:column;gap:var(--sp-4);">
           <div class="form-group">
-            <label class="form-label" for="fac-default-class">Default Active Class on Login</label>
-            <select class="form-input form-select" id="fac-default-class"
-              onchange="window.AscendFacultyData.setSelectedClass(this.value);AscendUI.showToast('Default active class updated.','success');">
-              ${classes.map(c => `<option value="${c.id}" ${c.id === selectedClassId ? 'selected' : ''}>${c.name} (${c.studentCount} students)</option>`).join('')}
-            </select>
-            <div class="form-hint">The Faculty Dashboard, Students Directory, and Feedback Hub will default to this cohort.</div>
-          </div>
-          <div style="padding:var(--sp-3) var(--sp-4);background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--r-md);">
-            <div style="font-size:var(--text-xs);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--c-text-2);margin-bottom:var(--sp-2);">
-              Currently Assigned Cohorts
-            </div>
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              ${classes.filter(c => c.id !== 'all').map(c => `
-                <div style="display:flex;align-items:center;justify-content:space-between;font-size:var(--text-xs);color:var(--c-text-2);">
-                  <span style="font-weight:500;">${c.name}</span>
-                  <span class="badge badge-normal" style="font-size:10px;">${c.studentCount} students</span>
-                </div>`).join('')}
+            <label class="form-label" for="fac-cur-pw">Current Password <span style="color:var(--c-rejected);">*</span></label>
+            <div style="position:relative;">
+              <input class="form-input" id="fac-cur-pw" type="password" required autocomplete="current-password" placeholder="Enter your current password" style="padding-right:40px;">
+              <button type="button" onclick="window.AscendViews.togglePasswordVisibility('fac-cur-pw', this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--c-text-3);padding:4px;" aria-label="Toggle password visibility">
+                ${Icons.eye}
+              </button>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Save Button -->
-      <div style="display:flex;align-items:center;justify-content:flex-end;gap:var(--sp-3);">
-        <button class="btn btn-outline" onclick="AscendApp.navigate('faculty-dashboard')">Cancel</button>
-        <button class="btn btn-primary" id="btn-save-fac-settings" onclick="window.FacultyViews.saveFacultySettings()">
-          ${Icons.checkCircle || ''} Save Faculty Settings
-        </button>
+          <div class="form-row-2">
+            <div class="form-group">
+              <label class="form-label" for="fac-new-pw">New Password <span style="color:var(--c-rejected);">*</span></label>
+              <div style="position:relative;">
+                <input class="form-input" id="fac-new-pw" type="password" required autocomplete="new-password" minlength="6" placeholder="At least 6 characters" style="padding-right:40px;">
+                <button type="button" onclick="window.AscendViews.togglePasswordVisibility('fac-new-pw', this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--c-text-3);padding:4px;" aria-label="Toggle password visibility">
+                  ${Icons.eye}
+                </button>
+              </div>
+              <div class="form-hint">Must be at least 6 characters long and different from current password.</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="fac-confirm-pw">Confirm New Password <span style="color:var(--c-rejected);">*</span></label>
+              <div style="position:relative;">
+                <input class="form-input" id="fac-confirm-pw" type="password" required autocomplete="new-password" placeholder="Re-enter new password" style="padding-right:40px;">
+                <button type="button" onclick="window.AscendViews.togglePasswordVisibility('fac-confirm-pw', this)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--c-text-3);padding:4px;" aria-label="Toggle password visibility">
+                  ${Icons.eye}
+                </button>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:flex-end;gap:var(--sp-3);padding-top:var(--sp-2);">
+            <button class="btn btn-primary btn-sm" id="btn-update-fac-pw" type="submit">
+              ${Icons.lock || ''} Update Password
+            </button>
+          </div>
+        </form>
       </div>
     </div>`;
 }
@@ -1010,6 +1301,11 @@ window.AscendViews.ascendToggleSwitch = ascendToggleSwitch;
 window.FacultyViews = window.FacultyViews || {};
 window.FacultyViews.settings = renderFacultySettings;
 window.FacultyViews.saveFacultySettings = saveFacultySettings;
+window.FacultyViews.changePassword = changeFacultyPassword;
+window.FacultyViews.togglePasswordVisibility = togglePasswordVisibility;
+window.FacultyViews.openClassModal = openClassModal;
+window.FacultyViews.saveClassModal = saveClassModal;
+window.FacultyViews.deleteClass = deleteFacultyClass;
 
 /* ── Expose toggle helper globally for onclick attributes ───── */
 window.ascendToggleSwitch = ascendToggleSwitch;

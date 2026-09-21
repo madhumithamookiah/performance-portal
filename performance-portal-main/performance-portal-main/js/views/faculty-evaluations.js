@@ -81,19 +81,14 @@ function renderFacultyEvaluations() {
     </div>
 
     <!-- Summary Metrics Row (Zero arbitrary automated quality scores) -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-4);margin-bottom:var(--sp-6);" class="faculty-grid-4">
-      <div class="metric-card" style="--metric-accent:var(--c-primary);">
-        <div class="metric-number">${evaluations.length}</div>
-        <div class="metric-label">Total Evaluations Recorded</div>
-        <div class="metric-change">Assigned student cohorts</div>
-      </div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--sp-4);margin-bottom:var(--sp-6);" class="faculty-grid-4">
       <div class="metric-card" style="--metric-accent:var(--c-verified);">
-        <div class="metric-number" style="color:var(--c-verified);">${publishedEvals.length}</div>
+        <div class="metric-number" id="eval-metric-published" style="color:var(--c-verified);">${publishedEvals.length}</div>
         <div class="metric-label">Published to Students</div>
         <div class="metric-change">Visible in student portals</div>
       </div>
       <div class="metric-card" style="--metric-accent:#2563EB;">
-        <div class="metric-number" style="color:#2563EB;">${draftEvals.length}</div>
+        <div class="metric-number" id="eval-metric-draft" style="color:#2563EB;">${draftEvals.length}</div>
         <div class="metric-label">Drafts in Progress</div>
         <div class="metric-change">Private faculty notes</div>
       </div>
@@ -167,6 +162,9 @@ function renderEvaluationsList(evals) {
           </span>
           <button class="btn btn-outline btn-sm" onclick="FacultyViews.openEditEvalModal('${ev.id}')">
             ${ev.status === 'draft' ? 'Edit Draft' : 'View / Edit'}
+          </button>
+          <button class="btn btn-ghost btn-sm" style="color:var(--c-rejected);border:1px solid var(--c-border);" onclick="FacultyViews.deleteEvaluation('${ev.id}', '${ev.studentId}')" title="Delete Evaluation">
+            ${Icons.trash} Delete
           </button>
         </div>
       </div>
@@ -356,8 +354,14 @@ function renderEvalFormModal(state) {
     </div>
 
     <!-- Modal Footer Actions: Save as Draft & Publish Evaluation -->
-    <div class="modal-footer" style="justify-content:space-between;">
-      <button class="btn btn-ghost" onclick="AscendUI.closeModal('eval-form-modal')">Cancel</button>
+    <div class="modal-footer" style="justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
+      <div style="display:flex;align-items:center;gap:var(--sp-2);">
+        <button class="btn btn-ghost" onclick="AscendUI.closeModal('eval-form-modal')">Cancel</button>
+        ${!state.isNew ? `
+        <button class="btn btn-ghost btn-sm" style="color:var(--c-rejected);border:1px solid var(--c-border);" onclick="FacultyViews.deleteEvaluation('${state.evalId}', '${state.studentId}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="margin-right:4px;"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>Delete Evaluation
+        </button>` : ''}
+      </div>
       <div style="display:flex;gap:var(--sp-3);">
         <button class="btn btn-outline" onclick="FacultyViews.saveRubricEvaluation('${state.evalId || ''}', false)">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save Draft
@@ -474,6 +478,37 @@ function saveRubricEvaluation(evalId, isPublish) {
   }
 }
 
+/* ── Delete Evaluation Action Handler ────────────────────────── */
+function deleteEvaluation(evalId, studentId) {
+  const evals = window.AscendFacultyData.evaluations;
+  const item = evals.find(e => e.id === evalId);
+  const studentName = item ? item.studentName : 'this student';
+
+  AscendUI.confirmDialog({
+    title: 'Delete Evaluation',
+    message: `Are you sure you want to delete this evaluation for <strong>${studentName}</strong>? This action cannot be undone.`,
+    confirmLabel: 'Delete',
+    danger: true,
+    onConfirm: async () => {
+      await window.AscendFacultyData.deleteEvaluation(evalId);
+      AscendUI.closeModal('eval-form-modal');
+      AscendUI.showToast('Evaluation deleted.', 'info');
+      filterEvaluations();
+
+      const pubEl = document.getElementById('eval-metric-published');
+      const draftEl = document.getElementById('eval-metric-draft');
+      if (pubEl) pubEl.textContent = window.AscendFacultyData.evaluations.filter(e => e.status === 'published').length;
+      if (draftEl) draftEl.textContent = window.AscendFacultyData.evaluations.filter(e => e.status === 'draft').length;
+
+      // If student detail evaluations tab is active
+      const detailTabEvals = document.getElementById('fsd-tab-evaluations');
+      if (detailTabEvals && typeof FacultyViews.openStudentDetail === 'function') {
+        FacultyViews.openStudentDetail(studentId || (item ? item.studentId : window._facultySelectedStudentId), 'evaluations');
+      }
+    },
+  });
+}
+
 window.FacultyViews = window.FacultyViews || {};
 Object.assign(window.FacultyViews, {
   evaluations: renderFacultyEvaluations,
@@ -483,4 +518,5 @@ Object.assign(window.FacultyViews, {
   selectRubricLevel,
   updateEvalFormStudent,
   saveRubricEvaluation,
+  deleteEvaluation,
 });

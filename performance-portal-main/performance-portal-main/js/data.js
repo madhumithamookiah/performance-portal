@@ -50,6 +50,7 @@
     portfolioInsights: { views: 0, downloads: 0, shares: 0 },
     goals: [],
     feedback: [],
+    evaluations: [],
     activity: [],
     monthlyData: [0, 0, 0, 0, 0, 0],
     profileChecklist: [],
@@ -73,6 +74,7 @@
         this.portfolioInsights = data.portfolioInsights || this.portfolioInsights;
         this.goals = Array.isArray(data.goals) ? data.goals : [];
         this.feedback = Array.isArray(data.feedback) ? data.feedback : [];
+        this.evaluations = Array.isArray(data.evaluations) ? data.evaluations : [];
         this.activity = Array.isArray(data.activity) ? data.activity : [];
         this.monthlyData = Array.isArray(data.monthlyData) ? data.monthlyData : [0, 0, 0, 0, 0, 0];
         this.profileChecklist = Array.isArray(data.profileChecklist) ? data.profileChecklist : [];
@@ -85,6 +87,7 @@
         return this;
       }
     },
+
 
     // Dynamic Persistence APIs
     async saveAchievement(ach) {
@@ -152,6 +155,105 @@
       } catch (e) {
         console.error('Failed to sync profile update to server:', e);
       }
+    },
+
+    async changePassword(currentPassword, newPassword) {
+      try {
+        const res = await fetch('/api/auth/change-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: this.student.id,
+            currentPassword,
+            newPassword,
+          }),
+        });
+        const result = await res.json();
+        if (!res.ok) {
+          throw new Error(result.error || 'Failed to change password.');
+        }
+        return result;
+      } catch (e) {
+        console.error('Password change error:', e);
+        throw e;
+      }
+    },
+
+    exportPortfolioArchive() {
+      const student = this.student || {};
+      const achievements = this.achievements || [];
+      const projects = this.projects || [];
+      const skills = this.skills || {};
+      const publicPortfolio = this.publicPortfolio || {};
+      const portfolioInsights = this.portfolioInsights || {};
+
+      const archiveData = {
+        metadata: {
+          exportVersion: '2.0',
+          exportedAt: new Date().toISOString(),
+          system: 'Ascend Performance Portal',
+        },
+        student: {
+          id: student.id,
+          name: student.name,
+          email: student.email,
+          institution: student.institution,
+          department: student.department,
+          degree: student.degree,
+          year: student.year,
+          graduationYear: student.graduationYear,
+          rollNumber: student.rollNumber,
+          bio: student.bio,
+          careerInterests: student.careerInterests,
+          linkedIn: student.linkedIn,
+          github: student.github,
+          portfolio: student.portfolio,
+          profileStrength: student.profileStrength,
+          twoFactorEnabled: !!student.twoFactorEnabled,
+          notificationPreferences: student.notificationPreferences || {},
+        },
+        achievements: achievements.map(a => ({
+          id: a.id,
+          title: a.title,
+          category: a.category,
+          organization: a.organization,
+          date: a.date,
+          skills: a.skills,
+          description: a.description,
+          proofLink: a.proofLink,
+          verified: true,
+        })),
+        projects: projects.map(p => ({
+          id: p.id,
+          title: p.title,
+          category: p.category,
+          description: p.description,
+          skills: p.skills,
+          liveUrl: p.liveUrl,
+          repoUrl: p.repoUrl,
+          date: p.date,
+          isPublic: p.isPublic !== false,
+        })),
+        skills,
+        publicPortfolio,
+        portfolioInsights,
+      };
+
+      const jsonStr = JSON.stringify(archiveData, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const slug = (student.name || 'student').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      const dateStr = new Date().toISOString().split('T')[0];
+      const filename = `ascend-portfolio-${slug}-${dateStr}.json`;
+
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+
+      return filename;
     },
   };
 

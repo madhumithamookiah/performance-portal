@@ -149,19 +149,6 @@
       background: var(--c-border-subtle);
     }
 
-    .demo-banner {
-      padding: 14px 16px;
-      background: var(--c-primary-xlight);
-      border: 1px solid #D2E3FC;
-      border-radius: var(--r-md);
-      font-size: var(--text-xs);
-      color: var(--c-text-2);
-      display: flex;
-      align-items: flex-start;
-      gap: var(--sp-2);
-    }
-    .demo-banner strong { color: var(--c-primary); }
-
     .password-wrap { position: relative; }
     .password-wrap input { padding-right: 46px; }
     .password-toggle {
@@ -262,7 +249,6 @@
     }
     @media (max-width: 360px) {
       .auth-panel-right { padding: var(--sp-4) var(--sp-3); }
-      .demo-banner button { flex: 1 1 100%; }
     }
   </style>
 </head>
@@ -313,8 +299,8 @@
     </div>
     <div class="auth-quote">
       <div class="auth-quote-text">"Ascend gave me a way to showcase my work beyond just grades. The projects and achievements in my portfolio helped me land my first internship at a top company."</div>
-      <div class="auth-quote-author">Aarav Sharma</div>
-      <div class="auth-quote-role">B.Tech CSE · Delhi Institute of Technology</div>
+      <div class="auth-quote-author">Ascend Graduate</div>
+      <div class="auth-quote-role">Computer Science Alumni</div>
     </div>
   </div>
 
@@ -334,28 +320,6 @@
       <div class="auth-tabs" id="auth-tabs" role="tablist">
         <button type="button" class="auth-tab active" id="tab-signin" role="tab" aria-selected="true" aria-controls="form-signin" onclick="switchTab('signin')">Sign in</button>
         <button type="button" class="auth-tab" id="tab-register" role="tab" aria-selected="false" aria-controls="form-register" onclick="switchTab('register')">Create account</button>
-      </div>
-
-      <!-- Quick Prototype Demo Sign-In Shortcuts (shown on signin tab) -->
-      <div id="demo-signin-card" style="margin-bottom:var(--sp-4);padding:12px 14px;background:#F8FAFD;border:1px solid #D2E3FC;border-radius:var(--r-md);">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--c-primary);margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
-          Quick Demo Sign-In (Prototype)
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;">
-          <button type="button" class="btn btn-outline btn-sm" style="font-size:11px;padding:8px;text-align:left;display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:#fff;" onclick="quickDemoLogin('aarav.sharma@university.edu','demo1234')">
-            <strong style="color:var(--c-text);font-size:11px;">Student</strong>
-            <span style="color:var(--c-text-3);font-size:10px;">Aarav S.</span>
-          </button>
-          <button type="button" class="btn btn-outline btn-sm" style="font-size:11px;padding:8px;text-align:left;display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:#fff;" onclick="quickDemoLogin('dr.mehta@university.edu','faculty123')">
-            <strong style="color:var(--c-text);font-size:11px;">Faculty</strong>
-            <span style="color:var(--c-text-3);font-size:10px;">Dr. Mehta</span>
-          </button>
-          <button type="button" class="btn btn-outline btn-sm" style="font-size:11px;padding:8px;text-align:left;display:flex;flex-direction:column;align-items:flex-start;gap:2px;background:#fff;" onclick="quickDemoLogin('hod.cse@university.edu','hod12345')">
-            <strong style="color:var(--c-primary);font-size:11px;">HOD</strong>
-            <span style="color:var(--c-text-3);font-size:10px;">Prof. Rao</span>
-          </button>
-        </div>
       </div>
 
       <!-- ── Sign In Form ── -->
@@ -396,7 +360,70 @@
         <button type="button" class="btn btn-outline btn-full" onclick="switchTab('register')">
           Create a new account
         </button>
+        <div style="margin-top:var(--sp-4);padding-top:var(--sp-3);border-top:1px dashed var(--c-border);text-align:center;">
+          <button type="button" class="btn btn-full" onclick="switchTab('admin')" id="login-as-admin-opt" style="background:#E8F0FE;border:1px solid #C2D8FF;color:#1A73E8;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:var(--r-full);font-size:var(--text-sm);transition:all 0.15s ease;cursor:pointer;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Login as Admin
+          </button>
+        </div>
+
       </form>
+
+      <!-- ── Admin Sign In Form ── -->
+      <form class="auth-form" id="form-admin-signin" onsubmit="handleAdminSignIn(event)" novalidate autocomplete="on">
+        <div style="margin-bottom:var(--sp-4);padding:14px 16px;background:linear-gradient(135deg,#E8F0FE 0%,#D2E3FC 100%);border:1px solid #C2D8FF;border-radius:var(--r-md);display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="width:34px;height:34px;border-radius:50%;background:#1A73E8;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div>
+              <div style="font-weight:700;font-size:14px;color:#1557B0;">Admin Portal Login</div>
+              <div style="font-size:12px;color:#1A73E8;">Institutional academic oversight</div>
+            </div>
+          </div>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="switchTab('signin')" style="font-size:12px;color:#1A73E8;padding:4px 8px;">
+            &larr; Standard Login
+          </button>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="admin-signin-email">Admin Email ID</label>
+          <input class="form-input" id="admin-signin-email" type="email" name="email"
+            placeholder="admin@ascend.com" autocomplete="email" required>
+          <div class="form-error" id="admin-signin-email-err" style="display:none;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Please enter a valid administrator email.
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="admin-signin-password">Admin Password</label>
+          <div class="password-wrap">
+            <input class="form-input" id="admin-signin-password" type="password" name="password"
+              placeholder="Enter admin password" autocomplete="current-password" required>
+            <button type="button" class="password-toggle" onclick="togglePassword('admin-signin-password', this)" aria-label="Show/hide password">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <div class="form-error" id="admin-signin-pass-err" style="display:none;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Incorrect email or password.
+          </div>
+        </div>
+        <div class="auth-options-row">
+          <label style="display:flex;align-items:center;gap:8px;font-size:var(--text-sm);cursor:pointer;min-height:36px;">
+            <input type="checkbox" style="accent-color:#1A73E8;width:16px;height:16px;" checked> Remember this device
+          </label>
+          <span style="font-size:12px;color:var(--c-text-3);">Restricted access</span>
+        </div>
+        <button type="submit" class="btn btn-full btn-lg" id="admin-signin-btn" style="background:#1A73E8;color:#fff;border-color:#1A73E8;">
+          Sign in as Admin
+        </button>
+        <div class="auth-divider">or</div>
+        <button type="button" class="btn btn-outline btn-full" onclick="switchTab('signin')">
+          Back to Student &amp; Faculty Sign In
+        </button>
+      </form>
+
 
       <!-- ── Register Form ── -->
       <form class="auth-form" id="form-register" onsubmit="handleRegister(event)" novalidate autocomplete="on">
@@ -406,7 +433,7 @@
             <span>Account Role <span class="required">*</span></span>
             <span id="role-badge" style="font-size:11px;font-weight:600;color:var(--c-primary);background:#E8F0FE;padding:2px 8px;border-radius:12px;">Student Account</span>
           </label>
-          <div class="role-grid">
+          <div class="role-grid" style="grid-template-columns:repeat(2, 1fr);">
             <label class="role-card active" id="role-card-student" onclick="selectRole('student')">
               <input type="radio" name="reg-role" value="student" checked>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--c-primary);"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
@@ -419,18 +446,12 @@
               <span class="role-card-title">Faculty</span>
               <span class="role-card-desc">Mentor / Advisor</span>
             </label>
-            <label class="role-card" id="role-card-hod" onclick="selectRole('hod')">
-              <input type="radio" name="reg-role" value="hod">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--c-text-2);"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-              <span class="role-card-title">HOD</span>
-              <span class="role-card-desc">Dept Coordinator</span>
-            </label>
           </div>
         </div>
 
         <div class="form-group">
           <label class="form-label" for="reg-fullname">Full name <span class="required">*</span></label>
-          <input class="form-input" id="reg-fullname" type="text" placeholder="e.g. Aarav Sharma" autocomplete="name" required aria-required="true">
+          <input class="form-input" id="reg-fullname" type="text" placeholder="e.g. Alex Morgan" autocomplete="name" required aria-required="true">
           <div class="form-error" id="err-fullname" style="display:none;" role="alert">Please enter your full name.</div>
         </div>
         <div class="form-group">
@@ -487,7 +508,7 @@
             <div class="form-error" id="err-degree" style="display:none;" role="alert">Please enter your course / degree.</div>
           </div>
 
-          <!-- Designation field (Faculty & HOD only) -->
+          <!-- Designation field (Faculty only) -->
           <div class="form-group" id="field-designation" style="display:none;">
             <label class="form-label" for="reg-designation">Designation / Role Title <span class="required">*</span></label>
             <input class="form-input" id="reg-designation" type="text" list="designation-presets" placeholder="e.g. Associate Professor & Faculty Advisor">
@@ -628,7 +649,7 @@
 
   function selectRole(role) {
     currentSelectedRole = role;
-    const roles = ['student', 'faculty', 'hod'];
+    const roles = ['student', 'faculty'];
     roles.forEach(r => {
       const card = document.getElementById(`role-card-${r}`);
       const isSelected = (r === role);
@@ -641,7 +662,7 @@
 
     const badge = document.getElementById('role-badge');
     if (badge) {
-      badge.textContent = role === 'hod' ? 'HOD Account' : (role === 'faculty' ? 'Faculty Account' : 'Student Account');
+      badge.textContent = role === 'faculty' ? 'Faculty Account' : 'Student Account';
     }
 
     const secTitle = document.getElementById('role-sec-title');
@@ -670,16 +691,6 @@
       if (idInput) idInput.placeholder = 'e.g. FAC-CSE-042';
       const desigInput = document.getElementById('reg-designation');
       if (desigInput && !desigInput.value) desigInput.value = 'Associate Professor & Faculty Advisor';
-    } else if (role === 'hod') {
-      if (secTitle) secTitle.textContent = 'Department Leadership Details';
-      if (secSub) secSub.textContent = 'Used for department oversight';
-      if (fieldDegree) fieldDegree.style.display = 'none';
-      if (fieldDesignation) fieldDesignation.style.display = 'block';
-      if (fieldYears) fieldYears.style.display = 'none';
-      if (idLabel) idLabel.innerHTML = 'HOD / Faculty Code <span style="font-size:11px;color:var(--c-text-3);font-weight:normal;">(optional)</span>';
-      if (idInput) idInput.placeholder = 'e.g. HOD-CSE-001';
-      const desigInput = document.getElementById('reg-designation');
-      if (desigInput) desigInput.value = 'Head of Department & Coordinator';
     }
   }
 
@@ -688,30 +699,45 @@
 
   function switchTab(tab) {
     document.getElementById('verification-pending-card').style.display = 'none';
-    document.getElementById('auth-tabs').style.display = 'flex';
-    document.getElementById('form-signin').classList.toggle('active', tab === 'signin');
-    document.getElementById('form-register').classList.toggle('active', tab === 'register');
+    const tabsContainer = document.getElementById('auth-tabs');
+    const formSignin = document.getElementById('form-signin');
+    const formRegister = document.getElementById('form-register');
+    const formAdmin = document.getElementById('form-admin-signin');
     const signinTab = document.getElementById('tab-signin');
     const registerTab = document.getElementById('tab-register');
-    signinTab.classList.toggle('active', tab === 'signin');
-    signinTab.setAttribute('aria-selected', tab === 'signin' ? 'true' : 'false');
-    registerTab.classList.toggle('active', tab === 'register');
-    registerTab.setAttribute('aria-selected', tab === 'register' ? 'true' : 'false');
-    const demoCard = document.getElementById('demo-signin-card');
-    if (demoCard) demoCard.style.display = tab === 'signin' ? 'block' : 'none';
-  }
 
-  function quickDemoLogin(email, password) {
-    switchTab('signin');
-    const emailEl = document.getElementById('signin-email');
-    const passEl = document.getElementById('signin-password');
-    if (emailEl && passEl) {
-      emailEl.value = email;
-      passEl.value = password;
-      const form = document.getElementById('form-signin');
-      if (form) {
-        form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+    if (tab === 'admin') {
+      if (tabsContainer) tabsContainer.style.display = 'none';
+      if (formSignin) formSignin.classList.remove('active');
+      if (formRegister) formRegister.classList.remove('active');
+      if (formAdmin) {
+        formAdmin.classList.add('active');
+        const emailInput = document.getElementById('admin-signin-email');
+        const passInput = document.getElementById('admin-signin-password');
+        if (passInput) passInput.value = '';
+        setTimeout(() => {
+          if (emailInput && !emailInput.value) {
+            emailInput.focus();
+          } else if (passInput) {
+            passInput.focus();
+          }
+        }, 100);
       }
+      return;
+    }
+
+    if (tabsContainer) tabsContainer.style.display = 'flex';
+    if (formSignin) formSignin.classList.toggle('active', tab === 'signin');
+    if (formRegister) formRegister.classList.toggle('active', tab === 'register');
+    if (formAdmin) formAdmin.classList.remove('active');
+
+    if (signinTab) {
+      signinTab.classList.toggle('active', tab === 'signin');
+      signinTab.setAttribute('aria-selected', tab === 'signin' ? 'true' : 'false');
+    }
+    if (registerTab) {
+      registerTab.classList.toggle('active', tab === 'register');
+      registerTab.setAttribute('aria-selected', tab === 'register' ? 'true' : 'false');
     }
   }
 
@@ -951,8 +977,8 @@
         sessionStorage.setItem('ascend_user', JSON.stringify(data.user));
         showToast('Signed in successfully! ' + (data.smtpStatus === 'sent' ? 'Login alert emailed.' : ''), 'success');
         setTimeout(() => {
-          if (data.user.role === 'hod') {
-            window.location.href = 'app.html#hod-dashboard';
+          if (data.user.role === 'admin') {
+            window.location.href = 'app.html#admin-dashboard';
           } else if (data.user.role === 'faculty') {
             window.location.href = 'app.html#faculty-dashboard';
           } else {
@@ -987,6 +1013,74 @@
       btn.innerHTML = 'Sign in to Ascend';
       btn.disabled = false;
       showToast('Connection error connecting to backend.', 'error');
+    }
+  }
+
+  /* ── Admin Sign In Handler ───────────────────────────────── */
+  async function handleAdminSignIn(e) {
+    e.preventDefault();
+    const email = document.getElementById('admin-signin-email').value.trim();
+    const pass  = document.getElementById('admin-signin-password').value.trim();
+    let valid = true;
+
+    document.getElementById('admin-signin-email-err').style.display = 'none';
+    document.getElementById('admin-signin-pass-err').style.display = 'none';
+    document.getElementById('admin-signin-email').classList.remove('error');
+    document.getElementById('admin-signin-password').classList.remove('error');
+
+    if (!email || !email.includes('@')) {
+      document.getElementById('admin-signin-email-err').style.display = 'flex';
+      document.getElementById('admin-signin-email').classList.add('error');
+      valid = false;
+    }
+    if (!pass) {
+      document.getElementById('admin-signin-pass-err').textContent = 'Please enter your administrator password.';
+      document.getElementById('admin-signin-pass-err').style.display = 'flex';
+      document.getElementById('admin-signin-password').classList.add('error');
+      valid = false;
+    }
+
+    if (!valid) return;
+
+    const btn = document.getElementById('admin-signin-btn');
+    btn.innerHTML = '<div style="width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.6s linear infinite;margin:0 auto;"></div>';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password: pass }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if (data.user.role !== 'admin') {
+          btn.innerHTML = 'Sign in as Admin';
+          btn.disabled = false;
+          showToast('This account does not have administrator privileges.', 'error');
+          document.getElementById('admin-signin-pass-err').textContent = 'This account is a ' + (data.user.role || 'user') + ' account, not an administrator.';
+          document.getElementById('admin-signin-pass-err').style.display = 'flex';
+          return;
+        }
+        sessionStorage.setItem('ascend_logged_in', 'true');
+        sessionStorage.setItem('ascend_role', 'admin');
+        sessionStorage.setItem('ascend_user', JSON.stringify(data.user));
+        showToast('Signed in as Administrator! ' + (data.smtpStatus === 'sent' ? 'Login alert emailed.' : ''), 'success');
+        setTimeout(() => {
+          window.location.href = 'app.html#admin-dashboard';
+        }, 400);
+      } else {
+        btn.innerHTML = 'Sign in as Admin';
+        btn.disabled = false;
+        document.getElementById('admin-signin-pass-err').textContent = data.error || 'Incorrect administrator email or password.';
+        document.getElementById('admin-signin-pass-err').style.display = 'flex';
+        document.getElementById('admin-signin-password').classList.add('error');
+        showToast(data.error || 'Incorrect administrator credentials.', 'error');
+      }
+    } catch (err) {
+      btn.innerHTML = 'Sign in as Admin';
+      btn.disabled = false;
+      showToast('Network error during administrator sign in.', 'error');
     }
   }
 
@@ -1042,7 +1136,7 @@
       document.getElementById('err-degree').style.display = 'flex';
       valid = false;
     }
-    if ((role === 'faculty' || role === 'hod') && !designation) {
+    if (role === 'faculty' && !designation) {
       document.getElementById('reg-designation')?.classList.add('error');
       document.getElementById('err-designation').style.display = 'flex';
       valid = false;
@@ -1073,7 +1167,7 @@
           password: pass,
           role,
           degree: role === 'student' ? degree : '',
-          designation: role !== 'student' ? (designation || (role === 'hod' ? 'Head of Department' : 'Faculty Advisor')) : '',
+          designation: role === 'faculty' ? (designation || 'Faculty Advisor') : '',
           department,
           institution,
           year: role === 'student' ? year : '',
@@ -1142,6 +1236,16 @@
   blurValidate('reg-degree',      'err-degree',      el => currentSelectedRole !== 'student' || el.value.trim().length > 0, 'Please enter your course / degree.');
   blurValidate('reg-designation', 'err-designation', el => currentSelectedRole === 'student' || el.value.trim().length > 0, 'Please enter your designation.');
   blurValidate('reg-department',  'err-department',  el => el.value.trim().length > 0, 'Please enter your department name.');
+
+  /* ── Direct Hash Support for Admin Sign In ───────────── */
+  if (window.location.hash === '#admin') {
+    switchTab('admin');
+  }
+  window.addEventListener('hashchange', () => {
+    if (window.location.hash === '#admin') {
+      switchTab('admin');
+    }
+  });
 
 </script>
 </body>

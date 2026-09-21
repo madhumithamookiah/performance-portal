@@ -31,8 +31,8 @@ const db = {
     },
     {
       id: 'usr-fac-001',
-      name: (context.window.AscendFacultyData && context.window.AscendFacultyData.facultyUser && context.window.AscendFacultyData.facultyUser.name) || 'Dr. Rakesh Mehta',
-      email: (context.window.AscendFacultyData && context.window.AscendFacultyData.facultyUser && context.window.AscendFacultyData.facultyUser.email) || 'dr.mehta@university.edu',
+      name: (context.window.AscendFacultyData && context.window.AscendFacultyData.facultyUser && context.window.AscendFacultyData.facultyUser.name) || 'Faculty Advisor',
+      email: (context.window.AscendFacultyData && context.window.AscendFacultyData.facultyUser && context.window.AscendFacultyData.facultyUser.email) || 'faculty@university.edu',
       password: (context.window.AscendFacultyData && context.window.AscendFacultyData.facultyUser && context.window.AscendFacultyData.facultyUser.password) || 'faculty123',
       role: 'faculty',
       createdAt: new Date().toISOString()

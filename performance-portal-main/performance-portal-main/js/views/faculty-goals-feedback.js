@@ -15,9 +15,6 @@ function renderFacultyGoalsFeedback() {
   const classStudents = getStudents(selectedClass.id);
   const classFeedback = getFeedback(selectedClass.id);
 
-  const unreadCount = classFeedback.filter(f => !f.isRead).length;
-  const followUpCount = classFeedback.filter(f => f.followUpState === 'scheduled' || f.followUpState === 'due').length;
-
   return `
     <!-- Header -->
     <div class="section-header" style="margin-bottom:var(--sp-5);">
@@ -54,21 +51,11 @@ function renderFacultyGoalsFeedback() {
     </div>
 
     <!-- Compact Metrics Row -->
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--sp-4);margin-bottom:var(--sp-6);" class="faculty-grid-4">
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--sp-4);margin-bottom:var(--sp-6);" class="faculty-grid-2">
       <div class="metric-card" style="--metric-accent:var(--c-primary);">
-        <div class="metric-number">${classFeedback.length}</div>
+        <div class="metric-number" id="fb-hub-metric-total">${classFeedback.length}</div>
         <div class="metric-label">Total Feedback Sent</div>
         <div class="metric-change">${selectedClass.shortName}</div>
-      </div>
-      <div class="metric-card" style="--metric-accent:#2563EB;">
-        <div class="metric-number" style="color:#2563EB;">${unreadCount}</div>
-        <div class="metric-label">Unread by Students</div>
-        <div class="metric-change">Pending student review</div>
-      </div>
-      <div class="metric-card" style="--metric-accent:#D97706;">
-        <div class="metric-number" style="color:#D97706;">${followUpCount}</div>
-        <div class="metric-label">Scheduled Follow-Ups</div>
-        <div class="metric-change">Upcoming review dates</div>
       </div>
       <div class="metric-card" style="--metric-accent:var(--c-verified);">
         <div class="metric-number" style="color:var(--c-verified);">${classStudents.length}</div>
@@ -231,9 +218,6 @@ function renderFeedbackHistory(feedbacks) {
         </div>
         <div style="display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap;">
           <span class="badge badge-primary" style="font-size:11px;font-weight:600;">${fb.category}</span>
-          <span class="badge ${fb.isRead ? 'badge-normal' : 'badge-feedback'}" style="font-size:10px;">
-            ${fb.isRead ? 'Read by student' : 'Unread'}
-          </span>
           ${fb.followUpDate ? `
             <span class="badge badge-review" style="font-size:10px;">
               Follow-up: ${formatDate(fb.followUpDate)}
@@ -251,7 +235,10 @@ function renderFeedbackHistory(feedbacks) {
           <div style="font-size:var(--text-xs);color:var(--c-text);font-weight:500;">${fb.recommendedNextStep}</div>
         </div>` : ''}
 
-      <div style="display:flex;justify-content:flex-end;">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:var(--sp-2);">
+        <button class="btn btn-ghost btn-sm" style="color:var(--c-rejected);border:1px solid var(--c-border);" onclick="FacultyViews.deleteFeedback('${fb.id}', '${fb.toStudentId}')" title="Delete Feedback">
+          ${Icons.trash} Delete
+        </button>
         <button class="btn btn-outline btn-sm" onclick="FacultyViews.openStudentDetail('${fb.toStudentId}')">
           View Student Profile
         </button>
@@ -328,16 +315,50 @@ function submitComposeFeedback() {
   window.AscendFacultyData.sendFeedback({
     toStudentId: studentId,
     toStudentName: studentName,
-    classId: window.AscendFacultyData.selectedClassId,
+    classId: window.AscendFacultyData.selectedClassId || 'class-cse-5a',
     category,
     message,
     recommendedNextStep: nextStep,
-    followUpDate,
+    followUpDate: followUpDate || null,
   });
 
   AscendUI.closeModal('fb-compose-modal');
   AscendUI.showToast(`Feedback sent to ${studentName}!`, 'success');
   AscendApp.navigate('faculty-goals-feedback');
+}
+
+/* ── Delete Feedback Action Handler ──────────────────────────── */
+function deleteFeedback(feedbackId, studentId) {
+  const feedbacks = window.AscendFacultyData.facultyFeedback;
+  const item = feedbacks.find(f => f.id === feedbackId);
+  const studentName = item ? item.toStudentName : 'this student';
+
+  AscendUI.confirmDialog({
+    title: 'Delete Feedback',
+    message: `Are you sure you want to delete this feedback note for <strong>${studentName}</strong>? This action cannot be undone.`,
+    confirmLabel: 'Delete',
+    danger: true,
+    onConfirm: async () => {
+      await window.AscendFacultyData.deleteFeedback(feedbackId);
+      AscendUI.showToast('Feedback deleted.', 'info');
+
+      const historyListEl = document.getElementById('fb-history-list');
+      if (historyListEl) {
+        filterFeedbackHistory();
+        const totalMetricEl = document.getElementById('fb-hub-metric-total');
+        if (totalMetricEl) {
+          const currentClassFeedback = window.AscendFacultyData.getFeedback();
+          totalMetricEl.textContent = currentClassFeedback.length;
+        }
+      }
+
+      // If student detail feedback tab is active
+      const detailTabFeedback = document.getElementById('fsd-tab-feedback');
+      if (detailTabFeedback && typeof FacultyViews.openStudentDetail === 'function') {
+        FacultyViews.openStudentDetail(studentId || (item ? item.toStudentId : window._facultySelectedStudentId), 'feedback');
+      }
+    },
+  });
 }
 
 window.FacultyViews = window.FacultyViews || {};
@@ -349,6 +370,7 @@ Object.assign(window.FacultyViews, {
   openGlobalFeedbackModal,
   openDirectFeedbackModal,
   submitComposeFeedback,
+  deleteFeedback,
   updateNextStepLabel(nextStepLabelId, nextStepReqId) {
     const catEl = document.getElementById('fb-modal-category');
     if (!catEl) return;

@@ -35,7 +35,15 @@ function renderFacultyDashboard() {
   };
 
   // Scoped records from dynamic store
-  const classStudents = getStudents(selectedClassId);
+  const rawStudents = getStudents(selectedClassId);
+  const seenStudentMap = new Map();
+  (rawStudents || []).forEach(s => {
+    if (s && s.id && !seenStudentMap.has(s.id)) {
+      seenStudentMap.set(s.id, s);
+    }
+  });
+  const classStudents = Array.from(seenStudentMap.values());
+
   const classUpdates = getRecentUpdates(selectedClassId);
   const classEvals = getEvaluations(selectedClassId);
   const classFeedback = (facultyFeedback || []).filter(f => !selectedClassId || selectedClassId === 'all' || f.classId === selectedClassId);
@@ -46,8 +54,14 @@ function renderFacultyDashboard() {
   const publishedEvalsCount = (classEvals || []).filter(e => e.status === 'published').length;
   const guidanceCount = classFeedback.length;
 
-  // Recent activity items (max 8)
-  const recentUpdatesToShow = (classUpdates || []).slice(0, 8);
+  // Recent activity items (max 8, deduplicated by student to eliminate duplicate student records in feed)
+  const seenStudentInFeed = new Set();
+  const recentUpdatesToShow = (classUpdates || []).filter(u => {
+    const key = u.studentId || u.studentName;
+    if (key && seenStudentInFeed.has(key)) return false;
+    if (key) seenStudentInFeed.add(key);
+    return true;
+  }).slice(0, 8);
 
   // Category badge styling helper
   function getTypeBadge(type) {
@@ -118,35 +132,6 @@ function renderFacultyDashboard() {
 
   return `
     <style>
-      .admin-stats-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: var(--sp-4);
-        margin-bottom: var(--sp-5);
-      }
-      .admin-stat-card {
-        background: var(--c-surface);
-        border: 1px solid var(--c-border);
-        border-radius: var(--r-lg);
-        padding: var(--sp-4);
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        transition: box-shadow var(--dur-fast), border-color var(--dur-fast);
-      }
-      .admin-stat-card:hover {
-        box-shadow: var(--shadow-sm);
-        border-color: var(--c-primary-light);
-      }
-      .admin-stat-icon {
-        width: 36px;
-        height: 36px;
-        border-radius: var(--r-md);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: var(--sp-2);
-      }
       .admin-layout-grid {
         display: grid;
         grid-template-columns: 7fr 5fr;
@@ -157,15 +142,7 @@ function renderFacultyDashboard() {
         background: var(--c-surface-hover, rgba(0,0,0,0.015));
       }
       @media (max-width: 1024px) {
-        .admin-stats-grid {
-          grid-template-columns: repeat(2, 1fr);
-        }
         .admin-layout-grid {
-          grid-template-columns: 1fr;
-        }
-      }
-      @media (max-width: 640px) {
-        .admin-stats-grid {
           grid-template-columns: 1fr;
         }
       }

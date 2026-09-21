@@ -95,84 +95,33 @@ function writeDB(data) {
   }
 }
 
-// ── Database Initializer (Ensure Admin & Base Data) ───────────
+// ── Database Initializer (Ensure Base Data Schema) ───────────
 function initDatabase() {
   const db = readDB();
   let changed = false;
 
-  // 1. Ensure faculty account exists
-  let faculty = db.users.find(u => u.email && u.email.toLowerCase() === 'dr.mehta@university.edu');
-  if (!faculty) {
-    faculty = {
-      id: 'usr-fac-001',
-      name: 'Dr. Rakesh Mehta',
-      email: 'dr.mehta@university.edu',
-      password: 'faculty123',
-      role: 'faculty',
-      isVerified: true,
-      createdAt: new Date().toISOString(),
-    };
-    db.users.push(faculty);
-    changed = true;
-    console.log('[Init] Faculty account seeded: dr.mehta@university.edu / faculty123');
-  }
-
-  // 2. Ensure HOD account exists
-  let hod = db.users.find(u => u.email && u.email.toLowerCase() === 'hod.cse@university.edu');
-  if (!hod) {
-    hod = {
-      id: 'usr-hod-001',
-      name: 'Prof. Sunita Rao',
-      email: 'hod.cse@university.edu',
-      password: 'hod12345',
-      role: 'hod',
-      isVerified: true,
-      createdAt: new Date().toISOString(),
-    };
-    db.users.push(hod);
-    changed = true;
-    console.log('[Init] HOD account seeded: hod.cse@university.edu / hod12345');
-  }
-
-  // 3. Ensure facultyData structure exists with Dr. Rakesh Mehta
   if (!db.facultyData || typeof db.facultyData !== 'object') {
     db.facultyData = {
       facultyUser: {
-        id: 'usr-fac-001',
-        name: 'Dr. Rakesh Mehta',
-        title: 'Dr.',
-        email: 'dr.mehta@university.edu',
+        id: 'usr-fac-default',
+        name: 'Faculty Advisor',
+        title: 'Prof.',
+        email: '',
         role: 'faculty',
-        designation: 'Associate Professor & Faculty Advisor',
+        designation: 'Faculty Advisor',
         department: 'Computer Science & Engineering',
-        institution: 'Delhi Institute of Technology',
+        institution: 'University',
       },
-      classes: [
-        { id: 'class-cse-5a', name: 'B.Tech CSE · Semester 5 · Section A', shortName: 'CSE · Sem 5 · Sec A', program: 'B.Tech CSE', department: 'Computer Science & Engineering', semester: 5, section: 'Section A' },
-        { id: 'class-cse-5b', name: 'B.Tech CSE · Semester 5 · Section B', shortName: 'CSE · Sem 5 · Sec B', program: 'B.Tech CSE', department: 'Computer Science & Engineering', semester: 5, section: 'Section B' },
-        { id: 'class-it-5a', name: 'B.Tech IT · Semester 5 · Section A', shortName: 'IT · Sem 5 · Sec A', program: 'B.Tech IT', department: 'Information Technology', semester: 5, section: 'Section A' },
-        { id: 'all', name: 'All Assigned Classes', shortName: 'All Classes', program: 'All Programmes', department: 'All Departments', semester: 'All', section: 'All' },
-      ],
+      classes: [],
       evaluations: [],
       feedbackHistory: [],
-    };
-    changed = true;
-  } else if (!db.facultyData.facultyUser || db.facultyData.facultyUser.id === 'usr-admin-001' || db.facultyData.facultyUser.role === 'admin') {
-    db.facultyData.facultyUser = {
-      id: 'usr-fac-001',
-      name: 'Dr. Rakesh Mehta',
-      title: 'Dr.',
-      email: 'dr.mehta@university.edu',
-      role: 'faculty',
-      designation: 'Associate Professor & Faculty Advisor',
-      department: 'Computer Science & Engineering',
-      institution: 'Delhi Institute of Technology',
     };
     changed = true;
   }
 
   if (changed) {
     writeDB(db);
+    console.log('[Init] Database schema initialized.');
   }
 }
 initDatabase();
@@ -211,7 +160,7 @@ app.post('/api/auth/register', async (req, res) => {
     const verificationToken = crypto.randomBytes(24).toString('hex');
     const verificationTokenExpires = Date.now() + 24 * 60 * 60 * 1000;
     const cleanRole = (role || 'student').toLowerCase();
-    const defaultDesignation = cleanRole === 'hod' ? 'Head of Department' : (cleanRole === 'faculty' ? 'Faculty Advisor' : 'Student');
+    const defaultDesignation = cleanRole === 'faculty' ? 'Faculty Advisor' : 'Student';
 
     const newUser = {
       id: userId,
@@ -292,18 +241,18 @@ app.post('/api/auth/register', async (req, res) => {
           views: 1,
           downloads: 0,
           shares: 0,
-          primaryCategories: (db.studentData['usr-stu-001'] && db.studentData['usr-stu-001'].portfolioInsights && db.studentData['usr-stu-001'].portfolioInsights.primaryCategories) || [
+          primaryCategories: [
             { key: 'Certification', name: 'Certification', label: 'Certifications', iconKey: 'award', isPrimary: true, description: 'Industry-recognized credentials and certifications' },
             { key: 'Hackathon', name: 'Hackathon', label: 'Hackathons', iconKey: 'lightbulb', isPrimary: true, description: 'Development sprints, hackathons, and design challenges' },
             { key: 'Internship', name: 'Internship', label: 'Internships', iconKey: 'briefcase', isPrimary: true, description: 'Industry internships and professional work experience' },
             { key: 'Workshop', name: 'Workshop', label: 'Workshops', iconKey: 'graduationCap', isPrimary: true, description: 'Technical workshops, seminars, and intensive training' },
           ],
-          additionalCategories: (db.studentData['usr-stu-001'] && db.studentData['usr-stu-001'].portfolioInsights && db.studentData['usr-stu-001'].portfolioInsights.additionalCategories) || [
+          additionalCategories: [
             { key: 'Leadership', name: 'Leadership', label: 'Leadership & Volunteering', iconKey: 'star', description: 'Student leadership, club initiatives, and community volunteering' },
             { key: 'Research', name: 'Research', label: 'Research & Publications', iconKey: 'fileText', description: 'Academic papers, lab research, and publications' },
             { key: 'Award', name: 'Award', label: 'Awards', iconKey: 'trophy', description: 'Merit recognitions, honors, and competitive awards' },
           ],
-          categories: (db.studentData['usr-stu-001'] && db.studentData['usr-stu-001'].portfolioInsights && db.studentData['usr-stu-001'].portfolioInsights.categories) || [
+          categories: [
             { name: 'Certification', label: 'Certifications', iconKey: 'award', max: 5 },
             { name: 'Hackathon', label: 'Hackathons', iconKey: 'lightbulb', max: 4 },
             { name: 'Internship', label: 'Internships', iconKey: 'briefcase', max: 3 },
@@ -1128,23 +1077,37 @@ app.get('/api/faculty/data', (req, res) => {
 
     res.json({
       facultyUser: facultyData.facultyUser || {
-        id: 'usr-fac-001',
-        name: 'Dr. Rakesh Mehta',
-        title: 'Dr.',
-        email: 'dr.mehta@university.edu',
+        id: 'usr-fac-default',
+        name: 'Faculty Advisor',
+        title: 'Prof.',
+        email: '',
         role: 'faculty',
-        designation: 'Associate Professor & Faculty Advisor',
+        designation: 'Faculty Advisor',
         department: 'Computer Science & Engineering',
-        institution: 'Delhi Institute of Technology',
+        institution: 'University',
       },
-      classes: [
-        { id: 'class-cse-5a', name: 'B.Tech CSE · Semester 5 · Section A', shortName: 'CSE · Sem 5 · Sec A', program: 'B.Tech CSE', department: 'Computer Science & Engineering', semester: 5, section: 'Section A', academicYear: '2026–27', studentCount: dynamicStudents.length },
-        { id: 'all', name: 'All Assigned Classes', shortName: 'All Classes', program: 'All Programmes', department: 'All Departments', semester: 'All', section: 'All', academicYear: '2026–27', studentCount: dynamicStudents.length },
-      ],
+      classes: (Array.isArray(facultyData.classes) && facultyData.classes.length > 0)
+        ? facultyData.classes
+        : [
+            { id: 'all', name: 'All Registered Students', shortName: 'All Students', program: 'All Programmes', department: 'All Departments', semester: 'All', section: 'All', academicYear: '2026–27', studentCount: dynamicStudents.length },
+            { id: 'class-cse-5a', name: 'B.Tech CSE · Semester 5 · Section A', shortName: 'CSE · Sem 5 · Sec A', program: 'B.Tech CSE', department: 'Computer Science & Engineering', semester: 5, section: 'Section A', academicYear: '2026–27', studentCount: dynamicStudents.length },
+          ],
       students: dynamicStudents,
       recentUpdates: recentUpdates,
       evaluations: facultyData.evaluations || [],
-      feedbackHistory: facultyData.feedbackHistory || [],
+      feedbackHistory: (facultyData.feedbackHistory || []).map(fb => {
+        // Normalize any legacy records that used old field names
+        const n = { ...fb };
+        if (!n.toStudentId && n.studentId) n.toStudentId = n.studentId;
+        if (!n.toStudentName && n.studentName) n.toStudentName = n.studentName;
+        if (!n.fromName && n.mentorName) n.fromName = n.mentorName;
+        if (!n.fromRole && n.mentorTitle) n.fromRole = n.mentorTitle;
+        if (!n.recommendedNextStep && n.nextSteps) n.recommendedNextStep = n.nextSteps;
+        if (!n.message && n.feedbackText) n.message = n.feedbackText;
+        if (!n.classId) n.classId = 'class-cse-5a';
+        if (!n.followUpState) n.followUpState = n.followUpDate ? 'scheduled' : 'none';
+        return n;
+      }),
     });
   } catch (err) {
     console.error('[Faculty Data API Error]:', err);
@@ -1168,20 +1131,43 @@ app.post('/api/faculty/evaluations', (req, res) => {
   }
 });
 
+app.delete('/api/faculty/evaluations/:id', (req, res) => {
+  try {
+    const db = readDB();
+    const evalId = req.params.id;
+    if (db.facultyData && Array.isArray(db.facultyData.evaluations)) {
+      db.facultyData.evaluations = db.facultyData.evaluations.filter(e => e.id !== evalId);
+      writeDB(db);
+    }
+    res.json({ success: true, id: evalId });
+  } catch (err) {
+    console.error('[Delete Faculty Evaluation Error]:', err);
+    res.status(500).json({ error: 'Failed to delete evaluation.' });
+  }
+});
+
 app.post('/api/faculty/feedback', (req, res) => {
   try {
     const db = readDB();
-    const { studentId, feedbackText, category, nextSteps } = req.body;
+    const { studentId, feedbackText, category, nextSteps, classId, followUpDate } = req.body;
+
+    const facultyUser = db.facultyData && db.facultyData.facultyUser ? db.facultyData.facultyUser : {};
+    const followUpState = followUpDate ? 'scheduled' : 'none';
 
     const newFb = {
       id: `fb-${Date.now()}`,
-      studentId,
-      studentName: req.body.studentName || 'Student',
-      mentorName: db.facultyData.facultyUser?.name || 'Dr. Rakesh Mehta',
-      mentorTitle: db.facultyData.facultyUser?.designation || 'Faculty Advisor',
-      category: category || 'Academic',
-      message: feedbackText,
-      nextSteps: nextSteps || '',
+      // Frontend-compatible field names
+      toStudentId: studentId,
+      toStudentName: req.body.studentName || 'Student',
+      fromId: facultyUser.id || 'usr-fac',
+      fromName: facultyUser.name || 'Faculty Advisor',
+      fromRole: facultyUser.designation || 'Faculty Advisor',
+      classId: classId || 'class-cse-5a',
+      category: category || 'General',
+      message: feedbackText || '',
+      recommendedNextStep: nextSteps || '',
+      followUpDate: followUpDate || null,
+      followUpState,
       date: new Date().toISOString().split('T')[0],
       isRead: false,
     };
@@ -1189,7 +1175,7 @@ app.post('/api/faculty/feedback', (req, res) => {
     if (!Array.isArray(db.facultyData.feedbackHistory)) db.facultyData.feedbackHistory = [];
     db.facultyData.feedbackHistory.unshift(newFb);
 
-    if (studentId && db.studentData[studentId]) {
+    if (studentId && db.studentData && db.studentData[studentId]) {
       if (!Array.isArray(db.studentData[studentId].feedback)) db.studentData[studentId].feedback = [];
       db.studentData[studentId].feedback.unshift(newFb);
     }
@@ -1198,6 +1184,28 @@ app.post('/api/faculty/feedback', (req, res) => {
     res.status(201).json({ success: true, feedback: newFb });
   } catch (err) {
     res.status(500).json({ error: 'Failed to save feedback.' });
+  }
+});
+
+app.delete('/api/faculty/feedback/:id', (req, res) => {
+  try {
+    const db = readDB();
+    const fbId = req.params.id;
+    if (db.facultyData && Array.isArray(db.facultyData.feedbackHistory)) {
+      db.facultyData.feedbackHistory = db.facultyData.feedbackHistory.filter(f => f.id !== fbId);
+    }
+    if (db.studentData) {
+      Object.values(db.studentData).forEach(sData => {
+        if (sData && Array.isArray(sData.feedback)) {
+          sData.feedback = sData.feedback.filter(f => f.id !== fbId);
+        }
+      });
+    }
+    writeDB(db);
+    res.json({ success: true, id: fbId });
+  } catch (err) {
+    console.error('[Delete Faculty Feedback Error]:', err);
+    res.status(500).json({ error: 'Failed to delete feedback.' });
   }
 });
 
@@ -1212,7 +1220,7 @@ app.put('/api/faculty/profile', (req, res) => {
 
     // Sync matching user record if name or email changed
     if (updates.name || updates.email) {
-      const facId = db.facultyData.facultyUser.id || 'usr-fac-001';
+      const facId = db.facultyData.facultyUser.id || 'usr-fac';
       const u = (db.users || []).find(it => it.id === facId || it.role === 'faculty');
       if (u) {
         if (updates.name) u.name = updates.name;
@@ -1224,6 +1232,95 @@ app.put('/api/faculty/profile', (req, res) => {
     res.json({ success: true, facultyUser: db.facultyData.facultyUser });
   } catch (err) {
     res.status(500).json({ error: 'Failed to update faculty profile.' });
+  }
+});
+
+// ── Faculty Classes Handled APIs ──────────────────────────────
+app.post('/api/faculty/classes', (req, res) => {
+  try {
+    const db = readDB();
+    if (!db.facultyData) db.facultyData = {};
+    if (!Array.isArray(db.facultyData.classes) || db.facultyData.classes.length === 0) {
+      db.facultyData.classes = [
+        { id: 'all', name: 'All Registered Students', shortName: 'All Students', program: 'All Programmes', department: 'All Departments', semester: 'All', section: 'All', academicYear: '2026–27', studentCount: 0 },
+        { id: 'class-cse-5a', name: 'B.Tech CSE · Semester 5 · Section A', shortName: 'CSE · Sem 5 · Sec A', program: 'B.Tech CSE', department: 'Computer Science & Engineering', semester: 5, section: 'Section A', academicYear: '2026–27', studentCount: 0 },
+      ];
+    }
+
+    const payload = req.body || {};
+    const newClass = {
+      id: payload.id || `class-${Date.now()}`,
+      name: payload.name || 'New Class',
+      shortName: payload.shortName || payload.name || 'New Class',
+      program: payload.program || 'General',
+      department: payload.department || 'Computer Science & Engineering',
+      semester: payload.semester !== undefined ? payload.semester : 1,
+      section: payload.section || 'Section A',
+      academicYear: payload.academicYear || '2026–27',
+      studentCount: 0,
+    };
+
+    db.facultyData.classes.push(newClass);
+    writeDB(db);
+    res.status(201).json({ success: true, class: newClass, classes: db.facultyData.classes });
+  } catch (err) {
+    console.error('[Add Faculty Class Error]:', err);
+    res.status(500).json({ error: 'Failed to add class.' });
+  }
+});
+
+app.put('/api/faculty/classes/:id', (req, res) => {
+  try {
+    const db = readDB();
+    if (!db.facultyData) db.facultyData = {};
+    if (!Array.isArray(db.facultyData.classes) || db.facultyData.classes.length === 0) {
+      db.facultyData.classes = [
+        { id: 'all', name: 'All Registered Students', shortName: 'All Students', program: 'All Programmes', department: 'All Departments', semester: 'All', section: 'All', academicYear: '2026–27', studentCount: 0 },
+        { id: 'class-cse-5a', name: 'B.Tech CSE · Semester 5 · Section A', shortName: 'CSE · Sem 5 · Sec A', program: 'B.Tech CSE', department: 'Computer Science & Engineering', semester: 5, section: 'Section A', academicYear: '2026–27', studentCount: 0 },
+      ];
+    }
+
+    const classId = req.params.id;
+    const index = db.facultyData.classes.findIndex(c => c.id === classId);
+    if (index === -1) {
+      return res.status(404).json({ error: 'Class not found.' });
+    }
+
+    const existing = db.facultyData.classes[index];
+    const updates = req.body || {};
+    const updatedClass = {
+      ...existing,
+      ...updates,
+      id: existing.id,
+    };
+
+    db.facultyData.classes[index] = updatedClass;
+    writeDB(db);
+    res.json({ success: true, class: updatedClass, classes: db.facultyData.classes });
+  } catch (err) {
+    console.error('[Update Faculty Class Error]:', err);
+    res.status(500).json({ error: 'Failed to update class.' });
+  }
+});
+
+app.delete('/api/faculty/classes/:id', (req, res) => {
+  try {
+    const db = readDB();
+    if (!db.facultyData || !Array.isArray(db.facultyData.classes)) {
+      return res.status(404).json({ error: 'Class not found.' });
+    }
+
+    const classId = req.params.id;
+    if (classId === 'all') {
+      return res.status(400).json({ error: 'Cannot delete the primary All Students scope.' });
+    }
+
+    db.facultyData.classes = db.facultyData.classes.filter(c => c.id !== classId);
+    writeDB(db);
+    res.json({ success: true, classes: db.facultyData.classes });
+  } catch (err) {
+    console.error('[Delete Faculty Class Error]:', err);
+    res.status(500).json({ error: 'Failed to delete class.' });
   }
 });
 
@@ -1335,6 +1432,239 @@ app.delete('/api/admin/users/:id', (req, res) => {
   }
 });
 
+app.post('/api/admin/create-user', (req, res) => {
+  try {
+    const { name, email, password, role, department, designation, degree } = req.body;
+    if (!email || !email.includes('@')) {
+      return res.status(400).json({ error: 'A valid email address is required.' });
+    }
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'Name is required.' });
+    }
+
+    const db = readDB();
+    const cleanEmail = email.trim().toLowerCase();
+    if (db.users.some(u => u.email.toLowerCase() === cleanEmail)) {
+      return res.status(409).json({ error: 'An account with this email already exists.' });
+    }
+
+    const cleanRole = ['faculty', 'admin'].includes(role) ? role : 'student';
+    const userId = `usr-${cleanRole.slice(0, 3)}-${Date.now().toString().slice(-6)}`;
+
+    const newUser = {
+      id: userId,
+      name: name.trim(),
+      email: cleanEmail,
+      password: (password && password.trim()) ? password.trim() : 'ascend@123',
+      role: cleanRole,
+      department: (department || 'Computer Science & Engineering').trim(),
+      designation: cleanRole === 'faculty' ? (designation || 'Faculty Advisor').trim() : (cleanRole === 'admin' ? 'System Administrator' : undefined),
+      degree: cleanRole === 'student' ? (degree || 'B.Tech in Computer Science').trim() : undefined,
+      institution: 'Delhi Institute of Technology',
+      createdAt: new Date().toISOString(),
+      isVerified: true,
+    };
+
+    db.users.push(newUser);
+
+    if (cleanRole === 'student') {
+      if (!db.studentData) db.studentData = {};
+      db.studentData[userId] = {
+        student: {
+          id: userId,
+          name: newUser.name,
+          firstName: newUser.name.split(' ')[0],
+          initials: newUser.name.split(' ').filter(Boolean).map(p => p[0]).slice(0, 2).join('').toUpperCase() || 'ST',
+          email: cleanEmail,
+          degree: newUser.degree,
+          department: newUser.department,
+          institution: newUser.institution,
+          year: 1,
+          graduationYear: 2028,
+          rollNumber: `2026${userId.slice(-4)}`,
+        },
+        achievements: [],
+        projects: [],
+        feedback: [],
+        evaluations: [],
+      };
+    }
+
+    writeDB(db);
+    res.json({ success: true, message: `Account created for ${newUser.name} as ${cleanRole}.`, user: newUser });
+  } catch (err) {
+    console.error('[Admin] Error creating user:', err);
+    res.status(500).json({ error: 'Failed to create user account.' });
+  }
+});
+
+app.post('/api/admin/remind-faculty', async (req, res) => {
+  try {
+    const { facultyId, facultyName, email } = req.body;
+    const targetEmail = (email || '').trim();
+    if (!targetEmail) {
+      return res.status(400).json({ error: 'Faculty email is required.' });
+    }
+
+    const subject = 'Ascend Oversight: Pending Student Rubric Evaluations & Feedback';
+    const text = `Dear ${facultyName || 'Faculty Advisor'},\n\nThis is an academic reminder from the Ascend Administration Console regarding pending student rubric evaluations and portfolio feedback. Please log in to complete evaluations for your assigned cohort.\n\nPortal: http://localhost:3000/auth.html\n\nOffice of Academic Affairs`;
+    const html = `
+      <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;padding:24px;border:1px solid #e0e0e0;border-radius:12px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <div style="width:36px;height:36px;border-radius:8px;background:#6D28D9;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;">A</div>
+          <span style="font-size:18px;font-weight:700;color:#1a1a1a;">Ascend Academic Oversight</span>
+        </div>
+        <h2 style="color:#202124;font-size:18px;margin-top:0;">Student Progress Evaluation & Mentoring Notice</h2>
+        <p style="color:#3c4043;font-size:14px;line-height:1.6;">Dear <strong>${facultyName || 'Faculty Advisor'}</strong>,</p>
+        <p style="color:#3c4043;font-size:14px;line-height:1.6;">
+          Institutional oversight records show students in your assigned cohorts have uploaded project work and achievements that require mentor feedback and semester rubric evaluations.
+        </p>
+        <div style="margin:24px 0;">
+          <a href="http://localhost:3000/auth.html" style="background:#1A73E8;color:#ffffff;text-decoration:none;padding:12px 24px;border-radius:8px;font-weight:600;font-size:14px;display:inline-block;">Open Faculty Portal</a>
+        </div>
+        <p style="color:#70757a;font-size:12px;margin-top:24px;">This reminder was dispatched by the Institution Academic Administrator.</p>
+      </div>
+    `;
+
+    const emailResult = await sendEmail({ to: targetEmail, subject, text, html });
+    res.json({
+      success: true,
+      message: `Evaluation reminder dispatched to ${facultyName || targetEmail}.`,
+      delivery: emailResult.simulated ? 'Simulated' : 'Delivered via SMTP',
+    });
+  } catch (err) {
+    console.error('[Admin] Error sending faculty reminder:', err);
+    res.status(500).json({ error: 'Failed to dispatch faculty reminder.' });
+  }
+});
+
+// ── Admin Comprehensive Oversight API ─────────────────────────
+app.get('/api/admin/data', (req, res) => {
+  try {
+    const db = readDB();
+    const allUsers = Array.isArray(db.users) ? db.users : [];
+    const studentUsers = allUsers.filter(u => u.role === 'student' || (!u.role && u.role !== 'faculty' && u.role !== 'admin'));
+    const facultyUsers = allUsers.filter(u => u.role === 'faculty');
+    const feedbackList = (db.facultyData && Array.isArray(db.facultyData.feedbackHistory)) ? db.facultyData.feedbackHistory : [];
+    const evaluationsList = (db.facultyData && Array.isArray(db.facultyData.evaluations)) ? db.facultyData.evaluations : [];
+
+    const allProjects = [];
+    const allAchievements = [];
+
+    const students = studentUsers.map(stu => {
+      const sData = (db.studentData && db.studentData[stu.id]) ? db.studentData[stu.id] : {};
+      const achievements = Array.isArray(sData.achievements) ? sData.achievements : [];
+      const projects = Array.isArray(sData.projects) ? sData.projects : [];
+      const studentFeedback = feedbackList.filter(f => f.toStudentId === stu.id || f.studentId === stu.id);
+      const studentEvaluations = evaluationsList.filter(e => e.studentId === stu.id);
+
+      projects.forEach(p => {
+        allProjects.push({
+          ...p,
+          studentId: stu.id,
+          studentName: stu.name,
+          studentEmail: stu.email,
+          studentRoll: stu.rollNumber || `STU-${stu.id.slice(-4)}`,
+        });
+      });
+
+      achievements.forEach(a => {
+        allAchievements.push({
+          ...a,
+          studentId: stu.id,
+          studentName: stu.name,
+          studentEmail: stu.email,
+          studentRoll: stu.rollNumber || `STU-${stu.id.slice(-4)}`,
+        });
+      });
+
+      return {
+        id: stu.id,
+        name: stu.name,
+        email: stu.email,
+        role: stu.role || 'student',
+        department: stu.department || 'Computer Science & Engineering',
+        degree: stu.degree || 'B.Tech in Computer Science',
+        institution: stu.institution || 'University',
+        rollNumber: stu.rollNumber || `STU-${stu.id.slice(-4)}`,
+        createdAt: stu.createdAt || new Date().toISOString(),
+        isVerified: stu.isVerified !== false,
+        achievementsCount: achievements.length,
+        projectsCount: projects.length,
+        feedbackCount: studentFeedback.length,
+        evaluationsCount: studentEvaluations.length,
+        achievements,
+        projects,
+        feedback: studentFeedback,
+        evaluations: studentEvaluations,
+        latestActivity: (projects[0]?.date || achievements[0]?.date || stu.createdAt || ''),
+        status: studentEvaluations.length > 0 ? 'Evaluated' : (projects.length > 0 || achievements.length > 0 ? 'Work Submitted' : 'Enrolled'),
+      };
+    });
+
+    const faculty = facultyUsers.map(fac => {
+      const givenFeedback = feedbackList.filter(f => f.fromId === fac.id || f.fromEmail === fac.email || f.fromName === fac.name);
+      const givenEvaluations = evaluationsList.filter(e => e.evaluatorId === fac.id || e.evaluatorName === fac.name);
+
+      let responsivenessStatus = 'Needs Engagement';
+      if (givenEvaluations.length > 0 && givenFeedback.length > 0) {
+        responsivenessStatus = 'Active & Responsive';
+      } else if (givenFeedback.length > 0) {
+        responsivenessStatus = 'Feedback Active';
+      } else if (givenEvaluations.length > 0) {
+        responsivenessStatus = 'Evaluated';
+      }
+
+      return {
+        id: fac.id,
+        name: fac.name,
+        email: fac.email,
+        role: fac.role,
+        designation: fac.designation || 'Faculty Advisor',
+        department: fac.department || 'Computer Applications',
+        institution: fac.institution || 'University',
+        createdAt: fac.createdAt || new Date().toISOString(),
+        feedbackGivenCount: givenFeedback.length,
+        evaluationsCount: givenEvaluations.length,
+        recentFeedback: givenFeedback.slice(0, 5),
+        recentEvaluations: givenEvaluations.slice(0, 5),
+        lastActivity: givenFeedback[0]?.date || givenEvaluations[0]?.lastUpdated || fac.createdAt,
+        responsivenessStatus,
+      };
+    });
+
+    allProjects.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+    allAchievements.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+    const overview = {
+      totalStudents: students.length,
+      totalFaculty: faculty.length,
+      totalProjects: allProjects.length,
+      totalAchievements: allAchievements.length,
+      totalEvaluations: evaluationsList.length,
+      totalFeedback: feedbackList.length,
+      studentsEvaluated: students.filter(s => s.evaluationsCount > 0).length,
+      studentsPendingEvaluation: students.filter(s => s.evaluationsCount === 0).length,
+      studentsWithFeedback: students.filter(s => s.feedbackCount > 0).length,
+      studentsWithoutFeedback: students.filter(s => s.feedbackCount === 0).length,
+    };
+
+    res.json({
+      success: true,
+      overview,
+      students,
+      faculty,
+      allProjects,
+      allAchievements,
+      feedbackList,
+      evaluationsList,
+    });
+  } catch (err) {
+    console.error('[Admin] Error fetching admin data:', err);
+    res.status(500).json({ error: 'Failed to retrieve admin oversight data' });
+  }
+});
+
 app.get('/api/admin/system', (req, res) => {
   try {
     const db = readDB();
@@ -1371,10 +1701,10 @@ app.get(['/register', '/create-account', '/signup', '/sign-up'], (req, res) => {
 });
 
 app.get(['/admin', '/admin-dashboard'], (req, res) => {
-  res.redirect('/app.html#hod-dashboard');
+  res.redirect('/app.html#admin-dashboard');
 });
 
-app.get(['/app', '/dashboard', '/profile', '/achievements', '/goals', '/feedback', '/settings', '/faculty-dashboard', '/hod-dashboard', '/hod-cohort-insights', '/hod-classes', '/hod-faculty-assignments', '/hod-evaluation-monitoring', '/hod-settings'], (req, res) => {
+app.get(['/app', '/dashboard', '/profile', '/achievements', '/goals', '/feedback', '/settings', '/faculty-dashboard', '/evaluations', '/admin-dashboard'], (req, res) => {
   res.sendFile(path.join(__dirname, 'app.html'));
 });
 
