@@ -1,12 +1,22 @@
-/**
+﻿/**
  * ASCEND – Faculty & Mentor Dashboard View
  * Clean, modern interface adhering to Google design principles.
- * Focuses on class oversight, student guidance feedback, and semester evaluations.
+ * Focuses on class oversight, monthly development tracking, and formal semester evaluations.
+ * Pure professional SVG icons — zero emojis.
  */
 
 function renderFacultyDashboard() {
-  const { facultyUser, getClasses, getStudents, getRecentUpdates, getEvaluations, facultyFeedback } = window.AscendFacultyData;
-  const { Icons, formatDate, daysUntil } = window.AscendUI;
+  const {
+    facultyUser,
+    getClasses,
+    getStudents,
+    getRecentUpdates,
+    getEvaluations,
+    getStudentsInactive30Days,
+    getStudentsUnreviewedMonthly,
+    getSemesterEvaluationsDue,
+  } = window.AscendFacultyData;
+  const { Icons, formatDate } = window.AscendUI;
 
   // Time-based greeting and faculty name
   const hour = new Date().getHours();
@@ -23,18 +33,15 @@ function renderFacultyDashboard() {
 
   // Classes and cohort selection
   const classes = getClasses();
-  let selectedClassId = window.AscendFacultyData.selectedClassId;
-  if (!selectedClassId) {
-    selectedClassId = 'all';
-  }
+  let selectedClassId = window.AscendFacultyData.selectedClassId || 'class-cse-5a';
   const selectedClass = classes.find(c => c.id === selectedClassId) || classes[0] || {
-    id: 'all',
-    name: 'All Registered Students',
-    shortName: 'All Students',
+    id: 'class-cse-5a',
+    name: 'B.Tech CSE · Semester 5 · Section A',
+    shortName: 'CSE · Sem 5 · Sec A',
     academicYear: '2026–27',
   };
 
-  // Scoped records from dynamic store
+  // Scoped student records from dynamic store
   const rawStudents = getStudents(selectedClassId);
   const seenStudentMap = new Map();
   (rawStudents || []).forEach(s => {
@@ -46,89 +53,52 @@ function renderFacultyDashboard() {
 
   const classUpdates = getRecentUpdates(selectedClassId);
   const classEvals = getEvaluations(selectedClassId);
-  const classFeedback = (facultyFeedback || []).filter(f => !selectedClassId || selectedClassId === 'all' || f.classId === selectedClassId);
 
-  // Computed metrics
-  const totalStudentsCount = classStudents.length;
-  const totalSubmissionsCount = classStudents.reduce((acc, s) => acc + (Array.isArray(s.achievements) ? s.achievements.length : (s.totalAchievements || 0)), 0);
-  const publishedEvalsCount = (classEvals || []).filter(e => e.status === 'published').length;
-  const guidanceCount = classFeedback.length;
+  // 1. Inactive in past 30 days
+  const inactiveStudents = getStudentsInactive30Days ? getStudentsInactive30Days(selectedClassId) : classStudents.filter(s => (s.daysInactive || 0) >= 30);
 
-  // Recent activity items (max 8, deduplicated by student to eliminate duplicate student records in feed)
+  // 2. Not reviewed monthly summary
+  const unreviewedMonthlyStudents = getStudentsUnreviewedMonthly ? getStudentsUnreviewedMonthly(selectedClassId) : classStudents.filter(s => s.monthlyReviewed === false);
+
+  // 3. Semester evaluations due
+  const semesterEvalsDue = getSemesterEvaluationsDue ? getSemesterEvaluationsDue(selectedClassId, 'Semester 5') : classStudents.map(s => {
+    const ev = (classEvals || []).find(e => e.studentId === s.id && e.evaluationPeriod?.includes('Semester 5'));
+    return {
+      student: s,
+      evaluation: ev,
+      status: ev ? ev.status : 'to-evaluate',
+      period: 'Semester 5 · July–November 2026',
+      latestSummary: s.latestMonthlySummary || 'September summary: Activity recorded.',
+      lastActivityDate: s.lastActivity || 'Recently',
+    };
+  });
+
+  const publishedCount = (classEvals || []).filter(e => e.status === 'published').length;
+  const draftCount = (classEvals || []).filter(e => e.status === 'draft').length;
+  const pendingCount = Math.max(0, classStudents.length - (publishedCount + draftCount));
+
+  // Recent activity items (deduplicated by student)
   const seenStudentInFeed = new Set();
   const recentUpdatesToShow = (classUpdates || []).filter(u => {
     const key = u.studentId || u.studentName;
     if (key && seenStudentInFeed.has(key)) return false;
     if (key) seenStudentInFeed.add(key);
     return true;
-  }).slice(0, 8);
+  }).slice(0, 6);
 
-  // Category badge styling helper
+  // Category badge helper
   function getTypeBadge(type) {
     const map = {
       'Hackathon':     { bg: '#EEF2FF', text: '#3730A3', border: '#C7D2FE' },
       'Certification': { bg: '#E0F2FE', text: '#0369A1', border: '#BAE6FD' },
       'Project':       { bg: '#F3E8FF', text: '#6D28D9', border: '#E9D5FF' },
-      'Portfolio':     { bg: '#FEF3C7', text: '#92400E', border: '#FDE68A' },
       'Research':      { bg: '#DCFCE7', text: '#166534', border: '#BBF7D0' },
       'Internship':    { bg: '#FCE7F3', text: '#9D174D', border: '#FBCFE8' },
-      'Workshop':      { bg: '#FFEDD5', text: '#9A3412', border: '#FED7AA' },
+      'Award':         { bg: '#FEF3C7', text: '#92400E', border: '#FDE68A' },
     };
     const c = map[type] || { bg: 'var(--c-bg)', text: 'var(--c-text-2)', border: 'var(--c-border)' };
     return `<span class="badge" style="background:${c.bg};color:${c.text};border:1px solid ${c.border};font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r-sm);">${type}</span>`;
   }
-
-  // Real, non-mocked attention items
-  function getAttentionItems() {
-    const list = [];
-    classStudents.forEach(student => {
-      const studentEvals = (classEvals || []).filter(e => e.studentId === student.id);
-      const draftEval = studentEvals.find(e => e.status === 'draft');
-      const pendingFollowUp = classFeedback.find(fb => fb.toStudentId === student.id && fb.followUpState === 'due');
-
-      let isInactive = false;
-      if (student.lastActivity) {
-        const daysDiff = Math.floor((new Date() - new Date(student.lastActivity)) / (1000 * 60 * 60 * 24));
-        if (daysDiff >= 30) isInactive = true;
-      }
-
-      const isIncomplete = student.profileSetupStatus === 'incomplete' ||
-        (Array.isArray(student.missingProfileFields) && student.missingProfileFields.length > 0);
-
-      if (draftEval) {
-        list.push({
-          student,
-          badgeLabel: 'Evaluation Draft',
-          badgeClass: 'badge-draft',
-          reason: `${draftEval.evaluationPeriod || 'Rubric evaluation'} awaiting publication`,
-        });
-      } else if (pendingFollowUp) {
-        list.push({
-          student,
-          badgeLabel: 'Follow-up Due',
-          badgeClass: 'badge-feedback',
-          reason: 'Scheduled mentorship follow-up date reached',
-        });
-      } else if (isInactive) {
-        list.push({
-          student,
-          badgeLabel: 'Needs Check-in',
-          badgeClass: 'badge-attention',
-          reason: 'No portfolio updates logged in the past 30 days',
-        });
-      } else if (isIncomplete) {
-        list.push({
-          student,
-          badgeLabel: 'Profile Incomplete',
-          badgeClass: 'badge-draft',
-          reason: `Missing setup: ${(student.missingProfileFields || ['Basic details']).join(', ')}`,
-        });
-      }
-    });
-    return list.slice(0, 5);
-  }
-
-  const attentionItems = getAttentionItems();
 
   return `
     <style>
@@ -160,27 +130,27 @@ function renderFacultyDashboard() {
           </span>
         </div>
         <div style="font-size:var(--text-sm);color:var(--c-text-2);">
-          Class oversight &bull; Student performance tracking &bull; Guidance &amp; evaluations
+          Class oversight &bull; Monthly student activity tracking &bull; Semester rubric evaluations
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap;">
         <button class="btn btn-outline btn-sm" onclick="AscendFacultyData.loadFacultyData().then(()=>AscendApp.navigate('faculty-dashboard'))" aria-label="Refresh data">
-          ${Icons.refreshCw || Icons.clock} Refresh Data
+          ${Icons.clock} Refresh Data
         </button>
         <button class="btn btn-outline btn-sm" onclick="AscendApp.navigate('faculty-goals-feedback');setTimeout(()=>FacultyViews.openGlobalFeedbackModal?.(),200)" aria-label="Send guidance feedback">
           ${Icons.messageSquare} Send Guidance
         </button>
         <button class="btn btn-primary btn-sm" onclick="AscendApp.navigate('faculty-evaluations')" aria-label="Open rubric evaluations">
-          ${Icons.fileText} Evaluations
+          ${Icons.fileText} Semester Evaluations
         </button>
       </div>
     </div>
 
-    <!-- ── 3. Scope & Cohort Filter Strip ─────────────────────────── -->
+    <!-- ── 2. Scope & Cohort Filter Strip ─────────────────────────── -->
     <div class="card" style="margin-bottom:var(--sp-5);padding:var(--sp-3) var(--sp-4);background:var(--c-surface);border:1px solid var(--c-border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-3);">
       <div style="display:flex;align-items:center;gap:var(--sp-3);">
         <div style="font-size:var(--text-xs);font-weight:600;color:var(--c-text-2);text-transform:uppercase;letter-spacing:0.04em;">
-          Active Cohort Scope:
+          Selected Cohort:
         </div>
         <select class="form-input form-select" id="dash-class-select" style="width:auto;min-width:260px;font-weight:600;font-size:var(--text-xs);" onchange="FacultyViews.onDashboardClassChange(this.value)" aria-label="Select cohort scope">
           ${classes.map(c => `
@@ -192,138 +162,270 @@ function renderFacultyDashboard() {
 
       <div style="display:flex;align-items:center;gap:var(--sp-2);">
         <span class="badge badge-normal" style="font-size:var(--text-xs);font-weight:600;padding:4px 10px;">
-          ${classStudents.length} student${classStudents.length !== 1 ? 's' : ''} in view
+          ${classStudents.length} enrolled student${classStudents.length !== 1 ? 's' : ''}
         </span>
         <button class="btn btn-ghost btn-sm" onclick="AscendApp.navigate('faculty-students')" style="font-size:var(--text-xs);">
-          Full Directory ${Icons.chevronRight}
+          Student Directory ${Icons.chevronRight}
         </button>
+      </div>
+    </div>
+
+    <!-- ── 3. Top Metrics Row ───────────────────────────────────────── -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--sp-4);margin-bottom:var(--sp-5);">
+      <div class="card" style="padding:16px;border-left:4px solid var(--c-primary);">
+        <div style="font-size:var(--text-2xl);font-weight:800;color:var(--c-primary);line-height:1;">${classStudents.length}</div>
+        <div style="font-size:12px;font-weight:600;color:var(--c-text);margin-top:4px;">Enrolled Students</div>
+        <div style="font-size:11px;color:var(--c-text-3);margin-top:2px;">In selected cohort scope</div>
+      </div>
+      <div class="card" style="padding:16px;border-left:4px solid #D97706;">
+        <div style="font-size:var(--text-2xl);font-weight:800;color:#D97706;line-height:1;">${inactiveStudents.length}</div>
+        <div style="font-size:12px;font-weight:600;color:var(--c-text);margin-top:4px;">Inactive (30+ Days)</div>
+        <div style="font-size:11px;color:var(--c-text-3);margin-top:2px;">No updates logged in 30 days</div>
+      </div>
+      <div class="card" style="padding:16px;border-left:4px solid #92400E;">
+        <div style="font-size:var(--text-2xl);font-weight:800;color:#92400E;line-height:1;">${unreviewedMonthlyStudents.length}</div>
+        <div style="font-size:12px;font-weight:600;color:var(--c-text);margin-top:4px;">Unreviewed Summaries</div>
+        <div style="font-size:11px;color:var(--c-text-3);margin-top:2px;">Monthly summary not reviewed</div>
+      </div>
+      <div class="card" style="padding:16px;border-left:4px solid var(--c-verified);">
+        <div style="font-size:var(--text-2xl);font-weight:800;color:var(--c-verified);line-height:1;">${publishedCount} / ${classStudents.length}</div>
+        <div style="font-size:12px;font-weight:600;color:var(--c-text);margin-top:4px;">Semester 5 Evals</div>
+        <div style="font-size:11px;color:var(--c-text-3);margin-top:2px;">${pendingCount} pending &bull; ${draftCount} in draft</div>
       </div>
     </div>
 
     <!-- ── 4. Main 2-Column Responsive Workspace ───────────────────── -->
     <div class="admin-layout-grid">
 
-      <!-- ── Left Column: Live Student Submissions & Activity ──────── -->
-      <div class="card" style="padding:0;overflow:hidden;">
-        <div style="padding:var(--sp-4) var(--sp-5);border-bottom:1px solid var(--c-border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
-          <div>
-            <div style="display:flex;align-items:center;gap:var(--sp-2);">
-              <h2 style="font-size:var(--text-base);font-weight:700;color:var(--c-text);margin:0;">
-                Live Student Submissions
-              </h2>
-              <span class="badge badge-normal" style="font-size:11px;">${recentUpdatesToShow.length} items</span>
-            </div>
-            <div style="font-size:var(--text-xs);color:var(--c-text-2);margin-top:2px;">
-              Real-time portfolio achievements, hackathons, and certifications
-            </div>
-          </div>
-          <button class="btn btn-ghost btn-sm" onclick="AscendApp.navigate('faculty-students')" style="font-size:var(--text-xs);">
-            View Roster ${Icons.chevronRight}
-          </button>
-        </div>
-
-        ${recentUpdatesToShow.length === 0 ? `
-          <div style="padding:var(--sp-8) var(--sp-4);text-align:center;color:var(--c-text-2);">
-            <div style="width:48px;height:48px;border-radius:50%;background:var(--c-bg);border:1px solid var(--c-border);display:inline-flex;align-items:center;justify-content:center;color:var(--c-text-3);margin-bottom:var(--sp-3);">
-              ${Icons.clock}
-            </div>
-            <div style="font-size:var(--text-sm);font-weight:600;color:var(--c-text);margin-bottom:4px;">
-              No Student Activity Recorded Yet
-            </div>
-            <div style="font-size:var(--text-xs);color:var(--c-text-2);max-width:380px;margin:0 auto;line-height:1.5;">
-              As enrolled students submit new achievements, certifications, and portfolio projects, their live activity feed will appear here for faculty mentoring and guidance.
-            </div>
-            <button class="btn btn-outline btn-sm" style="margin-top:var(--sp-4);" onclick="AscendApp.navigate('faculty-students')">
-              Open Student Directory
-            </button>
-          </div>` :
-          `<div style="display:flex;flex-direction:column;">
-            ${recentUpdatesToShow.map(u => `
-              <div style="padding:var(--sp-3) var(--sp-5);border-bottom:1px solid var(--c-border);display:flex;align-items:center;gap:var(--sp-3);transition:background var(--dur-fast);" class="feed-item-row">
-                <div class="avatar avatar-sm" style="flex-shrink:0;font-weight:700;font-size:12px;background:var(--c-primary-light);color:var(--c-primary);">${u.studentInitials || 'ST'}</div>
-                <div style="flex:1;min-width:0;">
-                  <div style="display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap;margin-bottom:2px;">
-                    <span style="font-size:var(--text-sm);font-weight:700;color:var(--c-text);">${u.studentName}</span>
-                    ${u.rollNo ? `<span style="font-size:var(--text-xs);color:var(--c-text-2);font-weight:500;">${u.rollNo}</span>` : ''}
-                    <span style="color:var(--c-border);font-size:10px;">&bull;</span>
-                    <span style="font-size:var(--text-xs);color:var(--c-text-2);">${u.actionType === 'added' ? 'added' : 'updated'}</span>
-                    ${getTypeBadge(u.itemType)}
-                  </div>
-                  <div style="font-size:var(--text-sm);font-weight:600;color:var(--c-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                    ${u.title}
-                  </div>
-                  <div style="font-size:var(--text-xs);color:var(--c-text-2);margin-top:2px;display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap;">
-                    ${u.subtitle ? `<span>${u.subtitle}</span><span style="color:var(--c-border);font-size:10px;">&bull;</span>` : ''}
-                    <span style="display:inline-flex;align-items:center;gap:4px;color:var(--c-text-2);font-weight:500;">
-                      ${Icons.clock} ${u.timestamp || 'Recently'}
-                    </span>
-                  </div>
-                </div>
-                <div style="flex-shrink:0;">
-                  <button class="btn btn-outline btn-sm" onclick="FacultyViews.openStudentDetail('${u.studentId}')" style="font-size:var(--text-xs);white-space:nowrap;">
-                    View Profile
-                  </button>
-                </div>
-              </div>`).join('')}
-          </div>`}
-      </div>
-
-      <!-- ── Right Column: Action Items & Evaluations ──────────────── -->
+      <!-- ── Left Column: Recent Updates & Semester Evaluations Due ── -->
       <div style="display:flex;flex-direction:column;gap:var(--sp-5);">
 
-        <!-- Action Items / Attention -->
-        <div class="card" style="padding:var(--sp-4);">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);margin-bottom:var(--sp-3);">
+        <!-- Live Student Submissions & Recent Updates -->
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div style="padding:var(--sp-4) var(--sp-5);border-bottom:1px solid var(--c-border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
             <div>
               <div style="display:flex;align-items:center;gap:var(--sp-2);">
-                <h2 style="font-size:var(--text-sm);font-weight:700;color:var(--c-text);margin:0;">Action Required</h2>
-                ${attentionItems.length > 0 ? `<span class="badge badge-attention" style="font-size:10px;font-weight:700;">${attentionItems.length}</span>` : ''}
+                <h2 style="font-size:var(--text-base);font-weight:700;color:var(--c-text);margin:0;">
+                  Recent Student Updates
+                </h2>
+                <span class="badge badge-normal" style="font-size:11px;">${recentUpdatesToShow.length} items</span>
               </div>
-              <div style="font-size:11px;color:var(--c-text-2);margin-top:2px;">
-                Factual items requiring advisor or mentor attention
+              <div style="font-size:var(--text-xs);color:var(--c-text-2);margin-top:2px;">
+                Real-time portfolio achievements, practical projects, and certifications
               </div>
             </div>
-            <span class="badge ${attentionItems.length > 0 ? 'badge-attention' : 'badge-normal'}" style="font-size:11px;">
-              ${attentionItems.length > 0 ? `${attentionItems.length} pending` : 'All clear'}
-            </span>
+            <button class="btn btn-ghost btn-sm" onclick="AscendApp.navigate('faculty-students')" style="font-size:var(--text-xs);">
+              View Directory ${Icons.chevronRight}
+            </button>
           </div>
 
-          ${attentionItems.length === 0 ? `
-            <div style="text-align:center;padding:var(--sp-5) var(--sp-3);background:var(--c-bg);border:1px dashed var(--c-border);border-radius:var(--r-md);">
-              <div style="display:inline-flex;color:var(--c-verified);margin-bottom:6px;">${Icons.checkCircle}</div>
-              <div style="font-size:var(--text-xs);font-weight:600;color:var(--c-text);">All Students On Track</div>
-              <div style="font-size:11px;color:var(--c-text-2);margin-top:2px;">No overdue reviews, incomplete profiles, or pending follow-ups in this cohort.</div>
+          ${recentUpdatesToShow.length === 0 ? `
+            <div style="padding:var(--sp-8) var(--sp-4);text-align:center;color:var(--c-text-2);">
+              <div style="width:44px;height:44px;border-radius:50%;background:var(--c-bg);border:1px solid var(--c-border);display:inline-flex;align-items:center;justify-content:center;color:var(--c-text-3);margin-bottom:var(--sp-2);">
+                ${Icons.clock}
+              </div>
+              <div style="font-size:var(--text-sm);font-weight:600;color:var(--c-text);margin-bottom:4px;">
+                No Student Activity Recorded Yet
+              </div>
+              <div style="font-size:var(--text-xs);color:var(--c-text-2);max-width:360px;margin:0 auto;line-height:1.5;">
+                As enrolled students submit new achievements and projects, their activity feed will appear here for faculty review.
+              </div>
             </div>` :
-            `<div style="display:flex;flex-direction:column;gap:var(--sp-2);">
-              ${attentionItems.map(item => `
-                <div style="padding:var(--sp-3);background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--r-md);display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);cursor:pointer;"
-                     onclick="FacultyViews.openStudentDetail('${item.student.id}')"
-                     role="button"
-                     tabindex="0"
-                     onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();FacultyViews.openStudentDetail('${item.student.id}');}"
-                     aria-label="View attention record for ${item.student.name}">
-                  <div style="display:flex;align-items:center;gap:var(--sp-2);min-width:0;">
-                    <div class="avatar avatar-sm" style="flex-shrink:0;width:30px;height:30px;font-size:11px;">${item.student.initials || 'ST'}</div>
-                    <div style="min-width:0;">
-                      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-                        <span style="font-size:var(--text-xs);font-weight:700;color:var(--c-text);">${item.student.name}</span>
-                        ${item.student.rollNo ? `<span style="font-size:10px;color:var(--c-text-2);">${item.student.rollNo}</span>` : ''}
-                      </div>
-                      <div style="margin-top:2px;">
-                        <span class="badge ${item.badgeClass}" style="font-size:10px;padding:1px 6px;">${item.badgeLabel}</span>
-                      </div>
-                      <div style="font-size:11px;color:var(--c-text-2);margin-top:3px;line-height:1.3;">
-                        ${item.reason}
-                      </div>
+            `<div style="display:flex;flex-direction:column;">
+              ${recentUpdatesToShow.map(u => `
+                <div style="padding:var(--sp-3) var(--sp-5);border-bottom:1px solid var(--c-border);display:flex;align-items:center;gap:var(--sp-3);transition:background var(--dur-fast);" class="feed-item-row">
+                  <div class="avatar avatar-sm" style="flex-shrink:0;font-weight:700;font-size:12px;background:var(--c-primary-light);color:var(--c-primary);">${u.studentInitials || 'ST'}</div>
+                  <div style="flex:1;min-width:0;">
+                    <div style="display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap;margin-bottom:2px;">
+                      <span style="font-size:var(--text-sm);font-weight:700;color:var(--c-text);">${u.studentName}</span>
+                      ${u.rollNo ? `<span style="font-size:var(--text-xs);color:var(--c-text-2);font-weight:500;">${u.rollNo}</span>` : ''}
+                      <span style="color:var(--c-border);font-size:10px;">&bull;</span>
+                      <span style="font-size:var(--text-xs);color:var(--c-text-2);">${u.actionType === 'added' ? 'added' : 'updated'}</span>
+                      ${getTypeBadge(u.itemType)}
+                    </div>
+                    <div style="font-size:var(--text-sm);font-weight:600;color:var(--c-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                      ${u.title}
+                    </div>
+                    <div style="font-size:var(--text-xs);color:var(--c-text-2);margin-top:2px;display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap;">
+                      ${u.subtitle ? `<span>${u.subtitle}</span><span style="color:var(--c-border);font-size:10px;">&bull;</span>` : ''}
+                      <span style="display:inline-flex;align-items:center;gap:4px;color:var(--c-text-2);font-weight:500;">
+                        ${Icons.clock} ${u.timestamp || 'Recently'}
+                      </span>
                     </div>
                   </div>
-                  <button class="btn btn-ghost btn-sm" style="flex-shrink:0;padding:4px 8px;font-size:11px;" onclick="event.stopPropagation();FacultyViews.openStudentDetail('${item.student.id}')">
-                    Review
-                  </button>
+                  <div style="flex-shrink:0;">
+                    <button class="btn btn-outline btn-sm" onclick="FacultyViews.openStudentDetail('${u.studentId}')" style="font-size:var(--text-xs);white-space:nowrap;">
+                      View Profile
+                    </button>
+                  </div>
                 </div>`).join('')}
             </div>`}
         </div>
 
+        <!-- Semester Evaluations Due (Semester 5 · July–November 2026) -->
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div style="padding:var(--sp-4) var(--sp-5);border-bottom:1px solid var(--c-border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
+            <div>
+              <div style="display:flex;align-items:center;gap:var(--sp-2);">
+                <h2 style="font-size:var(--text-base);font-weight:700;color:var(--c-text);margin:0;">
+                  Semester Evaluations Due
+                </h2>
+                <span class="badge badge-normal" style="font-size:11px;">Semester 5 &bull; Jul–Nov 2026</span>
+              </div>
+              <div style="font-size:var(--text-xs);color:var(--c-text-2);margin-top:2px;">
+                Faculty-led formal rubric evaluations across 5 developmental criteria
+              </div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="AscendApp.navigate('faculty-evaluations')" style="font-size:var(--text-xs);">
+              All Evaluations ${Icons.chevronRight}
+            </button>
+          </div>
+
+          <div style="display:flex;flex-direction:column;">
+            ${semesterEvalsDue.map(item => {
+              const s = item.student;
+              const statusBadge = item.status === 'published'
+                ? `<span class="badge" style="background:#E8F0FE;color:#1A73E8;border:1px solid #C2D8FF;font-size:10.5px;font-weight:600;">Published</span>`
+                : (item.status === 'draft'
+                  ? `<span class="badge" style="background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;font-size:10.5px;font-weight:600;">Draft</span>`
+                  : `<span class="badge" style="background:var(--c-bg);color:var(--c-text-2);border:1px solid var(--c-border);font-size:10.5px;font-weight:600;">To Evaluate</span>`);
+
+              const actionBtn = item.status === 'published'
+                ? `<button class="btn btn-outline btn-sm" style="font-size:11px;padding:3px 10px;" onclick="FacultyViews.openEditEvalModal('${item.evaluation.id}')">View / Edit</button>`
+                : (item.status === 'draft'
+                  ? `<button class="btn btn-primary btn-sm" style="font-size:11px;padding:3px 10px;" onclick="FacultyViews.openEditEvalModal('${item.evaluation.id}')">Continue Draft</button>`
+                  : `<button class="btn btn-primary btn-sm" style="font-size:11px;padding:3px 10px;" onclick="FacultyViews.openCreateEvalModal('${s.id}')">Start Evaluation</button>`);
+
+              return `
+                <div style="padding:14px 20px;border-bottom:1px solid var(--c-border);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+                  <div style="display:flex;align-items:center;gap:12px;min-width:200px;">
+                    <div class="avatar avatar-sm" style="background:var(--c-primary-light);color:var(--c-primary);font-weight:700;font-size:11px;">
+                      ${s.initials || 'ST'}
+                    </div>
+                    <div>
+                      <div style="display:flex;align-items:center;gap:6px;">
+                        <span style="font-size:var(--text-sm);font-weight:700;color:var(--c-text);">${s.name}</span>
+                        ${statusBadge}
+                      </div>
+                      <div style="font-size:11px;color:var(--c-text-3);margin-top:2px;">
+                        ${s.rollNo ? `${s.rollNo} &bull; ` : ''}${s.program || 'B.Tech CSE'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style="flex:1;min-width:220px;font-size:11.5px;color:var(--c-text-2);background:var(--c-bg);padding:6px 10px;border-radius:var(--r-sm);border:1px solid var(--c-border);">
+                    <div style="font-weight:600;color:var(--c-text);margin-bottom:1px;">Latest activity record:</div>
+                    ${item.latestSummary}
+                  </div>
+
+                  <div style="display:flex;align-items:center;gap:8px;">
+                    ${actionBtn}
+                  </div>
+                </div>`;
+            }).join('')}
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── Right Column: Inactive Students & Unreviewed Summaries ── -->
+      <div style="display:flex;flex-direction:column;gap:var(--sp-5);">
+
+        <!-- 1. Students with No Activity in Last 30 Days -->
+        <div class="card" style="padding:var(--sp-4);border-top:3px solid #D97706;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);margin-bottom:var(--sp-3);">
+            <div>
+              <div style="display:flex;align-items:center;gap:var(--sp-2);">
+                <h2 style="font-size:var(--text-sm);font-weight:700;color:var(--c-text);margin:0;">
+                  No Activity in Past 30 Days
+                </h2>
+                <span class="badge" style="background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;font-size:10px;font-weight:700;">
+                  ${inactiveStudents.length}
+                </span>
+              </div>
+              <div style="font-size:11px;color:var(--c-text-2);margin-top:2px;">
+                Students who have not logged any portfolio updates in 30+ days
+              </div>
+            </div>
+          </div>
+
+          ${inactiveStudents.length === 0 ? `
+            <div style="text-align:center;padding:var(--sp-4) var(--sp-3);background:var(--c-bg);border:1px dashed var(--c-border);border-radius:var(--r-md);">
+              <div style="display:inline-flex;color:var(--c-verified);margin-bottom:4px;">${Icons.check}</div>
+              <div style="font-size:var(--text-xs);font-weight:600;color:var(--c-text);">All Students Active</div>
+              <div style="font-size:11px;color:var(--c-text-3);margin-top:2px;">All enrolled students have logged activity within the past 30 days.</div>
+            </div>` :
+            `<div style="display:flex;flex-direction:column;gap:var(--sp-2);">
+              ${inactiveStudents.map(s => `
+                <div style="padding:10px 12px;background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--r-md);display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                  <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+                    <div class="avatar avatar-sm" style="width:28px;height:28px;font-size:10px;background:#FEF3C7;color:#92400E;">${s.initials || 'ST'}</div>
+                    <div style="min-width:0;">
+                      <div style="font-size:var(--text-xs);font-weight:700;color:var(--c-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                        ${s.name}
+                      </div>
+                      <div style="font-size:11px;color:#D97706;font-weight:600;margin-top:1px;">
+                        ${s.daysInactive ? `${s.daysInactive} days inactive` : '30+ days inactive'}
+                      </div>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:6px;flex-shrink:0;">
+                    <button class="btn btn-outline btn-sm" style="padding:3px 8px;font-size:11px;"
+                      onclick="FacultyViews.openGuidanceModalForStudent('${s.id}', '${s.name}')">
+                      Send Guidance
+                    </button>
+                  </div>
+                </div>`).join('')}
+            </div>`}
+        </div>
+
+        <!-- 2. Students Who Have Not Reviewed Monthly Summary -->
+        <div class="card" style="padding:var(--sp-4);border-top:3px solid #1A73E8;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);margin-bottom:var(--sp-3);">
+            <div>
+              <div style="display:flex;align-items:center;gap:var(--sp-2);">
+                <h2 style="font-size:var(--text-sm);font-weight:700;color:var(--c-text);margin:0;">
+                  Unreviewed Monthly Summary
+                </h2>
+                <span class="badge" style="background:#E8F0FE;color:#1A73E8;border:1px solid #C2D8FF;font-size:10px;font-weight:700;">
+                  ${unreviewedMonthlyStudents.length}
+                </span>
+              </div>
+              <div style="font-size:11px;color:var(--c-text-2);margin-top:2px;">
+                September activity summaries awaiting student confirmation
+              </div>
+            </div>
+          </div>
+
+          ${unreviewedMonthlyStudents.length === 0 ? `
+            <div style="text-align:center;padding:var(--sp-4) var(--sp-3);background:var(--c-bg);border:1px dashed var(--c-border);border-radius:var(--r-md);">
+              <div style="display:inline-flex;color:var(--c-verified);margin-bottom:4px;">${Icons.check}</div>
+              <div style="font-size:var(--text-xs);font-weight:600;color:var(--c-text);">All Summaries Reviewed</div>
+              <div style="font-size:11px;color:var(--c-text-3);margin-top:2px;">All students have confirmed their September portfolio activity summary.</div>
+            </div>` :
+            `<div style="display:flex;flex-direction:column;gap:var(--sp-2);">
+              ${unreviewedMonthlyStudents.map(s => `
+                <div style="padding:10px 12px;background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--r-md);display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                  <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+                    <div class="avatar avatar-sm" style="width:28px;height:28px;font-size:10px;background:var(--c-primary-light);color:var(--c-primary);">${s.initials || 'ST'}</div>
+                    <div style="min-width:0;">
+                      <div style="font-size:var(--text-xs);font-weight:700;color:var(--c-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                        ${s.name}
+                      </div>
+                      <div style="font-size:11px;color:var(--c-text-3);margin-top:1px;">
+                        September summary pending review
+                      </div>
+                    </div>
+                  </div>
+                  <div style="display:flex;gap:6px;flex-shrink:0;">
+                    <button class="btn btn-ghost btn-sm" style="padding:3px 8px;font-size:11px;border:1px solid var(--c-border);"
+                      onclick="FacultyViews.sendReviewReminder('${s.id}', '${s.name}')">
+                      Send Reminder
+                    </button>
+                  </div>
+                </div>`).join('')}
+            </div>`}
+        </div>
 
       </div>
 
@@ -336,8 +438,36 @@ function onDashboardClassChange(classId) {
   AscendApp.navigate('faculty-dashboard');
 }
 
+/* ── Helper: Send Reminder to Student ────────────────────────── */
+function sendReviewReminder(studentId, studentName) {
+  if (window.AscendFacultyData && window.AscendFacultyData.sendFeedback) {
+    window.AscendFacultyData.sendFeedback({
+      toStudentId: studentId,
+      toStudentName: studentName,
+      category: 'Monthly Review Reminder',
+      subject: 'Please review your September activity summary',
+      message: 'Your September portfolio activity summary is ready. Please review your logged achievements and confirm your monthly progress record.',
+      recommendedNextStep: 'Log into student portal and mark September summary as reviewed.',
+    });
+  }
+  if (window.AscendUI && window.AscendUI.showToast) {
+    window.AscendUI.showToast(`Reminder sent to ${studentName}.`, 'success');
+  }
+}
+
+function openGuidanceModalForStudent(studentId, studentName) {
+  AscendApp.navigate('faculty-goals-feedback');
+  setTimeout(() => {
+    if (typeof FacultyViews.openGlobalFeedbackModal === 'function') {
+      FacultyViews.openGlobalFeedbackModal(studentId);
+    }
+  }, 200);
+}
+
 window.FacultyViews = window.FacultyViews || {};
 Object.assign(window.FacultyViews, {
   dashboard: renderFacultyDashboard,
   onDashboardClassChange,
+  sendReviewReminder,
+  openGuidanceModalForStudent,
 });

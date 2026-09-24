@@ -106,17 +106,21 @@ function renderDashboard() {
 
   return `
     <!-- Page Header -->
-    <div style="margin-bottom:var(--sp-8);">
+    <div style="margin-bottom:var(--sp-6);">
       <div style="font-size:var(--text-2xl);font-weight:700;letter-spacing:-0.025em;color:var(--c-text);">
         ${greeting}, ${student ? student.firstName : 'Student'}
       </div>
       <div style="margin-top:4px;font-size:var(--text-base);color:var(--c-text-2);">
-        Keep building your comprehensive professional portfolio with unlimited achievements and practical projects.
+        Keep building your comprehensive professional portfolio with completed achievements and projects.
       </div>
     </div>
 
+    <!-- ── Compact Monthly Activity Update Card ────────────────────────── -->
+    ${renderStudentMonthlyUpdateCard()}
+
     <!-- Top Row: Factual Portfolio Overview + Add Achievement CTA -->
     <div class="dash-top-row" style="display:grid;grid-template-columns:1.2fr 1fr;gap:var(--sp-5);margin-bottom:var(--sp-6);">
+
 
       <!-- Factual Portfolio Overview Card -->
       <div class="card" style="display:flex;flex-direction:column;justify-content:space-between;gap:var(--sp-4);">
@@ -228,9 +232,139 @@ function renderDashboard() {
       @media (max-width: 900px) {
         .dash-top-row { grid-template-columns: 1fr !important; }
         .dash-lower-row { grid-template-columns: 1fr !important; }
+        .monthly-card-actions { flex-direction: column; align-items: stretch !important; gap: 8px !important; }
       }
     </style>`;
 }
 
+/* ── Compact Monthly Activity Update Card Sub-Renderer ───────── */
+function renderStudentMonthlyUpdateCard() {
+  const { Icons, formatDate } = window.AscendUI;
+  const summaries = (window.AscendData && Array.isArray(window.AscendData.monthlySummaries))
+    ? window.AscendData.monthlySummaries
+    : [];
+
+  const selectedKey = window._studentSelectedMonthKey || (summaries[0] ? summaries[0].monthKey : '2026-09');
+  const summary = summaries.find(m => m.monthKey === selectedKey) || summaries[0] || {
+    month: 'September 2026',
+    monthKey: '2026-09',
+    achievementsAdded: 2,
+    projectsUpdated: 1,
+    feedbackReceived: 1,
+    lastActivityFormatted: '4 days ago',
+    reviewedByStudent: false,
+    summaryText: 'September summary: 2 achievements added, 1 project updated, 1 faculty feedback note received. Last portfolio activity: 4 days ago.',
+  };
+
+  const isReviewed = !!summary.reviewedByStudent;
+  const reviewedText = summary.reviewedAt ? `Reviewed on ${formatDate(summary.reviewedAt)}` : 'Marked as reviewed';
+
+  return `
+    <div class="card" id="student-monthly-update-card" style="padding:18px 20px;margin-bottom:var(--sp-6);background:var(--c-surface);border:1.5px solid var(--c-border);border-left:4px solid var(--c-primary);border-radius:var(--r-md);box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+      <!-- Top Row: Icon + Title + Month Selector + Status Badge -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:12px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;border-radius:var(--r-md);background:var(--c-primary-light);color:var(--c-primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            ${Icons.clock}
+          </div>
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span style="font-size:var(--text-base);font-weight:700;color:var(--c-text);">Monthly Activity Summary</span>
+              <select class="form-input form-select" id="student-month-select"
+                style="padding:3px 26px 3px 10px;font-size:12px;font-weight:600;width:auto;border-radius:var(--r-sm);height:auto;"
+                onchange="AscendViews.onStudentChangeMonth(this.value)">
+                ${summaries.map(m => `
+                  <option value="${m.monthKey}" ${m.monthKey === selectedKey ? 'selected' : ''}>
+                    ${m.month}
+                  </option>`).join('')}
+              </select>
+            </div>
+            <div style="font-size:11px;color:var(--c-text-3);margin-top:2px;">
+              Factual record of portfolio additions and mentorship notes &bull; Not an automated score
+            </div>
+          </div>
+        </div>
+
+        <div>
+          ${isReviewed ? `
+            <span class="badge" style="background:#E8F0FE;color:#1A73E8;border:1px solid #C2D8FF;font-weight:600;font-size:11.5px;padding:4px 10px;display:inline-flex;align-items:center;gap:5px;">
+              ${Icons.check} Reviewed
+            </span>` : `
+            <span class="badge" style="background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;font-weight:600;font-size:11.5px;padding:4px 10px;display:inline-flex;align-items:center;gap:5px;">
+              ${Icons.clock} Review Needed
+            </span>`}
+        </div>
+      </div>
+
+      <!-- Factual Summary Callout -->
+      <div style="padding:12px 14px;background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--r-md);margin-bottom:12px;">
+        <div style="font-size:var(--text-sm);font-weight:600;color:var(--c-text);line-height:1.5;">
+          ${summary.summaryText}
+        </div>
+        <!-- Factual breakdown pills -->
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;">
+          <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r-sm);background:var(--c-surface);border:1px solid var(--c-border);color:var(--c-text-2);">
+            ${summary.achievementsAdded} achievement${summary.achievementsAdded !== 1 ? 's' : ''} added
+          </span>
+          <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r-sm);background:var(--c-surface);border:1px solid var(--c-border);color:var(--c-text-2);">
+            ${summary.projectsUpdated} project${summary.projectsUpdated !== 1 ? 's' : ''} updated
+          </span>
+          <span style="font-size:11px;font-weight:600;padding:2px 8px;border-radius:var(--r-sm);background:var(--c-surface);border:1px solid var(--c-border);color:var(--c-text-2);">
+            ${summary.feedbackReceived} feedback note${summary.feedbackReceived !== 1 ? 's' : ''}
+          </span>
+          <span style="font-size:11px;color:var(--c-text-3);">
+            &bull; Last activity: ${summary.lastActivityFormatted || 'Recently'}
+          </span>
+        </div>
+      </div>
+
+      <!-- Actions Bar -->
+      <div class="monthly-card-actions" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:4px;">
+        <div style="font-size:11.5px;color:var(--c-text-3);">
+          ${isReviewed ? `${Icons.check} ${reviewedText}` : 'Please review and confirm your monthly portfolio records before month-end.'}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button class="btn btn-outline btn-sm" onclick="AscendApp.navigate('goals')">
+            Review your progress ${Icons.chevronRight}
+          </button>
+          ${!isReviewed ? `
+            <button class="btn btn-primary btn-sm" onclick="AscendViews.onStudentReviewMonth('${summary.monthKey}')">
+              ${Icons.check} Mark as reviewed
+            </button>` : `
+            <button class="btn btn-ghost btn-sm" disabled style="opacity:0.8;cursor:default;border:1px solid var(--c-border);">
+              ${Icons.check} Confirmed
+            </button>`}
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ── Month Selector & Review Action Handlers ─────────────────── */
+function onStudentChangeMonth(monthKey) {
+  window._studentSelectedMonthKey = monthKey;
+  const card = document.getElementById('student-monthly-update-card');
+  if (card) {
+    card.outerHTML = renderStudentMonthlyUpdateCard();
+  }
+}
+
+async function onStudentReviewMonth(monthKey) {
+  if (window.AscendData && window.AscendData.markMonthReviewed) {
+    await window.AscendData.markMonthReviewed(monthKey);
+    if (window.AscendUI && window.AscendUI.showToast) {
+      window.AscendUI.showToast('Monthly activity summary marked as reviewed.', 'success');
+    }
+  }
+  const card = document.getElementById('student-monthly-update-card');
+  if (card) {
+    card.outerHTML = renderStudentMonthlyUpdateCard();
+  }
+}
+
 window.AscendViews = window.AscendViews || {};
-window.AscendViews.dashboard = renderDashboard;
+Object.assign(window.AscendViews, {
+  dashboard: renderDashboard,
+  onStudentChangeMonth,
+  onStudentReviewMonth,
+});
+

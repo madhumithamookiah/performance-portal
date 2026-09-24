@@ -389,6 +389,95 @@
         "Presentation Skills",
         "Code Review",
         "R Programming"
+      ],
+      "monthlySummaries": [
+        {
+          "month": "September 2026",
+          "monthKey": "2026-09",
+          "achievementsAdded": 2,
+          "achievementTitles": [
+            "AWS Certified Cloud Practitioner",
+            "Smart India Hackathon Finalist"
+          ],
+          "projectsUpdated": 1,
+          "projectTitles": [
+            "Ascend Distributed File System"
+          ],
+          "feedbackReceived": 1,
+          "profileDetailsUpdated": true,
+          "lastActivityDate": "2026-09-17",
+          "lastActivityFormatted": "4 days ago",
+          "reviewedByStudent": true,
+          "reviewedAt": "2026-09-21T17:23:05.266Z",
+          "summaryText": "September summary: 2 achievements added, 1 project updated, 1 faculty feedback note received. Last portfolio activity: 4 days ago."
+        },
+        {
+          "month": "August 2026",
+          "monthKey": "2026-08",
+          "achievementsAdded": 1,
+          "achievementTitles": [
+            "Frontend Engineering Certificate"
+          ],
+          "projectsUpdated": 0,
+          "projectTitles": [],
+          "feedbackReceived": 1,
+          "profileDetailsUpdated": false,
+          "lastActivityDate": "2026-08-26",
+          "lastActivityFormatted": "26 days ago",
+          "reviewedByStudent": true,
+          "reviewedAt": "2026-08-30T10:15:00.000Z",
+          "summaryText": "August summary: 1 achievement added, 0 projects updated, 1 faculty feedback note received. Last portfolio activity: 26 days ago."
+        },
+        {
+          "month": "July 2026",
+          "monthKey": "2026-07",
+          "achievementsAdded": 0,
+          "achievementTitles": [],
+          "projectsUpdated": 0,
+          "projectTitles": [],
+          "feedbackReceived": 0,
+          "profileDetailsUpdated": true,
+          "lastActivityDate": "2026-07-15",
+          "lastActivityFormatted": "July 15, 2026",
+          "reviewedByStudent": true,
+          "reviewedAt": "2026-07-31T18:00:00.000Z",
+          "summaryText": "July summary: 0 achievements added, 0 projects updated, 0 faculty feedback notes received. Profile details initialized."
+        }
+      ],
+      "notifications": [
+        {
+          "id": "notif-monthly-ready",
+          "type": "monthly_summary",
+          "title": "Monthly activity summary ready",
+          "message": "Your September activity summary is ready. Review your portfolio and add any completed work from this month.",
+          "date": "2026-09-18T09:00:00.000Z",
+          "formattedDate": "3 days ago",
+          "isRead": false,
+          "actionView": "dashboard",
+          "actionLabel": "Review your progress"
+        },
+        {
+          "id": "notif-month-end-reminder",
+          "type": "month_end_reminder",
+          "title": "Month-end portfolio reminder",
+          "message": "Reminder: Review your portfolio activity before month-end and record any completed certifications or projects.",
+          "date": "2026-09-20T14:30:00.000Z",
+          "formattedDate": "Yesterday",
+          "isRead": false,
+          "actionView": "goals",
+          "actionLabel": "View portfolio"
+        },
+        {
+          "id": "notif-eval-published",
+          "type": "eval_published",
+          "title": "Semester evaluation published",
+          "message": "Your Semester 5 evaluation has been published. Review your faculty feedback and recommended next steps.",
+          "date": "2026-09-19T16:00:00.000Z",
+          "formattedDate": "2 days ago",
+          "isRead": false,
+          "actionView": "evaluations",
+          "actionLabel": "View evaluation"
+        }
       ]
     },
     "usr-1789671579313-wy24": {

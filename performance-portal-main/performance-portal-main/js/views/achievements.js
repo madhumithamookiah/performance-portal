@@ -628,13 +628,14 @@ function openProofViewerModal(ach) {
   const headerIcon = document.getElementById('proof-modal-header-icon');
 
   if (modalTitle) {
-    modalTitle.textContent = `${ach.title} – Verification Proof`;
+    modalTitle.textContent = `${ach.title} – Evidence & Proof`;
   }
   const modalSubtitle = document.getElementById('proof-modal-subtitle');
   if (modalSubtitle) {
-    modalSubtitle.textContent = 'Verified Evidence Document';
+    modalSubtitle.textContent = 'Uploaded Proof Document & Credential Link';
   }
   if (headerIcon) {
+
     headerIcon.style.background = `${cardColor}15`;
     headerIcon.style.color = cardColor;
     headerIcon.innerHTML = Icons[ach.iconKey] || Icons.award;
@@ -744,7 +745,7 @@ function openProofViewerModal(ach) {
             <div class="proof-card-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
               <div style="display:flex;align-items:center;gap:8px;">
                 <span style="color:#137333;font-size:18px;">${Icons.link || Icons.globe}</span>
-                <span style="font-weight:700;font-size:12px;color:var(--c-text);text-transform:uppercase;letter-spacing:0.04em;">Verification URL</span>
+                <span style="font-weight:700;font-size:12px;color:var(--c-text);text-transform:uppercase;letter-spacing:0.04em;">Credential / Evidence Link</span>
               </div>
               <span class="proof-card-badge url" style="font-size:10.5px;font-weight:600;color:#1A73E8;background:#E8F0FE;border:1px solid #D2E3FC;padding:2px 8px;border-radius:10px;">Live Link</span>
             </div>
@@ -753,7 +754,7 @@ function openProofViewerModal(ach) {
                 ${fullUrl}
               </a>
               <div style="font-size:11px;color:var(--c-text-3);margin-top:4px;">
-                Public institutional credential verification link
+                Public credential link or project reference
               </div>
             </div>
           </div>
@@ -770,11 +771,12 @@ function openProofViewerModal(ach) {
             <div class="proof-card-header" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
               <div style="display:flex;align-items:center;gap:8px;">
                 <span style="color:var(--c-text-3);font-size:18px;">${Icons.link}</span>
-                <span style="font-weight:700;font-size:12px;color:var(--c-text-2);text-transform:uppercase;letter-spacing:0.04em;">Verification URL</span>
+                <span style="font-weight:700;font-size:12px;color:var(--c-text-2);text-transform:uppercase;letter-spacing:0.04em;">Credential / Evidence Link</span>
               </div>
               <span class="proof-card-badge empty" style="font-size:10.5px;color:var(--c-text-3);background:var(--c-bg);padding:2px 8px;border-radius:10px;">None</span>
             </div>
-            <div style="font-size:12px;color:var(--c-text-3);margin-top:6px;">No online verification URL was provided.</div>
+            <div style="font-size:12px;color:var(--c-text-3);margin-top:6px;">No online credential link was provided.</div>
+
           </div>
           <div>
             <span style="font-size:11px;color:var(--c-text-3);font-style:italic;">No URL provided</span>

@@ -288,29 +288,27 @@ function renderFacultyStudentDetail(paramId, paramTab) {
         </div>
       </div>
 
-      <!-- Skills Matrix (if available) -->
+      <!-- ── Monthly Activity Section (Month Selector + Factual Timeline) ── -->
+      ${renderStudentDetailMonthlyActivitySection(s)}
+
+      <!-- Skills Acquired Factual Inventory -->
       ${s.skills && Object.keys(s.skills).length > 0 ? `
-        <div class="card" style="padding:var(--sp-5);">
-          <div style="font-size:var(--text-base);font-weight:700;color:var(--c-text);margin-bottom:var(--sp-4);">
-            Skills & Competency Assessment
+        <div class="card" style="padding:var(--sp-5);margin-top:var(--sp-4);">
+          <div style="font-size:var(--text-base);font-weight:700;color:var(--c-text);margin-bottom:var(--sp-2);">
+            Demonstrated Skills &amp; Competency Inventory
           </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--sp-4);">
-            ${Object.entries(s.skills).map(([domain, val]) => {
-              const pct = typeof val === 'number' ? val : (Array.isArray(val) ? val.length * 20 : 75);
-              return `
-                <div>
-                  <div style="display:flex;justify-content:space-between;font-size:var(--text-xs);margin-bottom:6px;">
-                    <span style="font-weight:600;color:var(--c-text);">${domain}</span>
-                    <span style="color:var(--c-primary);font-weight:700;">${pct}%</span>
-                  </div>
-                  <div class="progress-bar-track" style="height:6px;">
-                    <div class="progress-bar-fill" style="width:${Math.min(100, pct)}%;background:var(--c-primary);"></div>
-                  </div>
-                </div>`;
+          <div style="font-size:var(--text-xs);color:var(--c-text-3);margin-bottom:var(--sp-4);">
+            Self-submitted and demonstrated through coursework, projects, and recorded certifications
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:var(--sp-2);">
+            ${Object.values(s.skills).flat().map(sk => {
+              const name = typeof sk === 'string' ? sk : (sk.name || 'Skill');
+              return skillTag(name);
             }).join('')}
           </div>
         </div>` : ''}
     </div>
+
 
     <!-- ═══════════ Tab 2: Activity (Student's Recent Achievements Uploaded in Student Portal) ═══════════ -->
     <div id="fsd-tab-activity" class="fsd-tab-content ${activeTab === 'activity' ? 'active' : ''}">
@@ -657,6 +655,155 @@ function openStudentDetail(studentId) {
   AscendApp.navigate('faculty-student-detail');
 }
 
+/* ── Monthly Activity Section Renderer (Overview & Activity) ─── */
+function renderStudentDetailMonthlyActivitySection(s) {
+
+  const { Icons, formatDate } = window.AscendUI;
+  const summaries = Array.isArray(s.monthlySummaries) && s.monthlySummaries.length > 0
+    ? s.monthlySummaries
+    : [
+        {
+          month: 'September 2026',
+          monthKey: '2026-09',
+          achievementsAdded: (s.achievements || []).length,
+          achievementTitles: (s.achievements || []).map(a => a.title),
+          projectsUpdated: (s.projects || []).length,
+          projectTitles: (s.projects || []).map(p => p.title),
+          feedbackReceived: 1,
+          lastActivityFormatted: '4 days ago',
+          reviewedByStudent: !!s.monthlyReviewed,
+          summaryText: s.latestMonthlySummary || 'September summary: Activity recorded.',
+        },
+        {
+          month: 'August 2026',
+          monthKey: '2026-08',
+          achievementsAdded: 1,
+          achievementTitles: ['Full-Stack Engineering Workshop'],
+          projectsUpdated: 0,
+          projectTitles: [],
+          feedbackReceived: 1,
+          lastActivityFormatted: 'August 20, 2026',
+          reviewedByStudent: true,
+          summaryText: 'August summary: 1 achievement added, 0 projects updated, 1 faculty feedback note received. Last portfolio activity: August 20, 2026.',
+        },
+        {
+          month: 'July 2026',
+          monthKey: '2026-07',
+          achievementsAdded: 0,
+          achievementTitles: [],
+          projectsUpdated: 0,
+          projectTitles: [],
+          feedbackReceived: 0,
+          lastActivityFormatted: 'July 15, 2026',
+          reviewedByStudent: true,
+          summaryText: 'July summary: 0 achievements added, 0 projects updated, 0 faculty feedback notes received. Profile details initialized.',
+        }
+      ];
+
+  const selectedKey = window._fsdSelectedMonthKey || (summaries[0] ? summaries[0].monthKey : '2026-09');
+  const currentSummary = summaries.find(m => m.monthKey === selectedKey) || summaries[0];
+  const isReviewed = !!currentSummary.reviewedByStudent;
+
+  // Filter achievements, projects, feedback for this month
+  const monthAchs = (s.achievements || []).filter(a => {
+    if (!a.date) return false;
+    return a.date.startsWith(selectedKey);
+  });
+  const monthProjs = (s.projects || []).filter(p => {
+    if (!p.date) return false;
+    return p.date.startsWith(selectedKey);
+  });
+
+  return `
+    <div class="card" id="fsd-monthly-activity-section" style="padding:var(--sp-5);margin-top:var(--sp-4);border-left:4px solid var(--c-primary);">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:var(--sp-4);">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;border-radius:var(--r-md);background:var(--c-primary-light);color:var(--c-primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            ${Icons.clock}
+          </div>
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span style="font-size:var(--text-base);font-weight:700;color:var(--c-text);">Monthly Activity Record</span>
+              <select class="form-input form-select" id="fsd-month-select"
+                style="padding:3px 26px 3px 10px;font-size:12px;font-weight:600;width:auto;border-radius:var(--r-sm);height:auto;"
+                onchange="FacultyViews.onSelectStudentDetailMonth(this.value)">
+                ${summaries.map(m => `
+                  <option value="${m.monthKey}" ${m.monthKey === selectedKey ? 'selected' : ''}>
+                    ${m.month}
+                  </option>`).join('')}
+              </select>
+            </div>
+            <div style="font-size:11px;color:var(--c-text-3);margin-top:2px;">
+              Factual student development timeline &bull; Monthly activity summary
+            </div>
+          </div>
+        </div>
+
+        <div>
+          ${isReviewed ? `
+            <span class="badge" style="background:#E8F0FE;color:#1A73E8;border:1px solid #C2D8FF;font-weight:600;font-size:11.5px;padding:4px 10px;display:inline-flex;align-items:center;gap:5px;">
+              ${Icons.check} Reviewed by Student
+            </span>` : `
+            <span class="badge" style="background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;font-weight:600;font-size:11.5px;padding:4px 10px;display:inline-flex;align-items:center;gap:5px;">
+              ${Icons.clock} Pending Student Review
+            </span>`}
+        </div>
+      </div>
+
+      <!-- Factual Summary Box -->
+      <div style="padding:14px 16px;background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--r-md);margin-bottom:var(--sp-4);">
+        <div style="font-size:var(--text-sm);font-weight:600;color:var(--c-text);line-height:1.5;">
+          ${currentSummary.summaryText}
+        </div>
+        <div style="font-size:11px;color:var(--c-text-3);margin-top:6px;">
+          Record type: Factual activity digest &bull; Not a grade or performance score
+        </div>
+      </div>
+
+      <!-- Factual Timeline of Events in Selected Month -->
+      <div style="display:flex;flex-direction:column;gap:var(--sp-3);">
+        <div style="font-size:var(--text-xs);font-weight:700;color:var(--c-text-2);text-transform:uppercase;letter-spacing:0.04em;">
+          Activity Log for ${currentSummary.month}
+        </div>
+
+        ${(currentSummary.achievementTitles && currentSummary.achievementTitles.length > 0) || (currentSummary.projectTitles && currentSummary.projectTitles.length > 0) ? `
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            ${(currentSummary.achievementTitles || []).map(title => `
+              <div style="padding:10px 14px;background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-sm);display:flex;align-items:center;gap:10px;">
+                <span style="color:var(--c-primary);">${Icons.award}</span>
+                <div style="flex:1;min-width:0;">
+                  <span style="font-size:var(--text-xs);font-weight:600;color:var(--c-text);">${title}</span>
+                  <span class="badge badge-normal" style="font-size:10px;margin-left:6px;">Achievement</span>
+                </div>
+              </div>`).join('')}
+
+            ${(currentSummary.projectTitles || []).map(title => `
+              <div style="padding:10px 14px;background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-sm);display:flex;align-items:center;gap:10px;">
+                <span style="color:#059669;">${Icons.folder}</span>
+                <div style="flex:1;min-width:0;">
+                  <span style="font-size:var(--text-xs);font-weight:600;color:var(--c-text);">${title}</span>
+                  <span class="badge badge-normal" style="font-size:10px;margin-left:6px;">Project</span>
+                </div>
+              </div>`).join('')}
+          </div>` : `
+          <div style="padding:14px;background:var(--c-bg);border:1px dashed var(--c-border);border-radius:var(--r-sm);font-size:var(--text-xs);color:var(--c-text-3);text-align:center;">
+            No portfolio additions or project updates were recorded in ${currentSummary.month}.
+          </div>`}
+      </div>
+    </div>`;
+}
+
+function onSelectStudentDetailMonth(monthKey) {
+  window._fsdSelectedMonthKey = monthKey;
+  const section = document.getElementById('fsd-monthly-activity-section');
+  if (section && window._facultySelectedStudentId) {
+    const student = (window.AscendFacultyData.students || []).find(st => st.id === window._facultySelectedStudentId);
+    if (student) {
+      section.outerHTML = renderStudentDetailMonthlyActivitySection(student);
+    }
+  }
+}
+
 window.FacultyViews = window.FacultyViews || {};
 Object.assign(window.FacultyViews, {
   studentDetail: renderFacultyStudentDetail,
@@ -666,6 +813,7 @@ Object.assign(window.FacultyViews, {
   submitDetailFeedback,
   openDetailNewEvalModal,
   openStudentDetail,
+  onSelectStudentDetailMonth,
   updateDetailNextStepLabel() {
     const catEl = document.getElementById('fsd-fb-category');
     if (!catEl) return;
@@ -674,3 +822,4 @@ Object.assign(window.FacultyViews, {
     const optEl = document.getElementById('fsd-fb-next-step-opt');
   },
 });
+

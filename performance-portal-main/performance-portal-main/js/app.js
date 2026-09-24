@@ -442,6 +442,7 @@
   function buildMobileTopBar() {
     const { Icons, ascendLogo } = window.AscendUI;
     const user = getUserInfo();
+    const unreadCount = getUnreadNotifCount();
 
     const bar = document.getElementById('mobile-topbar');
     if (!bar) return;
@@ -457,6 +458,13 @@
       </div>
       <div class="mobile-topbar-actions">
         ${renderRoleSwitcherHTML()}
+        <div class="notif-btn-wrap" id="mobile-notif-wrap">
+          <button type="button" class="icon-btn" id="mobile-notif-btn"
+            onclick="AscendApp.toggleNotifications(event, 'mobile-notif-wrap')" aria-label="Notifications" style="min-width:44px;min-height:44px;">
+            ${Icons.bell}
+            ${unreadCount > 0 ? `<span class="notif-badge" id="mobile-notif-badge">${unreadCount}</span>` : ''}
+          </button>
+        </div>
         <button class="icon-btn" aria-label="Account menu" id="mobile-avatar-btn"
           onclick="AscendApp.openAccountDropdown(event, 'mobile-avatar-btn')" style="padding:0;border-radius:50%;min-width:44px;min-height:44px;">
           <div class="avatar avatar-sm" style="pointer-events:none;">${user.initials}</div>
@@ -487,6 +495,7 @@
   function buildTopbar() {
     const { Icons } = window.AscendUI;
     const user = getUserInfo();
+    const unreadCount = getUnreadNotifCount();
     const activeView = currentView || ((currentRole === 'faculty') ? 'faculty-dashboard' : 'dashboard');
 
     const bar = document.getElementById('desktop-topbar');
@@ -497,7 +506,6 @@
         ? 'Faculty Settings'
         : (routes[activeView] ? (typeof routes[activeView].title === 'function' ? routes[activeView].title() : routes[activeView].title) : 'Dashboard'));
 
-    const notifTargetView = currentRole === 'admin' ? 'admin-dashboard' : (currentRole === 'student' ? 'feedback' : 'faculty-goals-feedback');
     const showSearch = (currentRole !== 'student');
 
     let searchPlaceholder = 'Search students, cohorts, feedback…';
@@ -523,9 +531,13 @@
       </div>` : ''}
       <div class="topbar-actions">
         ${renderRoleSwitcherHTML()}
-        <button type="button" class="icon-btn" onclick="AscendApp.navigate('${notifTargetView}')" aria-label="Notifications">
-          ${Icons.bell}
-        </button>
+        <div class="notif-btn-wrap" id="desktop-notif-wrap">
+          <button type="button" class="icon-btn" id="desktop-notif-btn"
+            onclick="AscendApp.toggleNotifications(event, 'desktop-notif-wrap')" aria-label="Notifications">
+            ${Icons.bell}
+            ${unreadCount > 0 ? `<span class="notif-badge" id="desktop-notif-badge">${unreadCount}</span>` : ''}
+          </button>
+        </div>
         <button class="icon-btn" aria-label="Account menu" id="desktop-avatar-btn"
           onclick="AscendApp.openAccountDropdown(event, 'desktop-avatar-btn')" style="padding:0;border-radius:50%;width:32px;height:32px;">
           <div class="avatar avatar-sm" style="pointer-events:none;">${user.initials}</div>
@@ -590,6 +602,145 @@
           window.FacultyViews.filterFeedbackHistory();
         }
       }
+    }
+  }
+
+  /* ── Notification System ─────────────────────────────────── */
+  function getNotificationsForCurrentRole() {
+    if (currentRole === 'student') {
+      return (window.AscendData && window.AscendData.notifications) || [];
+    } else if (currentRole === 'faculty') {
+      return (window.AscendFacultyData && window.AscendFacultyData.notifications) || [];
+    }
+    return [];
+  }
+
+  function getUnreadNotifCount() {
+    const list = getNotificationsForCurrentRole();
+    return list.filter(n => !n.isRead).length;
+  }
+
+  function updateNotifBadges() {
+    const count = getUnreadNotifCount();
+    ['desktop-notif-wrap', 'mobile-notif-wrap'].forEach(wrapId => {
+      const wrap = document.getElementById(wrapId);
+      if (!wrap) return;
+      const btn = wrap.querySelector('button');
+      if (!btn) return;
+      let badge = wrap.querySelector('.notif-badge');
+      if (count > 0) {
+        if (!badge) {
+          badge = document.createElement('span');
+          badge.className = 'notif-badge';
+          btn.appendChild(badge);
+        }
+        badge.textContent = count;
+      } else if (badge) {
+        badge.remove();
+      }
+    });
+  }
+
+  function toggleNotifications(e, triggerId) {
+    if (e) e.stopPropagation();
+    const existing = document.querySelector('.notification-flyout');
+    if (existing) {
+      existing.remove();
+      return;
+    }
+
+    const { Icons } = window.AscendUI;
+    const trigger = document.getElementById(triggerId);
+    if (!trigger) return;
+
+    const notifs = getNotificationsForCurrentRole();
+    const unreadCount = notifs.filter(n => !n.isRead).length;
+
+    const flyout = document.createElement('div');
+    flyout.className = 'notification-flyout';
+    flyout.innerHTML = `
+      <div class="notif-flyout-header">
+        <div class="notif-flyout-title">
+          <span>Notifications</span>
+          ${unreadCount > 0 ? `<span class="badge badge-primary" style="font-size:11px;padding:2px 7px;border-radius:10px;">${unreadCount} new</span>` : ''}
+        </div>
+        ${unreadCount > 0 ? `
+        <button type="button" class="notif-flyout-mark-read" onclick="AscendApp.markAllNotificationsRead(event)">
+          Mark all as read
+        </button>` : ''}
+      </div>
+      <div class="notif-flyout-list">
+        ${notifs.length === 0 ? `
+          <div class="notif-empty">
+            <div style="margin-bottom:6px;opacity:0.6;">${Icons.bell}</div>
+            <div>No notifications at this time</div>
+          </div>
+        ` : notifs.map(n => {
+          let iconSvg = Icons.bell;
+          if (n.type === 'monthly_summary') iconSvg = Icons.calendar;
+          else if (n.type === 'month_end_reminder') iconSvg = Icons.clock;
+          else if (n.type === 'eval_published' || n.type === 'eval_due') iconSvg = Icons.clipboardList;
+          else if (n.type === 'inactive_students') iconSvg = Icons.alertCircle;
+
+          return `
+            <div class="notif-item ${!n.isRead ? 'unread' : ''}" onclick="AscendApp.handleNotificationClick('${n.id}', '${n.actionView || ''}')">
+              <div class="notif-item-icon">${iconSvg}</div>
+              <div class="notif-item-body">
+                <div class="notif-item-header">
+                  <span class="notif-item-title">${n.title}</span>
+                  <span class="notif-item-time">${n.formattedDate || ''}</span>
+                </div>
+                <div class="notif-item-msg">${n.message}</div>
+                ${n.actionLabel ? `
+                  <button type="button" class="notif-item-action-btn" onclick="event.stopPropagation();AscendApp.handleNotificationClick('${n.id}', '${n.actionView || ''}')">
+                    <span>${n.actionLabel}</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                  </button>
+                ` : ''}
+              </div>
+              ${!n.isRead ? `<span class="notif-item-dot" title="Unread"></span>` : ''}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+
+    trigger.style.position = 'relative';
+    trigger.appendChild(flyout);
+
+    setTimeout(() => {
+      const closeHandler = (evt) => {
+        if (!flyout.contains(evt.target)) {
+          flyout.remove();
+          document.removeEventListener('click', closeHandler);
+        }
+      };
+      document.addEventListener('click', closeHandler);
+    }, 0);
+  }
+
+  function markAllNotificationsRead(e) {
+    if (e) e.stopPropagation();
+    const notifs = getNotificationsForCurrentRole();
+    notifs.forEach(n => n.isRead = true);
+    updateNotifBadges();
+    const flyout = document.querySelector('.notification-flyout');
+    if (flyout) flyout.remove();
+    window.AscendUI.showToast('All notifications marked as read', 'info');
+  }
+
+  function handleNotificationClick(notifId, actionView) {
+    const notifs = getNotificationsForCurrentRole();
+    const n = notifs.find(item => item.id === notifId);
+    if (n) {
+      n.isRead = true;
+    }
+    updateNotifBadges();
+    const flyout = document.querySelector('.notification-flyout');
+    if (flyout) flyout.remove();
+
+    if (actionView) {
+      navigate(actionView);
     }
   }
 
@@ -735,6 +886,10 @@
     setRole,
     toggleRoleDropdown,
     openAccountDropdown,
+    toggleNotifications,
+    markAllNotificationsRead,
+    handleNotificationClick,
+    updateNotifBadges,
     toggleSidebar,
     handleTopSearch,
     getCurrentRole: () => currentRole,

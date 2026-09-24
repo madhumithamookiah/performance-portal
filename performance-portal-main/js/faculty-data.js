@@ -67,13 +67,530 @@ let FACULTY_CLASSES = loadClassesFromStorage() || [
 ];
 
 /* ── Dynamic Storage Arrays (Populated from /api/faculty/data) ── */
-let FACULTY_STUDENTS = [];
-let RECENT_STUDENT_UPDATES = [];
-let FACULTY_FEEDBACK_SENT = [];
-let EVALUATIONS = [];
+let FACULTY_STUDENTS = [
+  {
+    id: 'stu-sai-001',
+    name: 'Sai Preethi',
+    firstName: 'Sai',
+    email: 'saipreethignanasekar@gmail.com',
+    initials: 'SP',
+    rollNo: '24BCSE101',
+    program: 'B.Tech CSE',
+    department: 'Computer Science & Engineering',
+    semester: 5,
+    section: 'Section A',
+    classId: 'class-cse-5a',
+    className: 'B.Tech CSE · Semester 5 · Section A',
+    status: 'Good Standing',
+    achievementsCount: 2,
+    projectsCount: 1,
+    totalAchievements: 2,
+    lastActivity: '2026-09-17',
+    daysInactive: 4,
+    monthlyReviewed: false,
+    latestMonthlySummary: 'September summary: 2 achievements added, 1 project updated, 1 faculty feedback note received. Last portfolio activity: 4 days ago.',
+    monthlySummaries: [
+      {
+        month: 'September 2026',
+        monthKey: '2026-09',
+        achievementsAdded: 2,
+        achievementTitles: ['AWS Certified Cloud Practitioner', 'Smart India Hackathon Finalist'],
+        projectsUpdated: 1,
+        projectTitles: ['Ascend Distributed File System'],
+        feedbackReceived: 1,
+        profileDetailsUpdated: true,
+        lastActivityDate: '2026-09-17',
+        lastActivityFormatted: '4 days ago',
+        reviewedByStudent: false,
+        summaryText: 'September summary: 2 achievements added, 1 project updated, 1 faculty feedback note received. Last portfolio activity: 4 days ago.',
+      },
+      {
+        month: 'August 2026',
+        monthKey: '2026-08',
+        achievementsAdded: 1,
+        achievementTitles: ['Frontend Engineering Certificate'],
+        projectsUpdated: 0,
+        projectTitles: [],
+        feedbackReceived: 1,
+        profileDetailsUpdated: false,
+        lastActivityDate: '2026-08-26',
+        lastActivityFormatted: '26 days ago',
+        reviewedByStudent: true,
+        summaryText: 'August summary: 1 achievement added, 0 projects updated, 1 faculty feedback note received. Last portfolio activity: 26 days ago.',
+      },
+      {
+        month: 'July 2026',
+        monthKey: '2026-07',
+        achievementsAdded: 0,
+        achievementTitles: [],
+        projectsUpdated: 0,
+        projectTitles: [],
+        feedbackReceived: 0,
+        profileDetailsUpdated: true,
+        lastActivityDate: '2026-07-15',
+        lastActivityFormatted: 'July 15, 2026',
+        reviewedByStudent: true,
+        summaryText: 'July summary: 0 achievements added, 0 projects updated, 0 faculty feedback notes received. Profile details initialized.',
+      },
+    ],
+    achievements: [
+      { id: 'ach-1', title: 'AWS Certified Cloud Practitioner', category: 'Certification', organization: 'Amazon Web Services', date: '2026-09-17' },
+      { id: 'ach-2', title: 'Smart India Hackathon Finalist', category: 'Hackathon', organization: 'Ministry of Education', date: '2026-09-12' },
+    ],
+    projects: [
+      { id: 'proj-1', title: 'Ascend Distributed File System', category: 'Systems', description: 'High throughput fault-tolerant storage system.', date: '2026-09-15' },
+    ],
+    evaluationStatus: 'pending',
+    attentionStatus: 'none',
+    profileSetupStatus: 'complete',
+  },
+  {
+    id: 'stu-rohan-002',
+    name: 'Rohan Sharma',
+    firstName: 'Rohan',
+    email: 'rohan.sharma@university.edu',
+    initials: 'RS',
+    rollNo: '24BCSE108',
+    program: 'B.Tech CSE',
+    department: 'Computer Science & Engineering',
+    semester: 5,
+    section: 'Section A',
+    classId: 'class-cse-5a',
+    className: 'B.Tech CSE · Semester 5 · Section A',
+    status: 'Good Standing',
+    achievementsCount: 1,
+    projectsCount: 1,
+    totalAchievements: 1,
+    lastActivity: '2026-08-19',
+    daysInactive: 33,
+    monthlyReviewed: false,
+    latestMonthlySummary: 'September summary: 0 achievements added, 0 projects updated, 0 faculty feedback notes received. No activity in the last 33 days.',
+    monthlySummaries: [
+      {
+        month: 'September 2026',
+        monthKey: '2026-09',
+        achievementsAdded: 0,
+        achievementTitles: [],
+        projectsUpdated: 0,
+        projectTitles: [],
+        feedbackReceived: 0,
+        profileDetailsUpdated: false,
+        lastActivityDate: '2026-08-19',
+        lastActivityFormatted: '33 days ago',
+        reviewedByStudent: false,
+        summaryText: 'September summary: 0 achievements added, 0 projects updated, 0 faculty feedback notes received. No activity in the last 33 days.',
+      },
+      {
+        month: 'August 2026',
+        monthKey: '2026-08',
+        achievementsAdded: 1,
+        achievementTitles: ['Full-Stack Web Development Workshop'],
+        projectsUpdated: 1,
+        projectTitles: ['Campus Lost & Found Portal'],
+        feedbackReceived: 1,
+        profileDetailsUpdated: false,
+        lastActivityDate: '2026-08-19',
+        lastActivityFormatted: 'August 19, 2026',
+        reviewedByStudent: true,
+        summaryText: 'August summary: 1 achievement added, 1 project updated, 1 faculty feedback note received. Last portfolio activity: August 19, 2026.',
+      },
+      {
+        month: 'July 2026',
+        monthKey: '2026-07',
+        achievementsAdded: 0,
+        achievementTitles: [],
+        projectsUpdated: 0,
+        projectTitles: [],
+        feedbackReceived: 0,
+        profileDetailsUpdated: true,
+        lastActivityDate: '2026-07-20',
+        lastActivityFormatted: 'July 20, 2026',
+        reviewedByStudent: true,
+        summaryText: 'July summary: 0 achievements added, 0 projects updated, 0 faculty feedback notes received. Profile details initialized.',
+      },
+    ],
+    achievements: [
+      { id: 'ach-3', title: 'Full-Stack Web Development Workshop', category: 'Certification', organization: 'Mozilla Campus Club', date: '2026-08-19' },
+    ],
+    projects: [
+      { id: 'proj-2', title: 'Campus Lost & Found Portal', category: 'Web Application', description: 'Real-time campus utility service.', date: '2026-08-15' },
+    ],
+    evaluationStatus: 'pending',
+    attentionStatus: 'inactive-30d',
+    attentionReason: 'No portfolio updates in past 33 days',
+    profileSetupStatus: 'complete',
+  },
+  {
+    id: 'stu-ananya-003',
+    name: 'Ananya Patel',
+    firstName: 'Ananya',
+    email: 'ananya.patel@university.edu',
+    initials: 'AP',
+    rollNo: '24BCSE114',
+    program: 'B.Tech CSE',
+    department: 'Computer Science & Engineering',
+    semester: 5,
+    section: 'Section A',
+    classId: 'class-cse-5a',
+    className: 'B.Tech CSE · Semester 5 · Section A',
+    status: 'Good Standing',
+    achievementsCount: 3,
+    projectsCount: 2,
+    totalAchievements: 3,
+    lastActivity: '2026-09-14',
+    daysInactive: 7,
+    monthlyReviewed: false,
+    latestMonthlySummary: 'September summary: 1 achievement added, 1 project updated, 1 faculty feedback note received. Last portfolio activity: 7 days ago.',
+    monthlySummaries: [
+      {
+        month: 'September 2026',
+        monthKey: '2026-09',
+        achievementsAdded: 1,
+        achievementTitles: ['Data Science & AI Virtual Internship'],
+        projectsUpdated: 1,
+        projectTitles: ['Adaptive Learning Assistant'],
+        feedbackReceived: 1,
+        profileDetailsUpdated: false,
+        lastActivityDate: '2026-09-14',
+        lastActivityFormatted: '7 days ago',
+        reviewedByStudent: false,
+        summaryText: 'September summary: 1 achievement added, 1 project updated, 1 faculty feedback note received. Last portfolio activity: 7 days ago.',
+      },
+      {
+        month: 'August 2026',
+        monthKey: '2026-08',
+        achievementsAdded: 2,
+        achievementTitles: ['National Algorithmic Sprint Top 10', 'Python for Scientific Computing'],
+        projectsUpdated: 1,
+        projectTitles: ['Adaptive Learning Assistant'],
+        feedbackReceived: 0,
+        profileDetailsUpdated: false,
+        lastActivityDate: '2026-08-28',
+        lastActivityFormatted: 'August 28, 2026',
+        reviewedByStudent: true,
+        summaryText: 'August summary: 2 achievements added, 1 project updated, 0 faculty feedback notes received. Last portfolio activity: August 28, 2026.',
+      },
+      {
+        month: 'July 2026',
+        monthKey: '2026-07',
+        achievementsAdded: 0,
+        achievementTitles: [],
+        projectsUpdated: 0,
+        projectTitles: [],
+        feedbackReceived: 0,
+        profileDetailsUpdated: true,
+        lastActivityDate: '2026-07-10',
+        lastActivityFormatted: 'July 10, 2026',
+        reviewedByStudent: true,
+        summaryText: 'July summary: 0 achievements added, 0 projects updated, 0 faculty feedback notes received. Profile details initialized.',
+      },
+    ],
+    achievements: [
+      { id: 'ach-4', title: 'Data Science & AI Virtual Internship', category: 'Internship', organization: 'Cognizant', date: '2026-09-14' },
+      { id: 'ach-5', title: 'National Algorithmic Sprint Top 10', category: 'Award', organization: 'ACM Chapter', date: '2026-08-28' },
+    ],
+    projects: [
+      { id: 'proj-3', title: 'Adaptive Learning Assistant', category: 'Machine Learning', description: 'Personalized student study path recommendation.', date: '2026-09-10' },
+    ],
+    evaluationStatus: 'draft',
+    attentionStatus: 'none',
+    profileSetupStatus: 'complete',
+  },
+  {
+    id: 'stu-vikram-004',
+    name: 'Vikram Verma',
+    firstName: 'Vikram',
+    email: 'vikram.verma@university.edu',
+    initials: 'VV',
+    rollNo: '24BCSE120',
+    program: 'B.Tech CSE',
+    department: 'Computer Science & Engineering',
+    semester: 5,
+    section: 'Section A',
+    classId: 'class-cse-5a',
+    className: 'B.Tech CSE · Semester 5 · Section A',
+    status: 'Good Standing',
+    achievementsCount: 2,
+    projectsCount: 1,
+    totalAchievements: 2,
+    lastActivity: '2026-09-11',
+    daysInactive: 10,
+    monthlyReviewed: true,
+    latestMonthlySummary: 'September summary: 1 achievement added, 0 projects updated, 1 faculty feedback note received. Last portfolio activity: 10 days ago.',
+    monthlySummaries: [
+      {
+        month: 'September 2026',
+        monthKey: '2026-09',
+        achievementsAdded: 1,
+        achievementTitles: ['Kubernetes Fundamentals'],
+        projectsUpdated: 0,
+        projectTitles: [],
+        feedbackReceived: 1,
+        profileDetailsUpdated: false,
+        lastActivityDate: '2026-09-11',
+        lastActivityFormatted: '10 days ago',
+        reviewedByStudent: true,
+        summaryText: 'September summary: 1 achievement added, 0 projects updated, 1 faculty feedback note received. Last portfolio activity: 10 days ago.',
+      },
+      {
+        month: 'August 2026',
+        monthKey: '2026-08',
+        achievementsAdded: 1,
+        achievementTitles: ['Docker Deep Dive'],
+        projectsUpdated: 1,
+        projectTitles: ['Microservices Booking Engine'],
+        feedbackReceived: 0,
+        profileDetailsUpdated: false,
+        lastActivityDate: '2026-08-20',
+        lastActivityFormatted: 'August 20, 2026',
+        reviewedByStudent: true,
+        summaryText: 'August summary: 1 achievement added, 1 project updated, 0 faculty feedback notes received. Last portfolio activity: August 20, 2026.',
+      },
+    ],
+    achievements: [
+      { id: 'ach-6', title: 'Kubernetes Fundamentals', category: 'Certification', organization: 'Linux Foundation', date: '2026-09-11' },
+    ],
+    projects: [
+      { id: 'proj-4', title: 'Microservices Booking Engine', category: 'DevOps', description: 'Event-driven ticketing architecture.', date: '2026-08-20' },
+    ],
+    evaluationStatus: 'evaluated',
+    attentionStatus: 'none',
+    profileSetupStatus: 'complete',
+  },
+  {
+    id: 'stu-jeffy-005',
+    name: 'Jeffy Joe',
+    firstName: 'Jeffy',
+    email: 'jeffyjoe50@gmail.com',
+    initials: 'JJ',
+    rollNo: '24BCSE132',
+    program: 'B.Tech CSE',
+    department: 'Computer Science & Engineering',
+    semester: 5,
+    section: 'Section A',
+    classId: 'class-cse-5a',
+    className: 'B.Tech CSE · Semester 5 · Section A',
+    status: 'Good Standing',
+    achievementsCount: 0,
+    projectsCount: 0,
+    totalAchievements: 0,
+    lastActivity: '2026-08-15',
+    daysInactive: 37,
+    monthlyReviewed: false,
+    latestMonthlySummary: 'September summary: 0 achievements added, 0 projects updated, 0 faculty feedback notes received. No activity recorded in the last 37 days.',
+    monthlySummaries: [
+      {
+        month: 'September 2026',
+        monthKey: '2026-09',
+        achievementsAdded: 0,
+        achievementTitles: [],
+        projectsUpdated: 0,
+        projectTitles: [],
+        feedbackReceived: 0,
+        profileDetailsUpdated: false,
+        lastActivityDate: '2026-08-15',
+        lastActivityFormatted: '37 days ago',
+        reviewedByStudent: false,
+        summaryText: 'September summary: 0 achievements added, 0 projects updated, 0 faculty feedback notes received. No activity recorded in the last 37 days.',
+      },
+    ],
+    achievements: [],
+    projects: [],
+    evaluationStatus: 'pending',
+    attentionStatus: 'inactive-30d',
+    attentionReason: 'No portfolio activity logged in 37 days',
+    profileSetupStatus: 'incomplete',
+  },
+];
+
+let RECENT_STUDENT_UPDATES = [
+  {
+    id: 'upd-1',
+    studentId: 'stu-sai-001',
+    studentName: 'Sai Preethi',
+    studentInitials: 'SP',
+    rollNo: '24BCSE101',
+    classId: 'class-cse-5a',
+    itemType: 'Certification',
+    actionType: 'added',
+    title: 'AWS Certified Cloud Practitioner',
+    subtitle: 'Amazon Web Services · Cloud Architecture',
+    timestamp: '4 days ago',
+    date: '2026-09-17',
+  },
+  {
+    id: 'upd-2',
+    studentId: 'stu-sai-001',
+    studentName: 'Sai Preethi',
+    studentInitials: 'SP',
+    rollNo: '24BCSE101',
+    classId: 'class-cse-5a',
+    itemType: 'Project',
+    actionType: 'updated',
+    title: 'Ascend Distributed File System',
+    subtitle: 'Go, Raft Consensus, Distributed Systems',
+    timestamp: '6 days ago',
+    date: '2026-09-15',
+  },
+  {
+    id: 'upd-3',
+    studentId: 'stu-ananya-003',
+    studentName: 'Ananya Patel',
+    studentInitials: 'AP',
+    rollNo: '24BCSE114',
+    classId: 'class-cse-5a',
+    itemType: 'Internship',
+    actionType: 'added',
+    title: 'Data Science & AI Virtual Internship',
+    subtitle: 'Cognizant · Applied Predictive Modeling',
+    timestamp: '7 days ago',
+    date: '2026-09-14',
+  },
+  {
+    id: 'upd-4',
+    studentId: 'stu-sai-001',
+    studentName: 'Sai Preethi',
+    studentInitials: 'SP',
+    rollNo: '24BCSE101',
+    classId: 'class-cse-5a',
+    itemType: 'Hackathon',
+    actionType: 'added',
+    title: 'Smart India Hackathon Finalist',
+    subtitle: 'Ministry of Education · Campus Innovation',
+    timestamp: '9 days ago',
+    date: '2026-09-12',
+  },
+  {
+    id: 'upd-5',
+    studentId: 'stu-vikram-004',
+    studentName: 'Vikram Verma',
+    studentInitials: 'VV',
+    rollNo: '24BCSE120',
+    classId: 'class-cse-5a',
+    itemType: 'Certification',
+    actionType: 'added',
+    title: 'Kubernetes Fundamentals',
+    subtitle: 'Linux Foundation · Container Orchestration',
+    timestamp: '10 days ago',
+    date: '2026-09-11',
+  },
+];
+
+let FACULTY_FEEDBACK_SENT = [
+  {
+    id: 'ffb-1',
+    fromId: 'usr-fac',
+    fromName: 'Dr. Rakesh Mehta',
+    fromRole: 'Associate Professor & Faculty Advisor',
+    toStudentId: 'stu-sai-001',
+    toStudentName: 'Sai Preethi',
+    date: '2026-09-16',
+    category: 'Project Architecture',
+    subject: 'Feedback on Distributed File System',
+    message: 'Excellent practical application of Raft consensus in your storage engine. Consider profiling disk write latency next.',
+    recommendedNextStep: 'Add benchmark telemetry and link working repo on public portfolio.',
+    classId: 'class-cse-5a',
+    isRead: true,
+  },
+  {
+    id: 'ffb-2',
+    fromId: 'usr-fac',
+    fromName: 'Dr. Rakesh Mehta',
+    fromRole: 'Associate Professor & Faculty Advisor',
+    toStudentId: 'stu-ananya-003',
+    toStudentName: 'Ananya Patel',
+    date: '2026-09-13',
+    category: 'Internship Alignment',
+    subject: 'Data Science Internship Milestone',
+    message: 'Great momentum with the Cognizant virtual internship. Ensure you document the dataset preprocessing pipeline.',
+    recommendedNextStep: 'Publish the summary write-up to your portfolio overview.',
+    classId: 'class-cse-5a',
+    isRead: false,
+  },
+];
+
+let EVALUATIONS = [
+  {
+    id: 'eval-vikram-s5',
+    studentId: 'stu-vikram-004',
+    studentName: 'Vikram Verma',
+    studentProgram: 'B.Tech CSE',
+    classId: 'class-cse-5a',
+    evaluatorId: 'usr-fac',
+    evaluatorName: 'Dr. Rakesh Mehta',
+    evaluationPeriod: 'Semester 5 · July–November 2026',
+    status: 'published',
+    createdAt: '2026-09-18',
+    lastUpdated: '2026-09-18',
+    publishedAt: '2026-09-18',
+    scores: {
+      technical: { level: 'Strong', comment: 'Solid foundation in containers, cloud native architecture, and systems programming.' },
+      projectAbility: { level: 'Strong', comment: 'Demonstrated clear capacity to deliver microservices with container deployment.' },
+      communication: { level: 'Meets Expectations', comment: 'Technical READMEs are concise; verbal defense during review was well reasoned.' },
+      leadership: { level: 'Meets Expectations', comment: 'Participates productively in team workflows and peer reviews.' },
+      careerPreparedness: { level: 'Strong', comment: 'Portfolio demonstrates relevant industry skills in DevOps and systems.' },
+    },
+    overallSummary: 'Vikram has maintained consistent technical focus on cloud-native systems this semester. His project delivery and certifications align well with industry expectations for DevOps engineering roles.',
+  },
+  {
+    id: 'eval-ananya-s5',
+    studentId: 'stu-ananya-003',
+    studentName: 'Ananya Patel',
+    studentProgram: 'B.Tech CSE',
+    classId: 'class-cse-5a',
+    evaluatorId: 'usr-fac',
+    evaluatorName: 'Dr. Rakesh Mehta',
+    evaluationPeriod: 'Semester 5 · July–November 2026',
+    status: 'draft',
+    createdAt: '2026-09-15',
+    lastUpdated: '2026-09-15',
+    publishedAt: null,
+    scores: {
+      technical: { level: 'Outstanding', comment: 'High algorithmic fluency and exceptional competitive programming performance.' },
+      projectAbility: { level: 'Strong', comment: 'Practical delivery of adaptive learning ML pipeline is progressing well.' },
+      communication: { level: 'Strong', comment: 'Clear project documentation and technical reports.' },
+      leadership: { level: 'Meets Expectations', comment: 'Engaged in study groups and student ACM chapter sessions.' },
+      careerPreparedness: { level: 'Strong', comment: 'Well-rounded portfolio with balanced competitive and project evidence.' },
+    },
+    overallSummary: 'Draft review in progress: Ananya is on track for an Outstanding semester evaluation once her ML assistant project milestone is closed.',
+  },
+];
+
+let FACULTY_NOTIFICATIONS = [
+  {
+    id: 'f-notif-1',
+    type: 'eval_due',
+    title: 'Semester evaluations due',
+    message: 'Formal Semester 5 evaluations are due for 2 students in Class CS-A.',
+    formattedDate: 'Today',
+    isRead: false,
+    actionView: 'faculty-evaluations',
+    actionLabel: 'Evaluate students',
+  },
+  {
+    id: 'f-notif-2',
+    type: 'inactive_students',
+    title: '30-day activity notice',
+    message: '2 students have not recorded any portfolio activity in the past 30 days.',
+    formattedDate: 'Yesterday',
+    isRead: false,
+    actionView: 'faculty-dashboard',
+    actionLabel: 'View dashboard',
+  },
+  {
+    id: 'f-notif-3',
+    type: 'monthly_summary',
+    title: 'September summaries generated',
+    message: 'Monthly activity records have been generated for all 6 students in Class CS-A.',
+    formattedDate: '3 days ago',
+    isRead: false,
+    actionView: 'faculty-students',
+    actionLabel: 'View directory',
+  },
+];
 
 /* ── Active Selected Class State ─────────────────────────────── */
-let activeSelectedClassId = 'all';
+let activeSelectedClassId = 'class-cse-5a';
 
 /* ── Ascend Faculty Data Export ──────────────────────────────── */
 window.AscendFacultyData = {
@@ -94,6 +611,9 @@ window.AscendFacultyData = {
   },
   get evaluations() {
     return EVALUATIONS;
+  },
+  get notifications() {
+    return FACULTY_NOTIFICATIONS;
   },
 
   /* ── Dynamic Load Faculty Data from Backend API ─────────────── */
@@ -118,14 +638,42 @@ window.AscendFacultyData = {
           stored.forEach(c => FACULTY_CLASSES.push(c));
         }
       }
-      if (Array.isArray(data.students)) {
-        FACULTY_STUDENTS = data.students;
+      if (Array.isArray(data.students) && data.students.length > 0) {
+        FACULTY_STUDENTS = data.students.map(s => {
+          // Normalize monthly tracking and review status
+          if (!Array.isArray(s.monthlySummaries) || s.monthlySummaries.length === 0) {
+            const achs = s.achievements || [];
+            const projs = s.projects || [];
+            s.monthlySummaries = [
+              {
+                month: 'September 2026',
+                monthKey: '2026-09',
+                achievementsAdded: achs.length,
+                achievementTitles: achs.map(a => a.title),
+                projectsUpdated: projs.length,
+                projectTitles: projs.map(p => p.title),
+                feedbackReceived: (data.feedbackHistory || []).filter(f => f.toStudentId === s.id || f.studentId === s.id).length,
+                profileDetailsUpdated: !!s.bio,
+                lastActivityDate: s.lastActivity || '2026-09-17',
+                lastActivityFormatted: '4 days ago',
+                reviewedByStudent: s.monthlyReviewed !== undefined ? s.monthlyReviewed : false,
+                summaryText: s.latestMonthlySummary || `September summary: ${achs.length} achievements added, ${projs.length} projects updated. Last portfolio activity: Recently.`,
+              },
+            ];
+          }
+          if (s.daysInactive === undefined && s.lastActivity) {
+            s.daysInactive = Math.max(0, Math.floor((Date.now() - new Date(s.lastActivity).getTime()) / (1000 * 60 * 60 * 24)));
+          }
+          if (s.monthlyReviewed === undefined) {
+            s.monthlyReviewed = s.monthlySummaries[0]?.reviewedByStudent || false;
+          }
+          return s;
+        });
       }
-      if (Array.isArray(data.evaluations)) {
+      if (Array.isArray(data.evaluations) && data.evaluations.length > 0) {
         EVALUATIONS = data.evaluations;
       }
-      if (Array.isArray(data.feedbackHistory)) {
-        // Normalize legacy records that used old field names
+      if (Array.isArray(data.feedbackHistory) && data.feedbackHistory.length > 0) {
         FACULTY_FEEDBACK_SENT = data.feedbackHistory.map(fb => {
           const n = { ...fb };
           if (!n.toStudentId && n.studentId) n.toStudentId = n.studentId;
@@ -139,7 +687,7 @@ window.AscendFacultyData = {
           return n;
         });
       }
-      if (Array.isArray(data.recentUpdates)) {
+      if (Array.isArray(data.recentUpdates) && data.recentUpdates.length > 0) {
         RECENT_STUDENT_UPDATES = data.recentUpdates;
       }
 
@@ -148,10 +696,16 @@ window.AscendFacultyData = {
       if (allClass) {
         allClass.studentCount = FACULTY_STUDENTS.length;
       }
+      FACULTY_CLASSES.forEach(c => {
+        if (c.id !== 'all') {
+          c.studentCount = FACULTY_STUDENTS.filter(s => s.classId === c.id).length;
+        }
+      });
     } catch (err) {
       console.warn('Could not load dynamic faculty data:', err);
     }
   },
+
 
   async updateFacultyProfile(updates) {
     try {
@@ -302,6 +856,87 @@ window.AscendFacultyData = {
     return list.filter(s => s.attentionStatus && s.attentionStatus !== 'none');
   },
 
+  /* ── Students with no portfolio updates in the past 30 days ─── */
+  getStudentsInactive30Days(classId) {
+    const cid = classId || activeSelectedClassId;
+    const list = (!cid || cid === 'all') ? FACULTY_STUDENTS : FACULTY_STUDENTS.filter(s => s.classId === cid);
+    const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+    return list.filter(s => {
+      if (s.daysInactive !== undefined && s.daysInactive >= 30) return true;
+      if (!s.lastActivity) return true;
+      return new Date(s.lastActivity).getTime() < thirtyDaysAgo;
+    });
+  },
+
+  /* ── Students who have not reviewed their monthly summary ────── */
+  getStudentsUnreviewedMonthly(classId) {
+    const cid = classId || activeSelectedClassId;
+    const list = (!cid || cid === 'all') ? FACULTY_STUDENTS : FACULTY_STUDENTS.filter(s => s.classId === cid);
+    return list.filter(s => s.monthlyReviewed === false);
+  },
+
+  /* ── Semester Evaluations Status by Period ───────────────────── */
+  getSemesterEvaluationsDue(classId, period = 'Semester 5') {
+    const cid = classId || activeSelectedClassId;
+    const list = (!cid || cid === 'all') ? FACULTY_STUDENTS : FACULTY_STUDENTS.filter(s => s.classId === cid);
+    const evals = (!cid || cid === 'all') ? EVALUATIONS : EVALUATIONS.filter(e => e.classId === cid);
+
+    return list.map(student => {
+      const studentEval = evals.find(e => e.studentId === student.id && (!period || (e.evaluationPeriod && e.evaluationPeriod.includes(period))));
+      const status = studentEval ? studentEval.status : 'to-evaluate'; // 'published' | 'draft' | 'to-evaluate'
+      return {
+        student,
+        evaluation: studentEval || null,
+        status,
+        period: studentEval ? studentEval.evaluationPeriod : `${period} · July–November 2026`,
+        latestSummary: student.latestMonthlySummary || (student.monthlySummaries && student.monthlySummaries[0] ? student.monthlySummaries[0].summaryText : 'Activity recorded.'),
+        lastActivityDate: student.lastActivity || 'Recently',
+      };
+    });
+  },
+
+  /* ── Factual Activity Brief Since Previous Evaluation ────────── */
+  getActivityBrief(studentId, period = 'Semester 5') {
+    const student = FACULTY_STUDENTS.find(s => s.id === studentId);
+    if (!student) {
+      return {
+        achievementsCount: 0,
+        achievementTitles: [],
+        projectsCount: 0,
+        projectTitles: [],
+        feedbackCount: 0,
+        feedbackNotes: [],
+        mostRecentDate: 'None recorded',
+        inactiveMonths: ['July 2026', 'August 2026'],
+      };
+    }
+
+    const achs = student.achievements || [];
+    const projs = student.projects || [];
+    const fb = FACULTY_FEEDBACK_SENT.filter(f => f.toStudentId === student.id || f.studentId === student.id);
+
+    // Identify months with zero activity from monthlySummaries
+    const inactiveMonths = [];
+    if (Array.isArray(student.monthlySummaries)) {
+      student.monthlySummaries.forEach(m => {
+        if ((m.achievementsAdded || 0) === 0 && (m.projectsUpdated || 0) === 0) {
+          inactiveMonths.push(m.month);
+        }
+      });
+    }
+
+    return {
+      achievementsCount: achs.length,
+      achievementTitles: achs.map(a => a.title),
+      projectsCount: projs.length,
+      projectTitles: projs.map(p => p.title),
+      feedbackCount: fb.length,
+      feedbackNotes: fb.map(f => `${f.category || 'Guidance'}: "${f.message || f.feedbackText || ''}" (${f.date || 'Recent'})`),
+      mostRecentDate: student.lastActivity ? student.lastActivity.slice(0, 10) : 'Recently',
+      inactiveMonths,
+    };
+  },
+
   getEvaluations(classId) {
     const cid = classId || activeSelectedClassId;
     if (!cid || cid === 'all') return EVALUATIONS;
@@ -315,6 +950,7 @@ window.AscendFacultyData = {
   },
 
   genId(prefix) {
+
     return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
   },
 

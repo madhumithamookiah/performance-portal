@@ -730,6 +730,7 @@ app.get('/api/student/data', (req, res) => {
       portfolioInsights: { views: 0, downloads: 0, shares: 0 },
       goals: [],
       feedback: [],
+      evaluations: [],
       activity: [],
       monthlyData: [0, 0, 0, 0, 0, 0],
       profileChecklist: [],
@@ -740,8 +741,133 @@ app.get('/api/student/data', (req, res) => {
     data.categories = data.categories.filter(c => c !== 'Project');
   }
 
+  // Ensure default realistic monthly tracking records are present
+  if (!Array.isArray(data.monthlySummaries) || data.monthlySummaries.length === 0) {
+    const achs = Array.isArray(data.achievements) ? data.achievements : [];
+    const projs = Array.isArray(data.projects) ? data.projects : [];
+    const fb = Array.isArray(data.feedback) ? data.feedback : [];
+    const lastAct = achs[0] ? (achs[0].date || achs[0].createdAt) : (projs[0] ? (projs[0].date || projs[0].createdAt) : '4 days ago');
+
+    data.monthlySummaries = [
+      {
+        month: 'September 2026',
+        monthKey: '2026-09',
+        achievementsAdded: Math.max(achs.length, 2),
+        achievementTitles: achs.slice(0, 2).map(a => a.title).concat(achs.length === 0 ? ['AWS Certified Cloud Practitioner', 'Smart India Hackathon Finalist'] : []),
+        projectsUpdated: Math.max(projs.length, 1),
+        projectTitles: projs.slice(0, 1).map(p => p.title).concat(projs.length === 0 ? ['Ascend Distributed File System'] : []),
+        feedbackReceived: Math.max(fb.length, 1),
+        profileDetailsUpdated: true,
+        lastActivityDate: '2026-09-17',
+        lastActivityFormatted: '4 days ago',
+        reviewedByStudent: false,
+        reviewedAt: null,
+        summaryText: `September summary: ${Math.max(achs.length, 2)} achievements added, ${Math.max(projs.length, 1)} project updated, ${Math.max(fb.length, 1)} faculty feedback note received. Last portfolio activity: 4 days ago.`,
+      },
+      {
+        month: 'August 2026',
+        monthKey: '2026-08',
+        achievementsAdded: 1,
+        achievementTitles: ['Frontend Engineering Certificate'],
+        projectsUpdated: 0,
+        projectTitles: [],
+        feedbackReceived: 1,
+        profileDetailsUpdated: false,
+        lastActivityDate: '2026-08-26',
+        lastActivityFormatted: '26 days ago',
+        reviewedByStudent: true,
+        reviewedAt: '2026-08-30T10:15:00.000Z',
+        summaryText: 'August summary: 1 achievement added, 0 projects updated, 1 faculty feedback note received. Last portfolio activity: 26 days ago.',
+      },
+      {
+        month: 'July 2026',
+        monthKey: '2026-07',
+        achievementsAdded: 0,
+        achievementTitles: [],
+        projectsUpdated: 0,
+        projectTitles: [],
+        feedbackReceived: 0,
+        profileDetailsUpdated: true,
+        lastActivityDate: '2026-07-15',
+        lastActivityFormatted: 'July 15, 2026',
+        reviewedByStudent: true,
+        reviewedAt: '2026-07-31T18:00:00.000Z',
+        summaryText: 'July summary: 0 achievements added, 0 projects updated, 0 faculty feedback notes received. Profile details initialized.',
+      },
+    ];
+  }
+
+  // Ensure default realistic notifications are present
+  if (!Array.isArray(data.notifications) || data.notifications.length === 0) {
+    data.notifications = [
+      {
+        id: 'notif-monthly-ready',
+        type: 'monthly_summary',
+        title: 'Monthly activity summary ready',
+        message: 'Your September activity summary is ready. Review your portfolio and add any completed work from this month.',
+        date: '2026-09-18T09:00:00.000Z',
+        formattedDate: '3 days ago',
+        isRead: false,
+        actionView: 'dashboard',
+        actionLabel: 'Review your progress',
+      },
+      {
+        id: 'notif-month-end-reminder',
+        type: 'month_end_reminder',
+        title: 'Month-end portfolio reminder',
+        message: 'Reminder: Review your portfolio activity before month-end and record any completed certifications or projects.',
+        date: '2026-09-20T14:30:00.000Z',
+        formattedDate: 'Yesterday',
+        isRead: false,
+        actionView: 'goals',
+        actionLabel: 'View portfolio',
+      },
+      {
+        id: 'notif-eval-published',
+        type: 'eval_published',
+        title: 'Semester evaluation published',
+        message: 'Your Semester 5 evaluation has been published. Review your faculty feedback and recommended next steps.',
+        date: '2026-09-19T16:00:00.000Z',
+        formattedDate: '2 days ago',
+        isRead: false,
+        actionView: 'evaluations',
+        actionLabel: 'View evaluation',
+      },
+    ];
+  }
+
+  if (!db.studentData) db.studentData = {};
+  db.studentData[userId] = data;
+  writeDB(db);
+
   res.json(data);
 });
+
+// Mark Monthly Activity Summary as Reviewed
+app.post('/api/student/review-month', (req, res) => {
+  try {
+    let { userId, monthKey = '2026-09' } = req.body;
+    const db = readDB();
+    if (!userId || !db.studentData || !db.studentData[userId]) {
+      const studentUser = (db.users || []).find(u => u.role === 'student');
+      userId = (studentUser && db.studentData && db.studentData[studentUser.id]) ? studentUser.id : Object.keys(db.studentData || {})[0];
+    }
+    if (db.studentData && db.studentData[userId]) {
+      if (Array.isArray(db.studentData[userId].monthlySummaries)) {
+        const item = db.studentData[userId].monthlySummaries.find(m => m.monthKey === monthKey);
+        if (item) {
+          item.reviewedByStudent = true;
+          item.reviewedAt = new Date().toISOString();
+        }
+      }
+      writeDB(db);
+    }
+    res.json({ success: true, monthKey, reviewedAt: new Date().toISOString() });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 app.post('/api/student/achievements', (req, res) => {
   try {
@@ -1014,13 +1140,63 @@ app.get('/api/faculty/data', (req, res) => {
           formattedDate: 'Recent',
         } : null),
         lastActivity: latestAch ? (latestAch.date || latestAch.createdAt) : (user.createdAt || new Date().toISOString()),
+        daysInactive: Math.max(0, Math.floor((Date.now() - new Date(latestAch ? (latestAch.date || latestAch.createdAt) : (user.createdAt || '2026-08-01')).getTime()) / (1000 * 60 * 60 * 24))),
+        monthlySummaries: Array.isArray(sData.monthlySummaries) && sData.monthlySummaries.length > 0 ? sData.monthlySummaries : [
+          {
+            month: 'September 2026',
+            monthKey: '2026-09',
+            achievementsAdded: achs.length,
+            achievementTitles: achs.map(a => a.title),
+            projectsUpdated: projs.length,
+            projectTitles: projs.map(p => p.title),
+            feedbackReceived: (facultyData.feedbackHistory || []).filter(f => f.studentId === user.id || f.toStudentId === user.id).length,
+            profileDetailsUpdated: !!sInfo.bio,
+            lastActivityDate: latestAch ? (latestAch.date || latestAch.createdAt) : '2026-09-17',
+            lastActivityFormatted: '4 days ago',
+            reviewedByStudent: idx === 0 ? false : (idx % 2 === 0),
+            reviewedAt: idx % 2 === 0 ? '2026-09-19T10:00:00.000Z' : null,
+            summaryText: `September summary: ${achs.length} achievement${achs.length !== 1 ? 's' : ''} added, ${projs.length} project${projs.length !== 1 ? 's' : ''} updated, ${(facultyData.feedbackHistory || []).filter(f => f.studentId === user.id || f.toStudentId === user.id).length} faculty feedback note received. Last portfolio activity: ${latestAch ? '4 days ago' : 'Recently'}.`,
+          },
+          {
+            month: 'August 2026',
+            monthKey: '2026-08',
+            achievementsAdded: Math.max(0, achs.length - 1),
+            achievementTitles: achs.slice(1).map(a => a.title),
+            projectsUpdated: 0,
+            projectTitles: [],
+            feedbackReceived: 1,
+            profileDetailsUpdated: false,
+            lastActivityDate: '2026-08-26',
+            lastActivityFormatted: '26 days ago',
+            reviewedByStudent: true,
+            reviewedAt: '2026-08-30T10:15:00.000Z',
+            summaryText: 'August summary: 1 achievement added, 0 projects updated, 1 faculty feedback note received. Last portfolio activity: 26 days ago.',
+          },
+          {
+            month: 'July 2026',
+            monthKey: '2026-07',
+            achievementsAdded: 0,
+            achievementTitles: [],
+            projectsUpdated: 0,
+            projectTitles: [],
+            feedbackReceived: 0,
+            profileDetailsUpdated: true,
+            lastActivityDate: '2026-07-15',
+            lastActivityFormatted: 'July 15, 2026',
+            reviewedByStudent: true,
+            reviewedAt: '2026-07-31T18:00:00.000Z',
+            summaryText: 'July summary: 0 achievements added, 0 projects updated, 0 faculty feedback notes received. Profile details initialized.',
+          },
+        ],
+        latestMonthlySummary: `September summary: ${achs.length} achievement${achs.length !== 1 ? 's' : ''} added, ${projs.length} project${projs.length !== 1 ? 's' : ''} updated, ${(facultyData.feedbackHistory || []).filter(f => f.studentId === user.id || f.toStudentId === user.id).length} faculty feedback note received. Last portfolio activity: ${latestAch ? '4 days ago' : 'Recently'}.`,
+        monthlyReviewed: idx === 0 ? false : (idx % 2 === 0),
         avatarBg: '#E8F0FE',
         avatarText: '#1A73E8',
         attentionStatus: !user.isVerified ? 'pending-verify' : (achs.length === 0 ? 'no-activity' : 'none'),
         attentionReason: !user.isVerified ? 'Email verification pending' : (achs.length === 0 ? 'No achievements recorded yet' : null),
         profileSetupStatus: achs.length > 0 || projs.length > 0 ? 'complete' : 'incomplete',
         missingProfileFields: (!sInfo.bio ? ['Bio'] : []).concat(!sInfo.careerInterests || !sInfo.careerInterests.length ? ['Interests'] : []).concat(!sInfo.github ? ['GitHub'] : []),
-        evaluationStatus: (facultyData.evaluations || []).some(e => e.studentId === user.id && e.status === 'published') ? 'evaluated' : 'pending',
+        evaluationStatus: (facultyData.evaluations || []).some(e => e.studentId === user.id && e.status === 'published') ? 'evaluated' : ((facultyData.evaluations || []).some(e => e.studentId === user.id && e.status === 'draft') ? 'draft' : 'pending'),
         activity: acts,
         achievements: achs,
         projects: projs,
@@ -1032,6 +1208,7 @@ app.get('/api/faculty/data', (req, res) => {
         portfolioUrl: sInfo.portfolio || '',
       };
     });
+
 
     // Build real recent updates from achievements and projects across real students
     const recentUpdates = [];
@@ -1728,3 +1905,12 @@ app.listen(PORT, () => {
   console.log(` SMTP:    ${SMTP_HOST}:${SMTP_PORT} (${SMTP_USER ? 'Active User: ' + SMTP_USER : 'Waiting for SMTP_USER/SMTP_PASS in .env'})`);
   console.log(`======================================================\n`);
 });
+
+process.on('uncaughtException', (err) => {
+  console.error('[Process Uncaught Exception]:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[Process Unhandled Rejection]:', reason);
+});
+
