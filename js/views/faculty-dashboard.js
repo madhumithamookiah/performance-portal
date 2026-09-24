@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ASCEND – Faculty & Mentor Dashboard View
  * Clean, modern interface adhering to Google design principles.
  * Focuses on class oversight, monthly development tracking, and formal semester evaluations.
@@ -170,29 +170,6 @@ function renderFacultyDashboard() {
       </div>
     </div>
 
-    <!-- ── 3. Top Metrics Row ───────────────────────────────────────── -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--sp-4);margin-bottom:var(--sp-5);">
-      <div class="card" style="padding:16px;border-left:4px solid var(--c-primary);">
-        <div style="font-size:var(--text-2xl);font-weight:800;color:var(--c-primary);line-height:1;">${classStudents.length}</div>
-        <div style="font-size:12px;font-weight:600;color:var(--c-text);margin-top:4px;">Enrolled Students</div>
-        <div style="font-size:11px;color:var(--c-text-3);margin-top:2px;">In selected cohort scope</div>
-      </div>
-      <div class="card" style="padding:16px;border-left:4px solid #D97706;">
-        <div style="font-size:var(--text-2xl);font-weight:800;color:#D97706;line-height:1;">${inactiveStudents.length}</div>
-        <div style="font-size:12px;font-weight:600;color:var(--c-text);margin-top:4px;">Inactive (30+ Days)</div>
-        <div style="font-size:11px;color:var(--c-text-3);margin-top:2px;">No updates logged in 30 days</div>
-      </div>
-      <div class="card" style="padding:16px;border-left:4px solid #92400E;">
-        <div style="font-size:var(--text-2xl);font-weight:800;color:#92400E;line-height:1;">${unreviewedMonthlyStudents.length}</div>
-        <div style="font-size:12px;font-weight:600;color:var(--c-text);margin-top:4px;">Unreviewed Summaries</div>
-        <div style="font-size:11px;color:var(--c-text-3);margin-top:2px;">Monthly summary not reviewed</div>
-      </div>
-      <div class="card" style="padding:16px;border-left:4px solid var(--c-verified);">
-        <div style="font-size:var(--text-2xl);font-weight:800;color:var(--c-verified);line-height:1;">${publishedCount} / ${classStudents.length}</div>
-        <div style="font-size:12px;font-weight:600;color:var(--c-text);margin-top:4px;">Semester 5 Evals</div>
-        <div style="font-size:11px;color:var(--c-text-3);margin-top:2px;">${pendingCount} pending &bull; ${draftCount} in draft</div>
-      </div>
-    </div>
 
     <!-- ── 4. Main 2-Column Responsive Workspace ───────────────────── -->
     <div class="admin-layout-grid">
