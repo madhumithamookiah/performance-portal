@@ -115,9 +115,6 @@ function renderDashboard() {
       </div>
     </div>
 
-    <!-- ── Compact "This month" Card ──────────────────────────────── -->
-    ${renderStudentMonthlyUpdateCard()}
-
     <!-- Top Row: Factual Portfolio Overview + Add Achievement CTA -->
     <div class="dash-top-row" style="display:grid;grid-template-columns:1.2fr 1fr;gap:var(--sp-5);margin-bottom:var(--sp-6);">
 
