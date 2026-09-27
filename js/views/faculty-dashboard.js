@@ -11,7 +11,6 @@ function renderFacultyDashboard() {
     getClasses,
     getStudents,
     getRecentUpdates,
-    getStudentsInactive30Days,
     getStudentsUnreviewedMonthly,
   } = window.AscendFacultyData;
   const { Icons, formatDate } = window.AscendUI;
@@ -51,10 +50,7 @@ function renderFacultyDashboard() {
 
   const classUpdates = getRecentUpdates(selectedClassId);
 
-  // 1. Inactive in past 30 days
-  const inactiveStudents = getStudentsInactive30Days ? getStudentsInactive30Days(selectedClassId) : classStudents.filter(s => (s.daysInactive || 0) >= 30);
-
-  // 2. Not reviewed monthly summary
+  // Students who have not reviewed monthly summary
   const unreviewedMonthlyStudents = getStudentsUnreviewedMonthly ? getStudentsUnreviewedMonthly(selectedClassId) : classStudents.filter(s => s.monthlyReviewed === false);
 
   // Recent activity items (deduplicated by student)
@@ -217,58 +213,10 @@ function renderFacultyDashboard() {
         </div>
       </div>
 
-      <!-- ── Right Column: Inactive Students & Unreviewed Summaries ── -->
+      <!-- ── Right Column: Unreviewed Monthly Summaries ── -->
       <div style="display:flex;flex-direction:column;gap:var(--sp-5);">
 
-        <!-- 1. Students with No Activity in Last 30 Days -->
-        <div class="card" style="padding:var(--sp-4);border-top:3px solid #D97706;">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);margin-bottom:var(--sp-3);">
-            <div>
-              <div style="display:flex;align-items:center;gap:var(--sp-2);">
-                <h2 style="font-size:var(--text-sm);font-weight:700;color:var(--c-text);margin:0;">
-                  No Activity in Past 30 Days
-                </h2>
-                <span class="badge" style="background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;font-size:10px;font-weight:700;">
-                  ${inactiveStudents.length}
-                </span>
-              </div>
-              <div style="font-size:11px;color:var(--c-text-2);margin-top:2px;">
-                Students who have not logged any portfolio updates in 30+ days
-              </div>
-            </div>
-          </div>
-
-          ${inactiveStudents.length === 0 ? `
-            <div style="text-align:center;padding:var(--sp-4) var(--sp-3);background:var(--c-bg);border:1px dashed var(--c-border);border-radius:var(--r-md);">
-              <div style="display:inline-flex;color:var(--c-verified);margin-bottom:4px;">${Icons.check}</div>
-              <div style="font-size:var(--text-xs);font-weight:600;color:var(--c-text);">All Students Active</div>
-              <div style="font-size:11px;color:var(--c-text-3);margin-top:2px;">All enrolled students have logged activity within the past 30 days.</div>
-            </div>` :
-            `<div style="display:flex;flex-direction:column;gap:var(--sp-2);">
-              ${inactiveStudents.map(s => `
-                <div style="padding:10px 12px;background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--r-md);display:flex;align-items:center;justify-content:space-between;gap:10px;">
-                  <div style="display:flex;align-items:center;gap:8px;min-width:0;">
-                    <div class="avatar avatar-sm" style="width:28px;height:28px;font-size:10px;background:#FEF3C7;color:#92400E;">${s.initials || 'ST'}</div>
-                    <div style="min-width:0;">
-                      <div style="font-size:var(--text-xs);font-weight:700;color:var(--c-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                        ${s.name}
-                      </div>
-                      <div style="font-size:11px;color:#D97706;font-weight:600;margin-top:1px;">
-                        ${s.daysInactive ? `${s.daysInactive} days inactive` : '30+ days inactive'}
-                      </div>
-                    </div>
-                  </div>
-                  <div style="display:flex;gap:6px;flex-shrink:0;">
-                    <button class="btn btn-outline btn-sm" style="padding:3px 8px;font-size:11px;"
-                      onclick="FacultyViews.openGuidanceModalForStudent('${s.id}', '${s.name}')">
-                      Send Guidance
-                    </button>
-                  </div>
-                </div>`).join('')}
-            </div>`}
-        </div>
-
-        <!-- 2. Students Who Have Not Reviewed Monthly Summary -->
+        <!-- Students Who Have Not Reviewed Monthly Summary -->
         <div class="card" style="padding:var(--sp-4);border-top:3px solid #1A73E8;">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);margin-bottom:var(--sp-3);">
             <div>
