@@ -1096,7 +1096,7 @@ function renderStudentSettings() {
       </div>
 
 
-      <!-- 3. Notification Preferences -->
+      <!-- 2. Notification Preferences -->
       <div class="card" style="margin-bottom:var(--sp-5);">
         <div style="margin-bottom:var(--sp-4);">
           <div style="font-size:var(--text-base);font-weight:700;color:var(--c-text);">Notification Preferences</div>
@@ -1389,9 +1389,6 @@ window.AscendViews.saveGeminiApiKey = saveGeminiApiKey;
 window.AscendViews.testGeminiConnection = testGeminiConnection;
 window.AscendViews.toggleGeminiKeyVisibility = toggleGeminiKeyVisibility;
 window.AscendViews.refreshGeminiStatus = refreshGeminiStatus;
-
-// Auto-refresh Gemini status when settings view loads
-setTimeout(refreshGeminiStatus, 150);
 
 window.FacultyViews = window.FacultyViews || {};
 window.FacultyViews.settings = renderFacultySettings;
