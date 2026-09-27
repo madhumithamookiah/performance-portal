@@ -154,17 +154,6 @@
         actionView: 'achievements',
         actionLabel: 'Add achievement',
       },
-      {
-        id: 'notif-eval-published',
-        type: 'eval_published',
-        title: 'Semester evaluation published',
-        message: 'Your Semester 5 evaluation has been published by your faculty advisor. Review your evaluation and recommended next steps.',
-        date: '2026-09-19T16:00:00.000Z',
-        formattedDate: '2 days ago',
-        isRead: false,
-        actionView: 'evaluations',
-        actionLabel: 'View evaluation',
-      },
     ],
 
     // Dynamic Server Loader

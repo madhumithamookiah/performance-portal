@@ -11,10 +11,8 @@ function renderFacultyDashboard() {
     getClasses,
     getStudents,
     getRecentUpdates,
-    getEvaluations,
     getStudentsInactive30Days,
     getStudentsUnreviewedMonthly,
-    getSemesterEvaluationsDue,
   } = window.AscendFacultyData;
   const { Icons, formatDate } = window.AscendUI;
 
@@ -52,30 +50,12 @@ function renderFacultyDashboard() {
   const classStudents = Array.from(seenStudentMap.values());
 
   const classUpdates = getRecentUpdates(selectedClassId);
-  const classEvals = getEvaluations(selectedClassId);
 
   // 1. Inactive in past 30 days
   const inactiveStudents = getStudentsInactive30Days ? getStudentsInactive30Days(selectedClassId) : classStudents.filter(s => (s.daysInactive || 0) >= 30);
 
   // 2. Not reviewed monthly summary
   const unreviewedMonthlyStudents = getStudentsUnreviewedMonthly ? getStudentsUnreviewedMonthly(selectedClassId) : classStudents.filter(s => s.monthlyReviewed === false);
-
-  // 3. Semester evaluations due
-  const semesterEvalsDue = getSemesterEvaluationsDue ? getSemesterEvaluationsDue(selectedClassId, 'Semester 5') : classStudents.map(s => {
-    const ev = (classEvals || []).find(e => e.studentId === s.id && e.evaluationPeriod?.includes('Semester 5'));
-    return {
-      student: s,
-      evaluation: ev,
-      status: ev ? ev.status : 'to-evaluate',
-      period: 'Semester 5 · July–November 2026',
-      latestSummary: s.latestMonthlySummary || 'September summary: Activity recorded.',
-      lastActivityDate: s.lastActivity || 'Recently',
-    };
-  });
-
-  const publishedCount = (classEvals || []).filter(e => e.status === 'published').length;
-  const draftCount = (classEvals || []).filter(e => e.status === 'draft').length;
-  const pendingCount = Math.max(0, classStudents.length - (publishedCount + draftCount));
 
   // Recent activity items (deduplicated by student)
   const seenStudentInFeed = new Set();
@@ -130,18 +110,15 @@ function renderFacultyDashboard() {
           </span>
         </div>
         <div style="font-size:var(--text-sm);color:var(--c-text-2);">
-          Class oversight &bull; Monthly student activity tracking &bull; Semester rubric evaluations
+          Class oversight &bull; Monthly student activity tracking &bull; Mentorship feedback
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap;">
         <button class="btn btn-outline btn-sm" onclick="AscendFacultyData.loadFacultyData().then(()=>AscendApp.navigate('faculty-dashboard'))" aria-label="Refresh data">
           ${Icons.clock} Refresh Data
         </button>
-        <button class="btn btn-outline btn-sm" onclick="AscendApp.navigate('faculty-goals-feedback');setTimeout(()=>FacultyViews.openGlobalFeedbackModal?.(),200)" aria-label="Send guidance feedback">
+        <button class="btn btn-primary btn-sm" onclick="AscendApp.navigate('faculty-goals-feedback');setTimeout(()=>FacultyViews.openGlobalFeedbackModal?.(),200)" aria-label="Send guidance feedback">
           ${Icons.messageSquare} Send Guidance
-        </button>
-        <button class="btn btn-primary btn-sm" onclick="AscendApp.navigate('faculty-evaluations')" aria-label="Open rubric evaluations">
-          ${Icons.fileText} Semester Evaluations
         </button>
       </div>
     </div>
@@ -238,71 +215,6 @@ function renderFacultyDashboard() {
                 </div>`).join('')}
             </div>`}
         </div>
-
-        <!-- Semester Evaluations Due (Semester 5 · July–November 2026) -->
-        <div class="card" style="padding:0;overflow:hidden;">
-          <div style="padding:var(--sp-4) var(--sp-5);border-bottom:1px solid var(--c-border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
-            <div>
-              <div style="display:flex;align-items:center;gap:var(--sp-2);">
-                <h2 style="font-size:var(--text-base);font-weight:700;color:var(--c-text);margin:0;">
-                  Semester Evaluations Due
-                </h2>
-                <span class="badge badge-normal" style="font-size:11px;">Semester 5 &bull; Jul–Nov 2026</span>
-              </div>
-              <div style="font-size:var(--text-xs);color:var(--c-text-2);margin-top:2px;">
-                Faculty-led formal rubric evaluations across 5 developmental criteria
-              </div>
-            </div>
-            <button class="btn btn-ghost btn-sm" onclick="AscendApp.navigate('faculty-evaluations')" style="font-size:var(--text-xs);">
-              All Evaluations ${Icons.chevronRight}
-            </button>
-          </div>
-
-          <div style="display:flex;flex-direction:column;">
-            ${semesterEvalsDue.map(item => {
-              const s = item.student;
-              const statusBadge = item.status === 'published'
-                ? `<span class="badge" style="background:#E8F0FE;color:#1A73E8;border:1px solid #C2D8FF;font-size:10.5px;font-weight:600;">Published</span>`
-                : (item.status === 'draft'
-                  ? `<span class="badge" style="background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;font-size:10.5px;font-weight:600;">Draft</span>`
-                  : `<span class="badge" style="background:var(--c-bg);color:var(--c-text-2);border:1px solid var(--c-border);font-size:10.5px;font-weight:600;">To Evaluate</span>`);
-
-              const actionBtn = item.status === 'published'
-                ? `<button class="btn btn-outline btn-sm" style="font-size:11px;padding:3px 10px;" onclick="FacultyViews.openEditEvalModal('${item.evaluation.id}')">View / Edit</button>`
-                : (item.status === 'draft'
-                  ? `<button class="btn btn-primary btn-sm" style="font-size:11px;padding:3px 10px;" onclick="FacultyViews.openEditEvalModal('${item.evaluation.id}')">Continue Draft</button>`
-                  : `<button class="btn btn-primary btn-sm" style="font-size:11px;padding:3px 10px;" onclick="FacultyViews.openCreateEvalModal('${s.id}')">Start Evaluation</button>`);
-
-              return `
-                <div style="padding:14px 20px;border-bottom:1px solid var(--c-border);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
-                  <div style="display:flex;align-items:center;gap:12px;min-width:200px;">
-                    <div class="avatar avatar-sm" style="background:var(--c-primary-light);color:var(--c-primary);font-weight:700;font-size:11px;">
-                      ${s.initials || 'ST'}
-                    </div>
-                    <div>
-                      <div style="display:flex;align-items:center;gap:6px;">
-                        <span style="font-size:var(--text-sm);font-weight:700;color:var(--c-text);">${s.name}</span>
-                        ${statusBadge}
-                      </div>
-                      <div style="font-size:11px;color:var(--c-text-3);margin-top:2px;">
-                        ${s.rollNo ? `${s.rollNo} &bull; ` : ''}${s.program || 'B.Tech CSE'}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style="flex:1;min-width:220px;font-size:11.5px;color:var(--c-text-2);background:var(--c-bg);padding:6px 10px;border-radius:var(--r-sm);border:1px solid var(--c-border);">
-                    <div style="font-weight:600;color:var(--c-text);margin-bottom:1px;">Latest activity record:</div>
-                    ${item.latestSummary}
-                  </div>
-
-                  <div style="display:flex;align-items:center;gap:8px;">
-                    ${actionBtn}
-                  </div>
-                </div>`;
-            }).join('')}
-          </div>
-        </div>
-
       </div>
 
       <!-- ── Right Column: Inactive Students & Unreviewed Summaries ── -->

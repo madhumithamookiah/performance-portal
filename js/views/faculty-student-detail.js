@@ -10,7 +10,7 @@
 
 /* ── Tab Switcher ────────────────────────────────────────────── */
 function switchStudentDetailTab(tabId) {
-  const normId = (tabId === 'evaluations') ? 'evaluation' : ((tabId === 'portfolio' || tabId === 'achievements') ? 'activity' : tabId);
+  const normId = ((tabId === 'portfolio' || tabId === 'achievements') ? 'activity' : tabId);
   window._facultySelectedStudentTab = normId;
   document.querySelectorAll('.fsd-tab-item').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.fsd-tab-content').forEach(el => el.classList.remove('active'));
@@ -49,21 +49,19 @@ function achievementCategoryColor(cat) {
 
 /* ── Main Render ─────────────────────────────────────────────── */
 function renderFacultyStudentDetail(paramId, paramTab) {
-  const { students, facultyFeedback, evaluations } = window.AscendFacultyData;
+  const { students, facultyFeedback } = window.AscendFacultyData;
   const { Icons, skillTag, formatDate } = window.AscendUI;
   const currentRole = window.AscendApp?.getCurrentRole?.() || sessionStorage.getItem('ascend_role');
 
   const studentId = paramId || window._facultySelectedStudentId || (students && students[0] ? students[0].id : 'stu-000');
   let rawTab = paramTab || window._facultySelectedStudentTab || 'overview';
-  if (currentRole === 'admin' && (rawTab === 'evaluation' || rawTab === 'evaluations')) rawTab = 'overview';
 
-  // Normalize tab ID to one of: overview, activity, feedback, evaluation
+  // Normalize tab ID to one of: overview, activity, feedback
   const tabRemap = {
     achievements: 'activity',
     projects: 'activity',
     portfolio: 'activity',
     skills: 'overview',
-    evaluations: 'evaluation'
   };
   const activeTab = tabRemap[rawTab] || rawTab;
   const s = (students && students.find(st => st.id === studentId)) || (students && students[0]) || {};
@@ -89,10 +87,8 @@ function renderFacultyStudentDetail(paramId, paramTab) {
     return new Date(db || 0) - new Date(da || 0);
   });
 
-  // Scoped feedback and evaluations
+  // Scoped feedback
   const stuFeedback = (facultyFeedback || []).filter(f => f.toStudentId === s.id || f.studentId === s.id);
-  const stuEvaluations = (evaluations || []).filter(e => e.studentId === s.id);
-  const latestEval = stuEvaluations.find(e => e.status === 'published') || stuEvaluations[0];
 
   const initials = s.initials || (s.name ? s.name.split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase() : 'ST');
 
@@ -158,26 +154,18 @@ function renderFacultyStudentDetail(paramId, paramTab) {
           <button class="btn btn-outline btn-sm" onclick="FacultyViews.openStudentPublicPortfolio('${s.id}')" title="Preview student's public portfolio">
             ${Icons.externalLink} View Public Portfolio
           </button>
-          <button class="btn btn-outline btn-sm" onclick="FacultyViews.openDetailFeedbackModal('${s.id}')">
+          <button class="btn btn-primary btn-sm" onclick="FacultyViews.openDetailFeedbackModal('${s.id}')">
             ${Icons.messageSquare} Send Feedback
           </button>
-          ${currentRole !== 'admin' ? (latestEval ? `
-            <button class="btn btn-primary btn-sm" onclick="FacultyViews.switchStudentDetailTab('evaluation')">
-              ${Icons.fileText} View Evaluation
-            </button>` : `
-            <button class="btn btn-primary btn-sm" onclick="FacultyViews.openDetailNewEvalModal('${s.id}')">
-              ${Icons.plus} Start Evaluation
-            </button>`) : ''}
         </div>
       </div>
     </div>
 
-    <!-- 4 Navigation Tabs: Overview · Activity · Feedback · Evaluation -->
+    <!-- 3 Navigation Tabs: Overview · Activity · Feedback -->
     <div class="tabs fsd-tabs" id="fsd-tab-bar" style="margin-bottom:var(--sp-5);">
       <button class="tab-item fsd-tab-item ${activeTab === 'overview' ? 'active' : ''}" data-sdtab="overview" onclick="FacultyViews.switchStudentDetailTab('overview')">Overview</button>
       <button class="tab-item fsd-tab-item ${activeTab === 'activity' ? 'active' : ''}" data-sdtab="activity" onclick="FacultyViews.switchStudentDetailTab('activity')">Activity (${sortedAchievements.length})</button>
       <button class="tab-item fsd-tab-item ${activeTab === 'feedback' ? 'active' : ''}" data-sdtab="feedback" onclick="FacultyViews.switchStudentDetailTab('feedback')">Feedback (${stuFeedback.length})</button>
-      ${currentRole !== 'admin' ? `<button class="tab-item fsd-tab-item ${activeTab === 'evaluation' ? 'active' : ''}" data-sdtab="evaluation" onclick="FacultyViews.switchStudentDetailTab('evaluation')">Evaluation (${stuEvaluations.length})</button>` : ''}
     </div>
 
     <!-- ═══════════ Tab 1: Overview (Overall Student Profile Details) ═══════════ -->
@@ -241,7 +229,7 @@ function renderFacultyStudentDetail(paramId, paramTab) {
             <div style="font-size:var(--text-base);font-weight:700;color:var(--c-text);margin-bottom:var(--sp-4);">
               Development Oversight at a Glance
             </div>
-            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:var(--sp-3);margin-bottom:var(--sp-4);">
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-3);margin-bottom:var(--sp-4);">
               <div style="padding:var(--sp-3);background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--r-md);text-align:center;">
                 <div style="font-size:1.75rem;font-weight:800;color:var(--c-primary);line-height:1;">${sortedAchievements.length}</div>
                 <div style="font-size:11px;color:var(--c-text-3);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Achievements</div>
@@ -254,10 +242,6 @@ function renderFacultyStudentDetail(paramId, paramTab) {
                 <div style="font-size:1.75rem;font-weight:800;color:var(--c-feedback);line-height:1;">${stuFeedback.length}</div>
                 <div style="font-size:11px;color:var(--c-text-3);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Feedback Given</div>
               </div>
-              <div style="padding:var(--sp-3);background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--r-md);text-align:center;">
-                <div style="font-size:1.75rem;font-weight:800;color:${latestEval && latestEval.status === 'published' ? 'var(--c-verified)' : 'var(--c-review)'};line-height:1;">${stuEvaluations.length}</div>
-                <div style="font-size:11px;color:var(--c-text-3);margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;">Evaluations</div>
-              </div>
             </div>
 
             <div style="display:flex;flex-direction:column;gap:var(--sp-2);">
@@ -265,12 +249,6 @@ function renderFacultyStudentDetail(paramId, paramTab) {
                 <span style="color:var(--c-text-3);">Profile Setup Status</span>
                 <span style="font-weight:700;color:${s.profileSetupStatus === 'complete' ? 'var(--c-verified)' : 'var(--c-rejected)'};">
                   ${s.profileSetupStatus === 'complete' ? 'Complete' : 'Incomplete'}
-                </span>
-              </div>
-              <div style="display:flex;justify-content:space-between;font-size:var(--text-xs);">
-                <span style="color:var(--c-text-3);">Evaluation State</span>
-                <span style="font-weight:700;">
-                  ${latestEval ? (latestEval.status === 'published' ? 'Evaluated (Published)' : 'Draft in Progress') : 'Pending Evaluation'}
                 </span>
               </div>
               <div style="display:flex;justify-content:space-between;font-size:var(--text-xs);">
@@ -471,93 +449,6 @@ function renderFacultyStudentDetail(paramId, paramTab) {
         </div>`}
     </div>
 
-    <!-- ═══════════ Tab 4: Evaluation (Personalised Feedback & Evaluation History) ═══════════ -->
-    <div id="fsd-tab-evaluation" class="fsd-tab-content ${activeTab === 'evaluation' ? 'active' : ''}">
-      <div style="margin-bottom:var(--sp-5);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:var(--sp-2);">
-        <div>
-          <div style="font-size:var(--text-base);font-weight:700;color:var(--c-text);">Personalised Evaluation History</div>
-          <div style="font-size:var(--text-xs);color:var(--c-text-3);margin-top:2px;">
-            Rubric competency assessments across core criteria and overall faculty recommendations for ${s.name || 'this student'}.
-          </div>
-        </div>
-        <button class="btn btn-primary btn-sm" onclick="FacultyViews.openDetailNewEvalModal('${s.id}')">
-          ${Icons.plus} Start Evaluation
-        </button>
-      </div>
-
-      ${stuEvaluations.length === 0 ? `
-        <div class="empty-state">
-          <div class="empty-state-icon">${Icons.fileText}</div>
-          <div class="empty-state-title">No evaluations on file</div>
-          <div class="empty-state-desc">Evaluate ${s.name || 'this student'} against the department development rubric to record personalized assessments.</div>
-          <button class="btn btn-primary btn-sm" onclick="FacultyViews.openDetailNewEvalModal('${s.id}')">Start First Evaluation</button>
-        </div>` :
-        `<div style="display:flex;flex-direction:column;gap:var(--sp-5);">
-          ${stuEvaluations.map(ev => {
-            const criteriaList = [
-              { key: 'technical',          label: 'Technical Competency' },
-              { key: 'projectAbility',     label: 'Project / Application Ability' },
-              { key: 'communication',      label: 'Communication' },
-              { key: 'leadership',         label: 'Collaboration & Leadership' },
-              { key: 'careerPreparedness', label: 'Career Preparedness' },
-            ];
-            return `
-              <div class="card" style="padding:var(--sp-5);">
-                <!-- Header -->
-                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-3);flex-wrap:wrap;margin-bottom:var(--sp-5);padding-bottom:var(--sp-4);border-bottom:1px solid var(--c-border);">
-                  <div>
-                    <div style="font-size:var(--text-lg);font-weight:700;color:var(--c-text);">${ev.evaluationPeriod}</div>
-                    <div style="font-size:var(--text-xs);color:var(--c-text-3);margin-top:4px;">
-                      Evaluated by ${ev.evaluatorName || 'Faculty Advisor'} · ${ev.status === 'published' ? 'Published on ' + formatDate(ev.publishedAt) : 'Draft saved ' + formatDate(ev.lastUpdated)}
-                    </div>
-                  </div>
-                  <div style="display:flex;align-items:center;gap:var(--sp-2);">
-                    <span class="badge ${ev.status === 'published' ? 'badge-verified' : 'badge-draft'}" style="font-size:11px;">
-                      ${ev.status === 'published' ? 'Published to Student' : 'Draft in Progress'}
-                    </span>
-                    <button class="btn btn-outline btn-sm" onclick="FacultyViews.openEditEvalModal('${ev.id}')">
-                      Edit
-                    </button>
-                    <button class="btn btn-ghost btn-sm" style="color:var(--c-rejected);border:1px solid var(--c-border);" onclick="FacultyViews.deleteEvaluation('${ev.id}', '${s.id}')" title="Delete Evaluation">
-                      ${Icons.trash} Delete
-                    </button>
-                  </div>
-                </div>
-
-                <!-- 5 Criteria Ratings -->
-                <div style="font-size:11px;font-weight:700;color:var(--c-text-3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--sp-3);">
-                  Rubric Assessment Criteria
-                </div>
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:var(--sp-3);margin-bottom:var(--sp-5);">
-                  ${criteriaList.map(c => {
-                    const item = ev.scores ? ev.scores[c.key] : null;
-                    const level = (item && item.level) || 'Developing';
-                    const comm = (item && item.comment) || '';
-                    return `
-                      <div style="padding:var(--sp-3);background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--r-md);">
-                        <div style="display:flex;align-items:center;justify-content:space-between;gap:4px;margin-bottom:${comm ? '8px' : '0'};">
-                          <div style="font-size:11px;font-weight:700;color:var(--c-text);text-transform:uppercase;letter-spacing:0.04em;">${c.label}</div>
-                          ${rubricLevelBadge(level)}
-                        </div>
-                        ${comm ? `<div style="font-size:var(--text-xs);color:var(--c-text-2);line-height:1.5;font-style:italic;">"${comm}"</div>` : ''}
-                      </div>`;
-                  }).join('')}
-                </div>
-
-                <!-- Overall Faculty Summary -->
-                <div style="padding:var(--sp-4);background:var(--c-surface);border:1px solid var(--c-border);border-radius:var(--r-md);">
-                  <div style="font-size:11px;font-weight:700;color:var(--c-text-3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--sp-2);">
-                    Overall Faculty Summary & Recommendations
-                  </div>
-                  <div style="font-size:var(--text-sm);color:var(--c-text);line-height:1.75;">
-                    ${ev.overallSummary || '<span style="color:var(--c-text-3);font-style:italic;">No summary provided yet.</span>'}
-                  </div>
-                </div>
-              </div>`;
-          }).join('')}
-        </div>`}
-    </div>
-
     <!-- Student Detail Feedback Modal -->
     <div id="fsd-detail-feedback-modal" class="modal-overlay">
       <div class="modal" style="max-width:560px;">
@@ -642,11 +533,6 @@ function submitDetailFeedback(studentId, studentName, classId) {
   AscendUI.closeModal('fsd-detail-feedback-modal');
   AscendUI.showToast(`Feedback sent to ${studentName}!`, 'success');
   AscendApp.navigate('faculty-student-detail');
-}
-
-function openDetailNewEvalModal(studentId) {
-  window._newEvalStudentId = studentId;
-  AscendApp.navigate('faculty-evaluations');
 }
 
 function openStudentDetail(studentId) {
@@ -794,28 +680,15 @@ function renderStudentDetailMonthlyActivitySection(s) {
       <!-- Direct Faculty Actions for Monthly Activity -->
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:var(--sp-4);padding-top:var(--sp-3);border-top:1px solid var(--c-border);">
         <div style="font-size:11.5px;color:var(--c-text-3);">
-          Faculty oversight &bull; Use monthly progress records to guide student or initiate semester evaluation
+          Faculty oversight &bull; Use monthly progress records to guide student development
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
-          <button class="btn btn-outline btn-sm" onclick="FacultyViews.openDetailFeedbackModal('${s.id}')">
+          <button class="btn btn-primary btn-sm" onclick="FacultyViews.openDetailFeedbackModal('${s.id}')">
             ${Icons.messageSquare} Give Guidance / Feedback
-          </button>
-          <button class="btn btn-primary btn-sm" onclick="FacultyViews.startEvaluationForStudent('${s.id}')">
-            ${Icons.plus} Begin Semester Evaluation
           </button>
         </div>
       </div>
     </div>`;
-}
-
-function startEvaluationForStudent(studentId) {
-  window._newEvalStudentId = studentId;
-  AscendApp.navigate('faculty-evaluations');
-  setTimeout(() => {
-    if (window.FacultyViews && window.FacultyViews.openCreateEvalModal) {
-      window.FacultyViews.openCreateEvalModal(studentId);
-    }
-  }, 150);
 }
 
 function onSelectStudentDetailMonth(monthKey) {
@@ -836,9 +709,7 @@ Object.assign(window.FacultyViews, {
   openStudentPublicPortfolio,
   openDetailFeedbackModal,
   submitDetailFeedback,
-  openDetailNewEvalModal,
   openStudentDetail,
-  startEvaluationForStudent,
   onSelectStudentDetailMonth,
   updateDetailNextStepLabel() {
     const catEl = document.getElementById('fsd-fb-category');

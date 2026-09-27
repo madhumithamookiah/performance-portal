@@ -55,9 +55,12 @@
       role: 'all',
     },
     evaluations: {
-      render: () => window.AscendViews.studentEvaluations ? window.AscendViews.studentEvaluations() : '<div class="card" style="padding:var(--sp-6);">Loading Evaluations…</div>',
+      render: () => {
+        setTimeout(() => window.AscendApp?.navigate('monthly-progress'), 0);
+        return '<div class="card" style="padding:var(--sp-6);">Redirecting to Monthly Progress…</div>';
+      },
       init: () => {},
-      title: 'My Evaluations',
+      title: 'Monthly Progress',
       role: 'student',
     },
 
@@ -112,9 +115,12 @@
       role: 'faculty',
     },
     'faculty-evaluations': {
-      render: () => window.FacultyViews.evaluations(),
+      render: () => {
+        setTimeout(() => window.AscendApp?.navigate('faculty-dashboard'), 0);
+        return '<div class="card p-6">Redirecting to Dashboard…</div>';
+      },
       init: () => {},
-      title: 'Rubric Evaluations',
+      title: 'Faculty Dashboard',
       role: 'faculty',
     },
     'faculty-analytics': {
@@ -140,7 +146,6 @@
         { id: 'achievements', label: 'Achievements', iconKey: 'award' },
         { id: 'goals', label: 'Portfolio Overview', iconKey: 'target' },
         { id: 'feedback', label: 'Feedback', iconKey: 'messageSquare' },
-        { id: 'evaluations', label: 'My Evaluations', iconKey: 'clipboardList' },
         { id: 'settings', label: 'Settings', iconKey: 'settings' },
       ],
       bottomItems: [
@@ -157,14 +162,12 @@
         { id: 'faculty-dashboard', label: 'Dashboard', iconKey: 'home' },
         { id: 'faculty-students', label: 'Students', iconKey: 'users' },
         { id: 'faculty-goals-feedback', label: 'Feedback', iconKey: 'messageSquare' },
-        { id: 'faculty-evaluations', label: 'Evaluations', iconKey: 'fileText' },
         { id: 'settings', label: 'Settings', iconKey: 'settings' },
       ],
       bottomItems: [
         { id: 'faculty-dashboard', label: 'Dashboard', iconKey: 'home' },
         { id: 'faculty-students', label: 'Students', iconKey: 'users' },
         { id: 'faculty-goals-feedback', label: 'Feedback', iconKey: 'messageSquare' },
-        { id: 'faculty-evaluations', label: 'Evaluations', iconKey: 'fileText' },
         { id: 'settings', label: 'Settings', iconKey: 'settings' },
       ],
     },
@@ -518,7 +521,7 @@
         }
       }
     } else {
-      if (currentView !== 'faculty-students' && currentView !== 'faculty-evaluations' && currentView !== 'faculty-goals-feedback' && q.length > 0) {
+      if (currentView !== 'faculty-students' && currentView !== 'faculty-goals-feedback' && q.length > 0) {
         navigate('faculty-students');
       }
       const fstuSearch = document.getElementById('fstu-search');
@@ -526,13 +529,6 @@
         fstuSearch.value = q;
         if (window.FacultyViews && window.FacultyViews.filterStudents) {
           window.FacultyViews.filterStudents();
-        }
-      }
-      const evalSearch = document.getElementById('eval-search');
-      if (evalSearch) {
-        evalSearch.value = q;
-        if (window.FacultyViews && window.FacultyViews.filterEvaluations) {
-          window.FacultyViews.filterEvaluations();
         }
       }
       const fbSearch = document.getElementById('fb-filter-search');

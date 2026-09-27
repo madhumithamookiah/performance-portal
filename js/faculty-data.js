@@ -558,16 +558,6 @@ let EVALUATIONS = [
 
 let FACULTY_NOTIFICATIONS = [
   {
-    id: 'f-notif-1',
-    type: 'eval_due',
-    title: 'Semester evaluations deadline',
-    message: '8 semester evaluations are due for B.Tech CSE · Semester 5 · Section A.',
-    formattedDate: 'Today',
-    isRead: false,
-    actionView: 'faculty-evaluations',
-    actionLabel: 'Evaluate students',
-  },
-  {
     id: 'f-notif-2',
     type: 'monthly_summary',
     title: 'September progress summaries ready',
