@@ -42,9 +42,12 @@ function renderMonthlyProgress() {
               Factual summaries compiled automatically from completed achievements, projects, and mentorship notes.
             </div>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <button class="btn btn-outline btn-sm" onclick="AscendApp.navigate('dashboard')">
               Back to Dashboard
+            </button>
+            <button class="btn btn-outline btn-sm" id="btn-gemini-monthly" onclick="AscendViews.generateMonthlyProgressWithGemini('${activeSummary.monthKey}')" style="display:inline-flex;align-items:center;gap:6px;border-color:var(--c-primary);color:var(--c-primary);background:#F0F6FF;font-weight:600;" title="Synthesize monthly progress automatically using Gemini AI">
+              ${Icons.sparkle} Generate with Gemini
             </button>
             <button class="btn btn-primary btn-sm" onclick="AscendApp.navigate('achievements');setTimeout(()=>AscendUI.openModal('add-achievement-modal'),200)">
               ${Icons.plus} Add Completed Work
@@ -125,6 +128,15 @@ function renderMonthlyProgress() {
 
             <!-- Factual Narrative Box -->
             <div style="padding:14px 16px;background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--r-md);margin-bottom:16px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
+                <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--c-primary);display:inline-flex;align-items:center;gap:5px;">
+                  ${Icons.sparkle} Factual Progress Summary
+                </span>
+                ${activeSummary.generatedWithGemini ? `
+                  <span class="badge" style="background:#E8F0FE;color:#1A73E8;border:1px solid #C2D8FF;font-size:10.5px;padding:2px 8px;display:inline-flex;align-items:center;gap:4px;">
+                    ${Icons.sparkle} Generated with Gemini
+                  </span>` : ''}
+              </div>
               <div style="font-size:var(--text-sm);font-weight:600;color:var(--c-text);line-height:1.6;">
                 &ldquo;${activeSummary.summaryText}&rdquo;
               </div>
@@ -164,6 +176,28 @@ function renderMonthlyProgress() {
                 <div style="font-size:11px;color:var(--c-text-2);margin-top:2px;">Bio &amp; links intact</div>
               </div>
             </div>
+
+            <!-- Gemini AI Key Accomplishments & Highlights (if available) -->
+            ${(activeSummary.highlights && activeSummary.highlights.length > 0) ? `
+              <div style="padding:14px 16px;background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--r-md);margin-bottom:16px;">
+                <div style="font-size:var(--text-xs);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--c-primary);margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                  ${Icons.sparkle} Key Accomplishments &amp; Milestones
+                </div>
+                <ul style="margin:0;padding-left:18px;font-size:13px;color:var(--c-text);line-height:1.6;">
+                  ${activeSummary.highlights.map(h => `<li style="margin-bottom:4px;">${h}</li>`).join('')}
+                </ul>
+              </div>` : ''}
+
+            <!-- Gemini AI Recommended Next Milestones (if available) -->
+            ${(activeSummary.nextMilestones && activeSummary.nextMilestones.length > 0) ? `
+              <div style="padding:14px 16px;background:#F8FAFD;border:1px solid #C2D8FF;border-radius:var(--r-md);margin-bottom:16px;">
+                <div style="font-size:var(--text-xs);font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--c-primary);margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+                  ${Icons.lightbulb || Icons.sparkle} Recommended Next-Month Milestones
+                </div>
+                <ul style="margin:0;padding-left:18px;font-size:13px;color:var(--c-text-2);line-height:1.6;">
+                  ${activeSummary.nextMilestones.map(m => `<li style="margin-bottom:4px;">${m}</li>`).join('')}
+                </ul>
+              </div>` : ''}
 
             <!-- Factual Activity Event Timeline for This Month -->
             <div style="border-top:1px solid var(--c-border);padding-top:16px;">
@@ -233,9 +267,44 @@ async function confirmMonthReview(monthKey) {
   selectMonthlyProgress(monthKey);
 }
 
+/* ── Generate Monthly Progress with Gemini ─────────────────────── */
+async function generateMonthlyProgressWithGemini(monthKey) {
+  const btn = document.getElementById('btn-gemini-monthly');
+  const originalHtml = btn ? btn.innerHTML : '';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = `<span style="display:inline-block;animation:spin 1s linear infinite;">${window.AscendUI.Icons.sparkle}</span> Generating...`;
+  }
+  window.AscendUI.showToast('Synthesizing factual monthly progress with Gemini...', 'info', 3000);
+
+  try {
+    const res = await window.AscendGemini.generateMonthlyProgress({
+      monthKey,
+      monthName: monthKey === '2026-09' ? 'September 2026' : (monthKey === '2026-08' ? 'August 2026' : 'Recent Month'),
+    });
+    if (res.success) {
+      if (window.AscendData) {
+        window.AscendData.monthlySummaries = res.monthlySummaries;
+      }
+      window.AscendUI.showToast(res.message || 'Monthly progress updated with Gemini!', 'success');
+      selectMonthlyProgress(monthKey);
+    } else {
+      window.AscendUI.showToast(res.error || 'Failed to generate progress summary.', 'error');
+    }
+  } catch (err) {
+    window.AscendUI.showToast('Error communicating with Gemini service.', 'error');
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+    }
+  }
+}
+
 window.AscendViews = window.AscendViews || {};
 Object.assign(window.AscendViews, {
   monthlyProgress: renderMonthlyProgress,
   selectMonthlyProgress,
   confirmMonthReview,
+  generateMonthlyProgressWithGemini,
 });

@@ -1381,8 +1381,19 @@
           <input type="text" class="form-input" id="new-user-dept" value="Computer Science & Engineering" required>
         </div>
         <div class="form-group" id="group-new-desig">
-          <label class="form-label">Designation / Degree</label>
-          <input type="text" class="form-input" id="new-user-desig" value="Associate Professor & Faculty Advisor">
+          <label class="form-label" id="label-new-desig">Designation / Degree</label>
+          <input type="text" class="form-input" id="new-user-desig" list="admin-classes-presets" value="Associate Professor & Faculty Advisor">
+          <datalist id="admin-classes-presets">
+            <option value="BCA-CC">
+            <option value="BCA-DS">
+            <option value="BSc-Cyber">
+            <option value="MBA">
+            <option value="BBA-Aviation">
+            <option value="BSc-AIML">
+            <option value="Associate Professor & Faculty Advisor">
+            <option value="Assistant Professor & Faculty Mentor">
+            <option value="Professor & Senior Mentor">
+          </datalist>
         </div>
         <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:10px;">
           <button type="button" class="btn btn-outline" onclick="AdminViews.closeModal()">Cancel</button>
@@ -1397,12 +1408,16 @@
 
   function onNewUserRoleChange(role) {
     const desigInput = document.getElementById('new-user-desig');
+    const label = document.getElementById('label-new-desig');
     if (!desigInput) return;
     if (role === 'student') {
-      desigInput.value = 'B.Tech in Computer Science';
+      if (label) label.textContent = 'Class / Degree Program *';
+      desigInput.value = 'BCA-CC';
     } else if (role === 'faculty') {
+      if (label) label.textContent = 'Designation / Role Title *';
       desigInput.value = 'Associate Professor & Faculty Advisor';
     } else {
+      if (label) label.textContent = 'Role Title *';
       desigInput.value = 'Institutional Administrator';
     }
   }

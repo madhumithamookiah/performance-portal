@@ -254,7 +254,6 @@ function skillTag(name) {
   return `<span class="skill-tag">${name}</span>`;
 }
 
-/* ── Expose globally ─────────────────────────────────────────── */
 window.AscendUI = {
   Icons,
   formatDate,
@@ -271,3 +270,55 @@ window.AscendUI = {
   confirmDialog,
   skillTag,
 };
+
+/* ── Gemini AI Client Helper ─────────────────────────────────── */
+window.AscendGemini = {
+  async getConfig() {
+    try {
+      const res = await fetch('/api/gemini/config');
+      return await res.json();
+    } catch (e) {
+      return { configured: false, maskedKey: null, model: 'gemini-2.5-flash' };
+    }
+  },
+
+  async saveConfig(apiKey) {
+    try {
+      const res = await fetch('/api/gemini/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiKey }),
+      });
+      return await res.json();
+    } catch (e) {
+      return { error: 'Failed to connect to server.' };
+    }
+  },
+
+  async generatePortfolio(options = {}) {
+    try {
+      const res = await fetch('/api/gemini/generate-portfolio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(options),
+      });
+      return await res.json();
+    } catch (e) {
+      return { error: 'Failed to communicate with portfolio generation service.' };
+    }
+  },
+
+  async generateMonthlyProgress(options = {}) {
+    try {
+      const res = await fetch('/api/gemini/generate-monthly-progress', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(options),
+      });
+      return await res.json();
+    } catch (e) {
+      return { error: 'Failed to communicate with monthly progress service.' };
+    }
+  },
+};
+

@@ -71,7 +71,7 @@ function renderFacultyEvaluations() {
 
   const currentPeriod = window._facultyEvalPeriod || 'Semester 5 · July–November 2026';
   const activeTab = window._facultyEvalActiveTab || 'to-evaluate';
-  const currentClassId = selectedClassId || 'class-cse-5a';
+  const currentClassId = selectedClassId || 'all';
 
   // Get full roster status for current period and class
   const rosterData = getSemesterEvaluationsDue
@@ -96,8 +96,13 @@ function renderFacultyEvaluations() {
   window._newEvalStudentId = null;
 
   const classList = Array.isArray(classes) && classes.length > 0 ? classes : [
-    { id: 'class-cse-5a', name: 'B.Tech CSE · Semester 5 · Section A', shortName: 'CSE 5-A' },
-    { id: 'class-cse-3b', name: 'B.Tech CSE · Semester 3 · Section B', shortName: 'CSE 3-B' },
+    { id: 'all', name: 'All Classes', shortName: 'All Classes' },
+    { id: 'class-bca-cc', name: 'BCA-CC', shortName: 'BCA-CC' },
+    { id: 'class-bca-ds', name: 'BCA-DS', shortName: 'BCA-DS' },
+    { id: 'class-bsc-cyber', name: 'BSc-Cyber', shortName: 'BSc-Cyber' },
+    { id: 'class-mba', name: 'MBA', shortName: 'MBA' },
+    { id: 'class-bba-aviation', name: 'BBA-Aviation', shortName: 'BBA-Aviation' },
+    { id: 'class-bsc-aiml', name: 'BSc-AIML', shortName: 'BSc-AIML' },
   ];
 
   return `

@@ -523,7 +523,7 @@ function submitDetailFeedback(studentId, studentName, classId) {
   window.AscendFacultyData.sendFeedback({
     toStudentId: studentId,
     toStudentName: studentName,
-    classId: classId || window.AscendFacultyData.selectedClassId || 'class-cse-5a',
+    classId: (classId && classId !== 'class-cse-5a') ? classId : (window.AscendFacultyData.selectedClassId !== 'all' ? window.AscendFacultyData.selectedClassId : 'class-bca-cc'),
     category,
     message,
     recommendedNextStep: nextStep,

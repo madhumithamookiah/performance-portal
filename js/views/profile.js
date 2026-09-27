@@ -192,11 +192,16 @@ function renderProfile() {
       <!-- Left column: Bio + Career Interests + External Profiles -->
       <div style="display:flex;flex-direction:column;gap:var(--sp-5);">
         <div class="card">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-3);">
-            <div style="font-size:var(--text-sm);font-weight:600;">About</div>
-            <button class="btn btn-ghost btn-sm" onclick="AscendViews.openEditProfileModal()" aria-label="Edit bio and career interests">
-              ${Icons.edit} Edit
-            </button>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-3);flex-wrap:wrap;gap:8px;">
+            <div style="font-size:var(--text-sm);font-weight:600;">About &amp; Career Trajectory</div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <button class="btn btn-outline btn-sm" id="btn-gemini-portfolio" onclick="AscendViews.generatePortfolioWithGemini()" style="display:inline-flex;align-items:center;gap:5px;border-color:var(--c-primary);color:var(--c-primary);background:#F0F6FF;padding:3px 10px;font-size:11.5px;font-weight:600;" title="Synthesize your headline, bio, and portfolio automatically with Gemini AI">
+                ${Icons.sparkle} Generate with Gemini
+              </button>
+              <button class="btn btn-ghost btn-sm" onclick="AscendViews.openEditProfileModal()" aria-label="Edit bio and career interests">
+                ${Icons.edit} Edit
+              </button>
+            </div>
           </div>
           <p id="profile-bio-text" style="font-size:var(--text-sm);color:${(student.bio && student.bio.trim()) ? 'var(--c-text-2)' : 'var(--c-text-3)'};line-height:1.8;margin-bottom:var(--sp-3);${(student.bio && student.bio.trim()) ? '' : 'font-style:italic;'}">${(student.bio && student.bio.trim()) ? student.bio : 'No professional bio added yet. Click Edit to add your bio.'}</p>
           <div style="font-size:var(--text-xs);font-weight:600;color:var(--c-text-3);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:var(--sp-2);">Career interests</div>
@@ -578,7 +583,10 @@ function renderProfile() {
                 Year ${student.year} · Expected graduation ${student.graduationYear}${student.rollNumber ? ` · Roll No: ${student.rollNumber}` : ''}
               </div>
             </div>
-            <div style="display:flex;gap:var(--sp-2);flex-wrap:wrap;">
+            <div style="display:flex;gap:var(--sp-2);flex-wrap:wrap;align-items:center;">
+              <button class="btn btn-outline btn-sm" id="btn-gemini-portfolio-hero" onclick="AscendViews.generatePortfolioWithGemini()" style="display:inline-flex;align-items:center;gap:6px;border-color:var(--c-primary);color:var(--c-primary);background:#F0F6FF;font-weight:600;" title="Synthesize your portfolio headline, bio, and career goals using Gemini AI">
+                ${Icons.sparkle} Generate with Gemini
+              </button>
               <button class="btn btn-outline btn-sm" onclick="AscendViews.openEditProfileModal()">
                 ${Icons.edit} Edit profile
               </button>
@@ -633,20 +641,15 @@ function renderProfile() {
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="edit-degree">Course / Degree Program <span class="required">*</span></label>
-              <input class="form-input" id="edit-degree" type="text" list="edit-degree-presets" value="${student.degree || ''}" placeholder="e.g. B.Tech in Computer Science">
-              <datalist id="edit-degree-presets">
-                <option value="B.Tech in Computer Science">
-                <option value="B.Tech in Information Technology">
-                <option value="B.Tech in Artificial Intelligence & Data Science">
-                <option value="B.Tech in Electronics & Communication">
-                <option value="B.Tech in Mechanical Engineering">
-                <option value="B.Tech in Civil Engineering">
-                <option value="BCA (Bachelor of Computer Applications)">
-                <option value="MCA (Master of Computer Applications)">
-                <option value="M.Tech in Computer Science">
-                <option value="B.Sc in Computer Science">
-              </datalist>
+              <label class="form-label" for="edit-degree">Select Class / Degree Program <span class="required">*</span></label>
+              <select class="form-input form-select" id="edit-degree" required onchange="if(typeof onEditDegreeChange==='function') onEditDegreeChange(this.value)">
+                <option value="BCA-CC" ${student.degree === 'BCA-CC' || (student.degree && student.degree.toLowerCase().includes('cloud')) ? 'selected' : ''}>BCA-CC (Cloud Computing)</option>
+                <option value="BCA-DS" ${student.degree === 'BCA-DS' || (student.degree && student.degree.toLowerCase().includes('data science')) ? 'selected' : ''}>BCA-DS (Data Science)</option>
+                <option value="BSc-Cyber" ${student.degree === 'BSc-Cyber' || (student.degree && student.degree.toLowerCase().includes('cyber')) ? 'selected' : ''}>BSc-Cyber (Cyber Security)</option>
+                <option value="MBA" ${student.degree === 'MBA' || (student.degree && student.degree.toLowerCase().includes('business')) ? 'selected' : ''}>MBA (Master of Business Administration)</option>
+                <option value="BBA-Aviation" ${student.degree === 'BBA-Aviation' || (student.degree && student.degree.toLowerCase().includes('aviation')) ? 'selected' : ''}>BBA-Aviation (Aviation Management)</option>
+                <option value="BSc-AIML" ${student.degree === 'BSc-AIML' || (student.degree && (student.degree.toLowerCase().includes('aiml') || student.degree.toLowerCase().includes('ai &') || student.degree.toLowerCase().includes('machine learning'))) ? 'selected' : ''}>BSc-AIML (AI &amp; Machine Learning)</option>
+              </select>
             </div>
 
             <div class="form-group">
@@ -1986,7 +1989,18 @@ function openEditProfileModal() {
 
   const s = window.AscendData.student || {};
   if (document.getElementById('edit-name')) document.getElementById('edit-name').value = s.name || '';
-  if (document.getElementById('edit-degree')) document.getElementById('edit-degree').value = s.degree || '';
+  if (document.getElementById('edit-degree')) {
+    const degEl = document.getElementById('edit-degree');
+    let matchedVal = '';
+    const dLower = (s.degree || '').toLowerCase();
+    if (dLower.includes('bca-ds') || dLower.includes('data science')) matchedVal = 'BCA-DS';
+    else if (dLower.includes('bca') || dLower.includes('cloud')) matchedVal = 'BCA-CC';
+    else if (dLower.includes('cyber') || dLower.includes('bsc-cyber')) matchedVal = 'BSc-Cyber';
+    else if (dLower.includes('mba') || dLower.includes('business')) matchedVal = 'MBA';
+    else if (dLower.includes('aviation') || dLower.includes('bba')) matchedVal = 'BBA-Aviation';
+    else if (dLower.includes('aiml') || dLower.includes('ai &') || dLower.includes('machine learning')) matchedVal = 'BSc-AIML';
+    degEl.value = matchedVal || s.degree || 'BCA-CC';
+  }
   if (document.getElementById('edit-department')) document.getElementById('edit-department').value = s.department || '';
   if (document.getElementById('edit-institution')) document.getElementById('edit-institution').value = s.institution || 'Delhi Institute of Technology';
   if (document.getElementById('edit-year')) document.getElementById('edit-year').value = s.year || '1';
@@ -2009,7 +2023,7 @@ function saveProfileEdit() {
   const s = window.AscendData.student || {};
 
   const name           = document.getElementById('edit-name')?.value.trim()           || s.name || 'Student';
-  const degree         = document.getElementById('edit-degree')?.value.trim()         || s.degree || 'B.Tech in Computer Science';
+  const degree         = document.getElementById('edit-degree')?.value.trim()         || s.degree || 'BCA-CC';
   const department     = document.getElementById('edit-department')?.value.trim()     || s.department || 'Computer Science & Engineering';
   const institution    = document.getElementById('edit-institution')?.value.trim()    || s.institution || 'Delhi Institute of Technology';
   const year           = parseInt(document.getElementById('edit-year')?.value, 10)    || s.year || 1;
@@ -2454,6 +2468,42 @@ function initProfileTabs() {
   }
 }
 
+/* ── Generate Portfolio with Gemini AI ───────────────────────── */
+async function generatePortfolioWithGemini() {
+  const btn1 = document.getElementById('btn-gemini-portfolio');
+  const btn2 = document.getElementById('btn-gemini-portfolio-hero');
+  const orig1 = btn1 ? btn1.innerHTML : '';
+  const orig2 = btn2 ? btn2.innerHTML : '';
+  if (btn1) { btn1.disabled = true; btn1.innerHTML = `<span style="display:inline-block;animation:spin 1s linear infinite;">${window.AscendUI.Icons.sparkle}</span> Generating...`; }
+  if (btn2) { btn2.disabled = true; btn2.innerHTML = `<span style="display:inline-block;animation:spin 1s linear infinite;">${window.AscendUI.Icons.sparkle}</span> Generating...`; }
+
+  window.AscendUI.showToast('Synthesizing professional portfolio with Gemini...', 'info', 3000);
+
+  try {
+    const res = await window.AscendGemini.generatePortfolio({ applyDirectly: true });
+    if (res.success) {
+      if (res.student && window.AscendData) {
+        window.AscendData.student = Object.assign(window.AscendData.student || {}, res.student);
+      }
+      if (res.publicPortfolio && window.AscendData) {
+        window.AscendData.publicPortfolio = Object.assign(window.AscendData.publicPortfolio || {}, res.publicPortfolio);
+      }
+      window.AscendUI.showToast(res.message || 'Portfolio generated with Gemini!', 'success');
+      const content = document.getElementById('app-content-area');
+      if (content && window.AscendViews && window.AscendViews.profile) {
+        content.innerHTML = window.AscendViews.profile();
+      }
+    } else {
+      window.AscendUI.showToast(res.error || 'Failed to generate portfolio.', 'error');
+    }
+  } catch (err) {
+    window.AscendUI.showToast('Error communicating with Gemini service.', 'error');
+  } finally {
+    if (btn1) { btn1.disabled = false; btn1.innerHTML = orig1; }
+    if (btn2) { btn2.disabled = false; btn2.innerHTML = orig2; }
+  }
+}
+
 window.AscendViews = window.AscendViews || {};
 Object.assign(window.AscendViews, {
   getStudentSlug,
@@ -2492,4 +2542,5 @@ Object.assign(window.AscendViews, {
   openGitHubModal,
   saveGitHub,
   removeGitHub,
+  generatePortfolioWithGemini,
 });

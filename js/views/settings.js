@@ -166,8 +166,8 @@ async function saveStudentAccountSettings() {
   try {
     const updates = {
       name,
-      degree: degree || 'B.Tech in Computer Science',
-      department: department || 'Computer Science & Engineering',
+      degree: degree || 'BCA-CC',
+      department: department || 'Department of Computer Applications',
       institution: institution || 'Delhi Institute of Technology',
       graduationYear: gradYear || window.AscendData.student.graduationYear || 2028,
     };
@@ -201,6 +201,81 @@ async function saveStudentAccountSettings() {
       btn.innerHTML = `${window.AscendUI.Icons.checkCircle || ''} Save Account Details`;
     }
   }
+}
+
+/* ── Gemini AI Configuration Handlers ────────────────────────── */
+async function saveGeminiApiKey() {
+  const input = document.getElementById('gemini-api-key-input');
+  const key = input ? input.value.trim() : '';
+  if (!key) {
+    window.AscendUI.showToast('Please enter a valid Gemini API key.', 'error');
+    return;
+  }
+  const btn = document.getElementById('btn-save-gemini-key');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving...'; }
+  try {
+    const res = await window.AscendGemini.saveConfig(key);
+    if (res.success) {
+      window.AscendUI.showToast(res.message || 'Gemini API key configured!', 'success');
+      refreshGeminiStatus();
+      if (input) input.value = '';
+    } else {
+      window.AscendUI.showToast(res.error || 'Failed to save Gemini key.', 'error');
+    }
+  } catch (e) {
+    window.AscendUI.showToast('Failed to connect to backend server.', 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Save Gemini API Key'; }
+  }
+}
+
+async function testGeminiConnection() {
+  window.AscendUI.showToast('Testing Gemini connection...', 'info', 2000);
+  try {
+    const res = await window.AscendGemini.generatePortfolio({ applyDirectly: false });
+    if (res.success) {
+      if (res.isLiveGemini) {
+        window.AscendUI.showToast(`Verified! Connected to live Google Gemini AI (${res.modelUsed || 'gemini-2.5-flash'}).`, 'success', 4000);
+      } else {
+        window.AscendUI.showToast('Gemini synthesis engine active. Add API key for live AI.', 'info', 4000);
+      }
+      refreshGeminiStatus();
+    } else {
+      window.AscendUI.showToast(res.error || 'Connection failed.', 'error');
+    }
+  } catch (e) {
+    window.AscendUI.showToast('Connection test failed: server unreachable.', 'error');
+  }
+}
+
+function toggleGeminiKeyVisibility() {
+  const input = document.getElementById('gemini-api-key-input');
+  if (!input) return;
+  input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+async function refreshGeminiStatus() {
+  try {
+    const cfg = await window.AscendGemini.getConfig();
+    const badge = document.getElementById('gemini-status-badge');
+    const hint = document.getElementById('gemini-key-hint');
+    if (badge) {
+      if (cfg.configured) {
+        badge.style.background = '#E6F4EA';
+        badge.style.color = '#137333';
+        badge.style.borderColor = '#CEEAD6';
+        badge.textContent = 'Active (Live Google Gemini)';
+      } else {
+        badge.style.background = '#FEF3C7';
+        badge.style.color = '#92400E';
+        badge.style.borderColor = '#FDE68A';
+        badge.textContent = 'Synthesis Mode (Key Needed)';
+      }
+    }
+    if (hint && cfg.maskedKey) {
+      hint.textContent = `Configured Key: ${cfg.maskedKey}. Model: ${cfg.model || 'gemini-2.5-flash'}`;
+    }
+  } catch (e) {}
 }
 
 /* ── Modal Utility Helpers ───────────────────────────────────── */
@@ -670,9 +745,9 @@ function openClassModal(classId) {
   const isEdit = !!classId;
   const existing = isEdit ? classes.find(c => c.id === classId) : null;
 
-  const defaultDept = (existing && existing.department) || facultyUser.department || 'Computer Science & Engineering';
-  const defaultProg = (existing && existing.program) || 'B.Tech CSE';
-  const defaultSem  = (existing && existing.semester !== undefined) ? existing.semester : 5;
+  const defaultDept = (existing && existing.department) || facultyUser.department || 'Department of Computer Applications';
+  const defaultProg = (existing && existing.program) || 'BCA-CC';
+  const defaultSem  = (existing && existing.semester !== undefined) ? existing.semester : 3;
   const defaultSec  = (existing && existing.section) || 'Section A';
   const defaultAY   = (existing && existing.academicYear) || '2026–27';
   const defaultName = (existing && existing.name) || '';
@@ -693,18 +768,25 @@ function openClassModal(classId) {
 
           <div class="form-group">
             <label class="form-label" for="inp-cls-name">Class Display Name <span style="color:var(--c-rejected);">*</span></label>
-            <input class="form-input" id="inp-cls-name" type="text" required placeholder="e.g. B.Tech CSE · Semester 5 · Section A" value="${defaultName}">
+            <input class="form-input" id="inp-cls-name" type="text" required placeholder="e.g. BCA-CC · Semester 3 · Section A" value="${defaultName}">
             <div class="form-hint">The full title shown in dropdown menus and class headers.</div>
           </div>
 
           <div class="form-row-2">
             <div class="form-group">
               <label class="form-label" for="inp-cls-short">Short Code / Badge <span style="color:var(--c-rejected);">*</span></label>
-              <input class="form-input" id="inp-cls-short" type="text" required placeholder="e.g. CSE · Sem 5 · Sec A" value="${defaultShort}">
+              <input class="form-input" id="inp-cls-short" type="text" required placeholder="e.g. BCA-CC · Sec A" value="${defaultShort}">
             </div>
             <div class="form-group">
-              <label class="form-label" for="inp-cls-prog">Degree / Programme</label>
-              <input class="form-input" id="inp-cls-prog" type="text" placeholder="e.g. B.Tech CSE" value="${defaultProg}">
+              <label class="form-label" for="inp-cls-prog">Degree / Programme <span style="color:var(--c-rejected);">*</span></label>
+              <select class="form-input form-select" id="inp-cls-prog" onchange="const d=document.getElementById('inp-cls-dept'); const n=document.getElementById('inp-cls-name'); const s=document.getElementById('inp-cls-short'); if(n && !n.value) n.value=this.value; if(s && !s.value) s.value=this.value; if(d){ if(this.value.includes('BCA')) d.value='Department of Computer Applications'; else if(this.value.includes('BSc')) d.value='Department of Computer Science'; else if(this.value==='MBA') d.value='Department of Management Studies'; else if(this.value.includes('BBA')) d.value='Department of Aviation & Management'; }">
+                <option value="BCA-CC" ${defaultProg === 'BCA-CC' ? 'selected' : ''}>BCA-CC (Cloud Computing)</option>
+                <option value="BCA-DS" ${defaultProg === 'BCA-DS' ? 'selected' : ''}>BCA-DS (Data Science)</option>
+                <option value="BSc-Cyber" ${defaultProg === 'BSc-Cyber' ? 'selected' : ''}>BSc-Cyber (Cyber Security)</option>
+                <option value="MBA" ${defaultProg === 'MBA' ? 'selected' : ''}>MBA (Master of Business Administration)</option>
+                <option value="BBA-Aviation" ${defaultProg === 'BBA-Aviation' ? 'selected' : ''}>BBA-Aviation (Aviation Management)</option>
+                <option value="BSc-AIML" ${defaultProg === 'BSc-AIML' ? 'selected' : ''}>BSc-AIML (AI &amp; Machine Learning)</option>
+              </select>
             </div>
           </div>
 
@@ -975,8 +1057,15 @@ function renderStudentSettings() {
 
           <div class="form-row-2">
             <div class="form-group">
-              <label class="form-label" for="set-stu-degree">Course / Degree</label>
-              <input class="form-input" id="set-stu-degree" type="text" value="${student.degree || 'B.Tech in Computer Science'}">
+              <label class="form-label" for="set-stu-degree">Select Class / Degree Program <span class="required">*</span></label>
+              <select class="form-input form-select" id="set-stu-degree" onchange="const d=document.getElementById('set-stu-dept'); if(d){ if(this.value.includes('BCA')) d.value='Department of Computer Applications'; else if(this.value.includes('BSc')) d.value='Department of Computer Science'; else if(this.value==='MBA') d.value='Department of Management Studies'; else if(this.value.includes('BBA')) d.value='Department of Aviation & Management'; }">
+                <option value="BCA-CC" ${student.degree === 'BCA-CC' || (student.degree && student.degree.toLowerCase().includes('cloud')) ? 'selected' : ''}>BCA-CC (Cloud Computing)</option>
+                <option value="BCA-DS" ${student.degree === 'BCA-DS' || (student.degree && student.degree.toLowerCase().includes('data science')) ? 'selected' : ''}>BCA-DS (Data Science)</option>
+                <option value="BSc-Cyber" ${student.degree === 'BSc-Cyber' || (student.degree && student.degree.toLowerCase().includes('cyber')) ? 'selected' : ''}>BSc-Cyber (Cyber Security)</option>
+                <option value="MBA" ${student.degree === 'MBA' || (student.degree && student.degree.toLowerCase().includes('business')) ? 'selected' : ''}>MBA (Master of Business Administration)</option>
+                <option value="BBA-Aviation" ${student.degree === 'BBA-Aviation' || (student.degree && student.degree.toLowerCase().includes('aviation')) ? 'selected' : ''}>BBA-Aviation (Aviation Management)</option>
+                <option value="BSc-AIML" ${student.degree === 'BSc-AIML' || (student.degree && (student.degree.toLowerCase().includes('aiml') || student.degree.toLowerCase().includes('ai &') || student.degree.toLowerCase().includes('machine learning'))) ? 'selected' : ''}>BSc-AIML (AI &amp; Machine Learning)</option>
+              </select>
             </div>
             <div class="form-group">
               <label class="form-label" for="set-stu-dept">Department</label>
@@ -1006,7 +1095,53 @@ function renderStudentSettings() {
         </form>
       </div>
 
-      <!-- 2. Notification Preferences -->
+      <!-- 2. Google Gemini AI Integration -->
+      <div class="card" style="margin-bottom:var(--sp-5);border-left:4px solid var(--c-primary);">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-3);flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="font-size:var(--text-base);font-weight:700;color:var(--c-text);display:flex;align-items:center;gap:6px;">
+              <span style="color:var(--c-primary);display:inline-flex;">${Icons.sparkle}</span>
+              Google Gemini AI Integration
+            </div>
+            <div style="font-size:var(--text-xs);color:var(--c-text-2);margin-top:2px;">
+              Automatically generate student portfolio bio, custom headlines, career interests, and monthly progress recaps.
+            </div>
+          </div>
+          <span id="gemini-status-badge" class="badge" style="background:#E8F0FE;color:#1A73E8;border:1px solid #C2D8FF;font-size:11px;font-weight:600;">
+            Checking status...
+          </span>
+        </div>
+
+        <div style="background:var(--c-bg);padding:14px 16px;border-radius:var(--r-md);border:1px solid var(--c-border);margin-bottom:var(--sp-3);">
+          <div style="font-size:12.5px;color:var(--c-text-2);line-height:1.5;">
+            Connect your Google Gemini API key to activate live generative AI synthesis across your student portfolio and factual monthly activity tracking.
+            Get your key for free at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style="color:var(--c-primary);font-weight:600;">Google AI Studio</a>.
+          </div>
+        </div>
+
+        <form onsubmit="event.preventDefault(); window.AscendViews.saveGeminiApiKey();" style="display:flex;flex-direction:column;gap:var(--sp-3);">
+          <div class="form-group">
+            <label class="form-label" for="gemini-api-key-input">Gemini API Key</label>
+            <div class="password-wrap" style="position:relative;display:flex;align-items:center;">
+              <input class="form-input" id="gemini-api-key-input" type="password" placeholder="AIzaSy..." style="font-family:'Roboto Mono',monospace;letter-spacing:1px;padding-right:40px;">
+              <button type="button" class="password-toggle" onclick="AscendViews.toggleGeminiKeyVisibility()" aria-label="Show/hide key" style="position:absolute;right:10px;background:none;border:none;cursor:pointer;color:var(--c-text-3);">
+                ${Icons.eye}
+              </button>
+            </div>
+            <div class="form-hint" id="gemini-key-hint">Enter your key above to save it to your local environment.</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;justify-content:flex-end;flex-wrap:wrap;">
+            <button type="button" class="btn btn-outline btn-sm" onclick="AscendViews.testGeminiConnection()">
+              Test Connection
+            </button>
+            <button type="submit" class="btn btn-primary btn-sm" id="btn-save-gemini-key">
+              ${Icons.sparkle} Save Gemini API Key
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- 3. Notification Preferences -->
       <div class="card" style="margin-bottom:var(--sp-5);">
         <div style="margin-bottom:var(--sp-4);">
           <div style="font-size:var(--text-base);font-weight:700;color:var(--c-text);">Notification Preferences</div>
@@ -1295,6 +1430,13 @@ window.AscendViews.handleExportArchive = handleExportArchive;
 window.AscendViews.openDeactivateModal = openDeactivateModal;
 window.AscendViews.confirmDeactivateAccount = confirmDeactivateAccount;
 window.AscendViews.ascendToggleSwitch = ascendToggleSwitch;
+window.AscendViews.saveGeminiApiKey = saveGeminiApiKey;
+window.AscendViews.testGeminiConnection = testGeminiConnection;
+window.AscendViews.toggleGeminiKeyVisibility = toggleGeminiKeyVisibility;
+window.AscendViews.refreshGeminiStatus = refreshGeminiStatus;
+
+// Auto-refresh Gemini status when settings view loads
+setTimeout(refreshGeminiStatus, 150);
 
 window.FacultyViews = window.FacultyViews || {};
 window.FacultyViews.settings = renderFacultySettings;

@@ -30,11 +30,11 @@ function renderFacultyDashboard() {
 
   // Classes and cohort selection
   const classes = getClasses();
-  let selectedClassId = window.AscendFacultyData.selectedClassId || 'class-cse-5a';
+  let selectedClassId = window.AscendFacultyData.selectedClassId || 'all';
   const selectedClass = classes.find(c => c.id === selectedClassId) || classes[0] || {
-    id: 'class-cse-5a',
-    name: 'B.Tech CSE · Semester 5 · Section A',
-    shortName: 'CSE · Sem 5 · Sec A',
+    id: 'all',
+    name: 'All Classes',
+    shortName: 'All Classes',
     academicYear: '2026–27',
   };
 

@@ -114,8 +114,14 @@
         "year": 1,
         "graduationYear": 2028,
         "profileStrength": 45,
-        "bio": "",
-        "careerInterests": [],
+        "bio": "Sai Preethi is an engineering undergraduate pursuing B.Tech in Computer Science at Delhi Institute of Technology with a focus on high-performance software architecture.\n\nWith practical experience across 0 recognized achievements—including credentials in Cloud & Software Engineering—and hands-on development in projects such as Distributed Applications, Sai Preethi combines analytical rigor with hands-on development.\n\nCommitted to continuous learning, collaborative problem solving, and building meaningful technological solutions that create positive real-world impact.",
+        "careerInterests": [
+          "Cloud Systems & Architecture",
+          "Full Stack Web Development",
+          "Distributed Systems Engineering",
+          "Software Reliability Engineering",
+          "AI & Data Systems"
+        ],
         "linkedIn": "",
         "github": "",
         "portfolio": "",
@@ -166,7 +172,7 @@
       "publicPortfolio": {
         "isPublished": true,
         "slug": "sai-preethi",
-        "customHeadline": "Sai Preethi · Student Portfolio",
+        "customHeadline": "Sai Preethi | Computer Science & Full-Stack Developer | Ascend Scholar",
         "showBio": false,
         "showCareerInterests": false,
         "showLinks": true,
@@ -174,7 +180,8 @@
         "showProjects": true,
         "showAchievements": true,
         "publicAchievementIds": [],
-        "keepEvidencePrivate": true
+        "keepEvidencePrivate": true,
+        "summary": "Sai Preethi is a results-oriented student developer with demonstrated competence across 0 achievements and 0 core engineering projects."
       },
       "portfolioInsights": {
         "views": 1,
@@ -327,7 +334,7 @@
         {
           "id": "bio",
           "label": "Add professional bio",
-          "done": false,
+          "done": true,
           "detail": "Introduce your academic background and focus"
         },
         {
@@ -351,7 +358,7 @@
         {
           "id": "interests",
           "label": "Select career interests",
-          "done": false,
+          "done": true,
           "detail": "Highlight target roles and industries"
         }
       ],
@@ -392,24 +399,64 @@
       ],
       "monthlySummaries": [
         {
+          "month": "Recent Month",
+          "monthKey": "2026-03",
+          "achievementsAdded": 0,
+          "achievementTitles": [],
+          "projectsUpdated": 0,
+          "projectTitles": [],
+          "feedbackReceived": 0,
+          "profileDetailsUpdated": true,
+          "lastActivityDate": "2026-09-27",
+          "lastActivityFormatted": "Recently updated",
+          "reviewedByStudent": false,
+          "reviewedAt": null,
+          "summaryText": "Recent Month activity record: 0 achievements added, 0 projects updated or active, and 0 faculty guidance notes received. Factual portfolio milestones documented.",
+          "highlights": [
+            "Documented 0 completed achievement credentials in the portfolio repository.",
+            "Advanced code deliverables and milestones across 0 active projects.",
+            "Synchronized developmental records with faculty advisor feedback and guidance.",
+            "Verified technical skills alignment against current academic semester milestones."
+          ],
+          "nextMilestones": [
+            "Finalize implementation of remaining project modules and push source documentation.",
+            "Prepare and register for upcoming industry certification or hackathon challenge.",
+            "Review monthly activity record with faculty mentor to align next semester development targets."
+          ],
+          "generatedWithGemini": true,
+          "isLiveGemini": false,
+          "modelUsed": null,
+          "generatedAt": "2026-09-27T09:17:25.424Z"
+        },
+        {
           "month": "September 2026",
           "monthKey": "2026-09",
-          "achievementsAdded": 2,
-          "achievementTitles": [
-            "AWS Certified Cloud Practitioner",
-            "Smart India Hackathon Finalist"
-          ],
-          "projectsUpdated": 1,
-          "projectTitles": [
-            "Ascend Distributed File System"
-          ],
-          "feedbackReceived": 1,
+          "achievementsAdded": 0,
+          "achievementTitles": [],
+          "projectsUpdated": 0,
+          "projectTitles": [],
+          "feedbackReceived": 0,
           "profileDetailsUpdated": true,
-          "lastActivityDate": "2026-09-17",
-          "lastActivityFormatted": "4 days ago",
-          "reviewedByStudent": true,
-          "reviewedAt": "2026-09-21T17:23:05.266Z",
-          "summaryText": "September summary: 2 achievements added, 1 project updated, 1 faculty feedback note received. Last portfolio activity: 4 days ago."
+          "lastActivityDate": "2026-09-27",
+          "lastActivityFormatted": "Recently updated",
+          "reviewedByStudent": false,
+          "reviewedAt": null,
+          "summaryText": "September 2026 activity record: 0 achievements added, 0 projects updated or active, and 0 faculty guidance notes received. Factual portfolio milestones documented.",
+          "highlights": [
+            "Documented 0 completed achievement credentials in the portfolio repository.",
+            "Advanced code deliverables and milestones across 0 active projects.",
+            "Synchronized developmental records with faculty advisor feedback and guidance.",
+            "Verified technical skills alignment against current academic semester milestones."
+          ],
+          "nextMilestones": [
+            "Finalize implementation of remaining project modules and push source documentation.",
+            "Prepare and register for upcoming industry certification or hackathon challenge.",
+            "Review monthly activity record with faculty mentor to align next semester development targets."
+          ],
+          "generatedWithGemini": true,
+          "isLiveGemini": false,
+          "modelUsed": null,
+          "generatedAt": "2026-09-27T09:06:11.821Z"
         },
         {
           "month": "August 2026",
@@ -2351,7 +2398,7 @@
           "fromId": "usr-1789930577411-mrwr",
           "fromName": "Sai preethi",
           "fromRole": "Associate Professor",
-          "classId": "class-cse-5a",
+          "classId": "class-bca-cc",
           "category": "Portfolio",
           "message": "good",
           "recommendedNextStep": "gfgchvbn",
@@ -2577,7 +2624,7 @@
     "facultyUser": {
       "id": "usr-1789930577411-mrwr",
       "name": "Sai preethi",
-      "title": "Prof.",
+      "title": "Dr.",
       "email": "saipreethignanasekar.clg@gmail.com",
       "role": "faculty",
       "designation": "Associate Professor",
@@ -2587,8 +2634,8 @@
     "classes": [
       {
         "id": "all",
-        "name": "All Registered Students",
-        "shortName": "All Students",
+        "name": "All Classes",
+        "shortName": "All Classes",
         "program": "All Programmes",
         "department": "All Departments",
         "semester": "All",
@@ -2597,12 +2644,67 @@
         "studentCount": 0
       },
       {
-        "id": "class-cse-5a",
-        "name": "B.Tech CSE · Semester 5 · Section A",
-        "shortName": "CSE · Sem 5 · Sec A",
-        "program": "B.Tech CSE",
-        "department": "Computer Science & Engineering",
-        "semester": 5,
+        "id": "class-bca-cc",
+        "name": "BCA-CC",
+        "shortName": "BCA-CC",
+        "program": "BCA-CC",
+        "department": "Department of Computer Applications",
+        "semester": 3,
+        "section": "Section A",
+        "academicYear": "2026–27",
+        "studentCount": 0
+      },
+      {
+        "id": "class-bca-ds",
+        "name": "BCA-DS",
+        "shortName": "BCA-DS",
+        "program": "BCA-DS",
+        "department": "Department of Computer Applications",
+        "semester": 3,
+        "section": "Section A",
+        "academicYear": "2026–27",
+        "studentCount": 0
+      },
+      {
+        "id": "class-bsc-cyber",
+        "name": "BSc-Cyber",
+        "shortName": "BSc-Cyber",
+        "program": "BSc-Cyber",
+        "department": "Department of Computer Science",
+        "semester": 3,
+        "section": "Section A",
+        "academicYear": "2026–27",
+        "studentCount": 0
+      },
+      {
+        "id": "class-mba",
+        "name": "MBA",
+        "shortName": "MBA",
+        "program": "MBA",
+        "department": "Department of Management Studies",
+        "semester": 1,
+        "section": "Section A",
+        "academicYear": "2026–27",
+        "studentCount": 0
+      },
+      {
+        "id": "class-bba-aviation",
+        "name": "BBA-Aviation",
+        "shortName": "BBA-Aviation",
+        "program": "BBA-Aviation",
+        "department": "Department of Aviation & Management",
+        "semester": 1,
+        "section": "Section A",
+        "academicYear": "2026–27",
+        "studentCount": 0
+      },
+      {
+        "id": "class-bsc-aiml",
+        "name": "BSc-AIML",
+        "shortName": "BSc-AIML",
+        "program": "BSc-AIML",
+        "department": "Department of Computer Science",
+        "semester": 3,
         "section": "Section A",
         "academicYear": "2026–27",
         "studentCount": 0
@@ -2617,7 +2719,7 @@
         "fromId": "usr-1789930577411-mrwr",
         "fromName": "Sai preethi",
         "fromRole": "Associate Professor",
-        "classId": "class-cse-5a",
+        "classId": "class-bca-cc",
         "category": "Portfolio",
         "message": "good",
         "recommendedNextStep": "gfgchvbn",

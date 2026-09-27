@@ -95,6 +95,189 @@ function writeDB(data) {
   }
 }
 
+// ── Gemini AI Integration ─────────────────────────────────────
+let GoogleGenAI = null;
+try {
+  GoogleGenAI = require('@google/genai').GoogleGenAI;
+} catch (e) {
+  console.warn('[@google/genai]:', e.message);
+}
+
+function getGeminiApiKey(customKey) {
+  return (customKey && customKey.trim()) || (process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.trim()) || '';
+}
+
+function updateEnvApiKey(key) {
+  process.env.GEMINI_API_KEY = key;
+  try {
+    const envPath = path.join(__dirname, '.env');
+    let content = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf8') : '';
+    if (/^GEMINI_API_KEY=/m.test(content)) {
+      content = content.replace(/^GEMINI_API_KEY=.*$/m, `GEMINI_API_KEY=${key}`);
+    } else {
+      content = content.trim() + `\nGEMINI_API_KEY=${key}\n`;
+    }
+    fs.writeFileSync(envPath, content, 'utf8');
+  } catch (err) {
+    console.warn('[Env File Update Error]:', err.message);
+  }
+}
+
+async function callGemini({ prompt, systemInstruction, customKey, jsonMode = true }) {
+  const apiKey = getGeminiApiKey(customKey);
+  if (!apiKey) {
+    throw new Error('MISSING_KEY: Gemini API key is not configured.');
+  }
+
+  const candidateModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+  let lastErr = null;
+
+  // 1. Attempt using @google/genai SDK
+  if (GoogleGenAI) {
+    try {
+      const ai = new GoogleGenAI({ apiKey });
+      for (const model of candidateModels) {
+        try {
+          const response = await ai.models.generateContent({
+            model,
+            contents: prompt,
+            config: {
+              systemInstruction: systemInstruction || 'You are an academic career and portfolio advisor AI for Ascend Student Performance Portal.',
+              responseMimeType: jsonMode ? 'application/json' : 'text/plain',
+              temperature: 0.7,
+            },
+          });
+          const text = response.text || (response.candidates?.[0]?.content?.parts?.[0]?.text);
+          if (text) {
+            if (jsonMode) {
+              const cleaned = text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
+              return { success: true, data: JSON.parse(cleaned), modelUsed: model, isLiveGemini: true };
+            }
+            return { success: true, data: text, modelUsed: model, isLiveGemini: true };
+          }
+        } catch (mErr) {
+          lastErr = mErr;
+          console.warn(`[Gemini SDK] Model ${model} returned error:`, mErr.message);
+        }
+      }
+    } catch (sdkErr) {
+      lastErr = sdkErr;
+    }
+  }
+
+  // 2. Direct HTTPS fetch fallback
+  try {
+    for (const model of candidateModels) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const payload = {
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.7,
+            ...(jsonMode ? { responseMimeType: 'application/json' } : {}),
+          },
+          ...(systemInstruction ? {
+            systemInstruction: { parts: [{ text: systemInstruction }] },
+          } : {}),
+        };
+        const resp = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!resp.ok) {
+          const errBody = await resp.text();
+          throw new Error(`HTTP ${resp.status}: ${errBody}`);
+        }
+        const json = await resp.json();
+        const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) {
+          if (jsonMode) {
+            const cleaned = text.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
+            return { success: true, data: JSON.parse(cleaned), modelUsed: model, isLiveGemini: true };
+          }
+          return { success: true, data: text, modelUsed: model, isLiveGemini: true };
+        }
+      } catch (fErr) {
+        lastErr = fErr;
+      }
+    }
+  } catch (directErr) {
+    lastErr = directErr;
+  }
+
+  throw lastErr || new Error('Failed to generate content with Gemini API');
+}
+
+function synthesizeStudentPortfolioFallback(student, achs, projs, skills) {
+  const achTitles = achs.map(a => a.title);
+  const projTitles = projs.map(p => p.title);
+  const degree = student.degree || 'B.Tech in Computer Science';
+  const major = degree.includes(' in ') ? degree.split(' in ')[1] : degree;
+  const name = student.name || 'Student';
+
+  const headline = `${name} | ${major} & Full-Stack Developer | Ascend Scholar`;
+  const bio = `${name} is an engineering undergraduate pursuing ${degree} at ${student.institution || 'Delhi Institute of Technology'} with a focus on high-performance software architecture.\n\nWith practical experience across ${achs.length} recognized achievements—including credentials in ${achTitles.slice(0, 2).join(' and ') || 'Cloud & Software Engineering'}—and hands-on development in projects such as ${projTitles.slice(0, 2).join(' and ') || 'Distributed Applications'}, ${name} combines analytical rigor with hands-on development.\n\nCommitted to continuous learning, collaborative problem solving, and building meaningful technological solutions that create positive real-world impact.`;
+
+  const careerInterests = [
+    'Cloud Systems & Architecture',
+    'Full Stack Web Development',
+    'Distributed Systems Engineering',
+    'Software Reliability Engineering',
+    'AI & Data Systems'
+  ];
+
+  const portfolioSummary = `${name} is a results-oriented student developer with demonstrated competence across ${achs.length} achievements and ${projs.length} core engineering projects.`;
+
+  const keyHighlights = [
+    `Earned ${achs.length} recognized achievements and verified credentials in software engineering and cloud computing.`,
+    `Developed and published ${projs.length} comprehensive technical projects demonstrating end-to-end design and implementation.`,
+    `Actively demonstrates technical, communication, and leadership capabilities across university initiatives.`,
+    `Maintains an up-to-date, transparent performance portfolio adhering to verified developmental milestones.`
+  ];
+
+  return {
+    customHeadline: headline,
+    bio,
+    careerInterests,
+    portfolioSummary,
+    keyHighlights
+  };
+}
+
+function synthesizeMonthlyProgressFallback(student, monthKey, monthName, achs, projs, fb) {
+  const achCount = achs.length;
+  const projCount = projs.length;
+  const fbCount = fb.length;
+
+  const summaryText = `${monthName} activity record: ${achCount} achievement${achCount !== 1 ? 's' : ''} added, ${projCount} project${projCount !== 1 ? 's' : ''} updated or active, and ${fbCount} faculty guidance note${fbCount !== 1 ? 's' : ''} received. Factual portfolio milestones documented.`;
+
+  const highlights = [
+    `Documented ${achCount} completed achievement credential${achCount !== 1 ? 's' : ''} in the portfolio repository.`,
+    `Advanced code deliverables and milestones across ${projCount} active project${projCount !== 1 ? 's' : ''}.`,
+    `Synchronized developmental records with faculty advisor feedback and guidance.`,
+    `Verified technical skills alignment against current academic semester milestones.`
+  ];
+
+  const nextMilestones = [
+    `Finalize implementation of remaining project modules and push source documentation.`,
+    `Prepare and register for upcoming industry certification or hackathon challenge.`,
+    `Review monthly activity record with faculty mentor to align next semester development targets.`
+  ];
+
+  return {
+    summaryText,
+    achievementsAdded: achCount,
+    achievementTitles: achs.slice(0, 3).map(a => a.title),
+    projectsUpdated: projCount,
+    projectTitles: projs.slice(0, 3).map(p => p.title),
+    feedbackReceived: fbCount,
+    highlights,
+    nextMilestones,
+    lastActivityFormatted: 'Recently updated'
+  };
+}
+
 // ── Database Initializer (Ensure Base Data Schema) ───────────
 function initDatabase() {
   const db = readDB();
@@ -126,6 +309,40 @@ function initDatabase() {
 }
 initDatabase();
 
+// ── Canonical Classes & Degree Mapping ────────────────────────
+const CANONICAL_CLASSES = [
+  { id: 'all', name: 'All Classes', shortName: 'All Classes', program: 'All Programmes', department: 'All Departments', semester: 'All', section: 'All', academicYear: '2026–27', studentCount: 0 },
+  { id: 'class-bca-cc', name: 'BCA-CC', shortName: 'BCA-CC', program: 'BCA-CC', department: 'Department of Computer Applications', semester: 3, section: 'Section A', academicYear: '2026–27', studentCount: 0 },
+  { id: 'class-bca-ds', name: 'BCA-DS', shortName: 'BCA-DS', program: 'BCA-DS', department: 'Department of Computer Applications', semester: 3, section: 'Section A', academicYear: '2026–27', studentCount: 0 },
+  { id: 'class-bsc-cyber', name: 'BSc-Cyber', shortName: 'BSc-Cyber', program: 'BSc-Cyber', department: 'Department of Computer Science', semester: 3, section: 'Section A', academicYear: '2026–27', studentCount: 0 },
+  { id: 'class-mba', name: 'MBA', shortName: 'MBA', program: 'MBA', department: 'Department of Management Studies', semester: 1, section: 'Section A', academicYear: '2026–27', studentCount: 0 },
+  { id: 'class-bba-aviation', name: 'BBA-Aviation', shortName: 'BBA-Aviation', program: 'BBA-Aviation', department: 'Department of Aviation & Management', semester: 1, section: 'Section A', academicYear: '2026–27', studentCount: 0 },
+  { id: 'class-bsc-aiml', name: 'BSc-AIML', shortName: 'BSc-AIML', program: 'BSc-AIML', department: 'Department of Computer Science', semester: 3, section: 'Section A', academicYear: '2026–27', studentCount: 0 },
+];
+
+function mapDegreeToClassInfo(degree) {
+  const d = (degree || '').toLowerCase().trim();
+  if (d.includes('bca-ds') || d.includes('data science')) {
+    return { classId: 'class-bca-ds', className: 'BCA-DS', program: 'BCA-DS', department: 'Department of Computer Applications' };
+  }
+  if (d.includes('bca') || d.includes('cloud')) {
+    return { classId: 'class-bca-cc', className: 'BCA-CC', program: 'BCA-CC', department: 'Department of Computer Applications' };
+  }
+  if (d.includes('cyber') || d.includes('bsc-cyber')) {
+    return { classId: 'class-bsc-cyber', className: 'BSc-Cyber', program: 'BSc-Cyber', department: 'Department of Computer Science' };
+  }
+  if (d.includes('mba') || d.includes('business administration')) {
+    return { classId: 'class-mba', className: 'MBA', program: 'MBA', department: 'Department of Management Studies' };
+  }
+  if (d.includes('aviation') || d.includes('bba')) {
+    return { classId: 'class-bba-aviation', className: 'BBA-Aviation', program: 'BBA-Aviation', department: 'Department of Aviation & Management' };
+  }
+  if (d.includes('aiml') || d.includes('ai') || d.includes('machine learning')) {
+    return { classId: 'class-bsc-aiml', className: 'BSc-AIML', program: 'BSc-AIML', department: 'Department of Computer Science' };
+  }
+  return { classId: 'class-bca-cc', className: 'BCA-CC', program: 'BCA-CC', department: 'Department of Computer Applications' };
+}
+
 // ── Auth API ──────────────────────────────────────────────────
 app.post('/api/auth/register', async (req, res) => {
   try {
@@ -134,6 +351,7 @@ app.post('/api/auth/register', async (req, res) => {
       password,
       role = 'student',
       degree,
+      handledClasses,
       designation,
       department,
       institution,
@@ -179,15 +397,38 @@ app.post('/api/auth/register', async (req, res) => {
       createdAt: new Date().toISOString(),
     };
 
+    if (newUser.role === 'faculty') {
+      const facultyHandled = Array.isArray(handledClasses) && handledClasses.length > 0
+        ? handledClasses
+        : ['BCA-CC', 'BCA-DS', 'BSc-Cyber', 'MBA', 'BBA-Aviation', 'BSc-AIML'];
+      newUser.handledClasses = facultyHandled;
+      if (!db.facultyData) db.facultyData = {};
+      db.facultyData.facultyUser = {
+        id: userId,
+        name: newUser.name,
+        title: 'Prof.',
+        email: cleanEmail,
+        role: 'faculty',
+        designation: newUser.designation,
+        department: newUser.department,
+        institution: newUser.institution,
+        handledClasses: facultyHandled,
+      };
+    }
+
     db.users.push(newUser);
 
     if (newUser.role === 'student') {
-      const studentDegree = (degree && degree.trim()) || 'B.Tech in Computer Science';
-      const studentDept = (department && department.trim()) || 'Computer Science & Engineering';
+      const studentDegree = (degree && degree.trim()) || 'BCA-CC';
+      const classInfo = mapDegreeToClassInfo(studentDegree);
+      const studentDept = (department && department.trim()) || classInfo.department;
       const studentInst = (institution && institution.trim()) || 'Delhi Institute of Technology';
       const studentYear = year ? parseInt(year, 10) : 1;
       const studentGradYear = graduationYear ? parseInt(graduationYear, 10) : (new Date().getFullYear() + 4);
       const studentRoll = (rollNumber && rollNumber.trim()) || `2026CSE${Math.floor(1000 + Math.random() * 9000)}`;
+
+      newUser.degree = studentDegree;
+      newUser.classId = classInfo.classId;
 
       db.studentData[userId] = {
         student: {
@@ -200,6 +441,7 @@ app.post('/api/auth/register', async (req, res) => {
           institution: studentInst,
           department: studentDept,
           degree: studentDegree,
+          classId: classInfo.classId,
           year: studentYear,
           graduationYear: studentGradYear,
           rollNumber: studentRoll,
@@ -301,7 +543,8 @@ app.post('/api/auth/register', async (req, res) => {
           department: studentDept,
           semester: studentYear * 2 - 1,
           section: 'Section A',
-          classId: 'class-cse-5a',
+          classId: classInfo.classId,
+          className: classInfo.className,
           status: 'Good Standing',
           achievementsCount: 0,
           skillsCount: 3,
@@ -1095,6 +1338,293 @@ app.put('/api/student/profile', (req, res) => {
   }
 });
 
+// ── Gemini AI Endpoints ───────────────────────────────────────
+
+// 1. Get Gemini Configuration Status
+app.get('/api/gemini/config', (req, res) => {
+  const key = getGeminiApiKey();
+  res.json({
+    configured: !!key,
+    maskedKey: key ? (key.length > 8 ? `${key.slice(0, 4)}...${key.slice(-4)}` : '••••••••') : null,
+    model: 'gemini-2.5-flash',
+  });
+});
+
+// 2. Save / Update Gemini API Key
+app.post('/api/gemini/config', async (req, res) => {
+  try {
+    const { apiKey } = req.body;
+    if (!apiKey || !apiKey.trim()) {
+      return res.status(400).json({ error: 'API key is required.' });
+    }
+    const cleanKey = apiKey.trim();
+    updateEnvApiKey(cleanKey);
+    res.json({
+      success: true,
+      message: 'Gemini API key configured successfully!',
+      maskedKey: cleanKey.length > 8 ? `${cleanKey.slice(0, 4)}...${cleanKey.slice(-4)}` : '••••••••',
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 3. Automatically Generate Student Portfolio using Gemini
+app.post('/api/gemini/generate-portfolio', async (req, res) => {
+  try {
+    const db = readDB();
+    let userId = req.body.userId;
+    if (!userId || !db.studentData[userId]) {
+      const studentUser = (db.users || []).find(u => u.role === 'student');
+      userId = (studentUser && db.studentData[studentUser.id]) ? studentUser.id : Object.keys(db.studentData || {})[0];
+    }
+    const sData = db.studentData[userId];
+    if (!sData) return res.status(404).json({ error: 'Student data not found.' });
+
+    const student = sData.student || {};
+    const achs = Array.isArray(sData.achievements) ? sData.achievements : [];
+    const projs = Array.isArray(sData.projects) ? sData.projects : [];
+    const skills = sData.skills || {};
+
+    const customKey = req.body.apiKey;
+    const apiKey = getGeminiApiKey(customKey);
+
+    let generated = null;
+    let isLiveGemini = false;
+    let modelUsed = null;
+
+    if (apiKey) {
+      const prompt = `You are an elite academic and professional career advisor AI for Ascend Student Performance Portal.
+Analyze the following student profile:
+Student Name: ${student.name || 'Student'}
+Degree / Major: ${student.degree || 'B.Tech in Computer Science'}
+Department: ${student.department || 'Computer Science & Engineering'}
+Institution: ${student.institution || 'Delhi Institute of Technology'}
+Graduation Year: ${student.graduationYear || 2028}
+
+Achievements (${achs.length}):
+${achs.map(a => `- ${a.title} [${a.category}] ${a.organization ? 'by ' + a.organization : ''}: ${a.description || ''}`).join('\n') || 'None'}
+
+Projects (${projs.length}):
+${projs.map(p => `- ${p.title} (Tech: ${(p.techStack || p.skills || []).join(', ')}): ${p.description || ''}`).join('\n') || 'None'}
+
+Recorded Skills:
+${JSON.stringify(skills, null, 2)}
+
+Generate a high-impact, professional JSON object matching this schema:
+{
+  "customHeadline": "A concise, impactful 1-line professional headline (e.g., 'Full-Stack Developer & Cloud Architecture Enthusiast | CSE \\'27')",
+  "bio": "A compelling 2-3 paragraph professional biography detailing academic foundations, real-world project accomplishments, technical proficiencies, and career direction.",
+  "careerInterests": ["Array of 4-6 specific, modern industry career tracks matching their achievements and projects"],
+  "portfolioSummary": "A 2-sentence executive summary suitable for external recruiters and industry evaluators.",
+  "keyHighlights": ["3-4 bullet point highlights synthesizing their standout achievements and project impact"]
+}
+Return only valid JSON.`;
+
+      try {
+        const result = await callGemini({
+          prompt,
+          systemInstruction: 'You are an academic career and portfolio advisor AI for Ascend Student Performance Portal. Output valid JSON only.',
+          customKey: apiKey,
+          jsonMode: true,
+        });
+        if (result && result.success && result.data) {
+          generated = result.data;
+          isLiveGemini = true;
+          modelUsed = result.modelUsed;
+        }
+      } catch (gemErr) {
+        console.warn('[Gemini Portfolio Generation Error]:', gemErr.message);
+      }
+    }
+
+    if (!generated) {
+      generated = synthesizeStudentPortfolioFallback(student, achs, projs, skills);
+    }
+
+    // Apply directly if requested (default: true)
+    const applyDirectly = req.body.applyDirectly !== false;
+    if (applyDirectly) {
+      if (generated.bio) student.bio = generated.bio;
+      if (Array.isArray(generated.careerInterests) && generated.careerInterests.length > 0) {
+        student.careerInterests = generated.careerInterests;
+      }
+      if (!sData.publicPortfolio) sData.publicPortfolio = {};
+      if (generated.customHeadline) {
+        sData.publicPortfolio.customHeadline = generated.customHeadline;
+      }
+      if (generated.portfolioSummary) {
+        sData.publicPortfolio.summary = generated.portfolioSummary;
+      }
+
+      // Update profile checklist
+      if (Array.isArray(sData.profileChecklist)) {
+        const bioItem = sData.profileChecklist.find(c => c.id === 'bio');
+        if (bioItem) bioItem.done = true;
+        const intItem = sData.profileChecklist.find(c => c.id === 'interests');
+        if (intItem) intItem.done = true;
+      }
+
+      writeDB(db);
+    }
+
+    res.json({
+      success: true,
+      generated,
+      applied: applyDirectly,
+      isLiveGemini,
+      modelUsed,
+      student,
+      publicPortfolio: sData.publicPortfolio,
+      message: isLiveGemini
+        ? 'Portfolio successfully generated with Google Gemini AI!'
+        : 'Portfolio synthesized using Ascend AI Engine.',
+    });
+  } catch (err) {
+    console.error('[Generate Portfolio Error]:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 4. Automatically Generate Monthly Progress Summary using Gemini
+app.post('/api/gemini/generate-monthly-progress', async (req, res) => {
+  try {
+    const db = readDB();
+    let userId = req.body.userId;
+    if (!userId || !db.studentData[userId]) {
+      const studentUser = (db.users || []).find(u => u.role === 'student');
+      userId = (studentUser && db.studentData[studentUser.id]) ? studentUser.id : Object.keys(db.studentData || {})[0];
+    }
+    const sData = db.studentData[userId];
+    if (!sData) return res.status(404).json({ error: 'Student data not found.' });
+
+    const student = sData.student || {};
+    const achs = Array.isArray(sData.achievements) ? sData.achievements : [];
+    const projs = Array.isArray(sData.projects) ? sData.projects : [];
+    const fb = Array.isArray(sData.feedback) ? sData.feedback : [];
+    const monthKey = req.body.monthKey || '2026-09';
+    const monthName = req.body.monthName || (monthKey === '2026-09' ? 'September 2026' : (monthKey === '2026-08' ? 'August 2026' : (monthKey === '2026-07' ? 'July 2026' : 'Recent Month')));
+
+    const customKey = req.body.apiKey;
+    const apiKey = getGeminiApiKey(customKey);
+
+    let generated = null;
+    let isLiveGemini = false;
+    let modelUsed = null;
+
+    if (apiKey) {
+      const prompt = `You are an academic progress tracking AI for Ascend Student Performance Portal.
+Ascend follows a strict Factual Tracking Principle: progress summaries must be completely objective, based solely on documented activity (achievements added, projects updated, feedback received), without subjective scores or arbitrary grades.
+
+Student: ${student.name || 'Student'} (${student.degree || 'Computer Science'})
+Evaluation Period: ${monthName} (${monthKey})
+
+Recorded Achievements (${achs.length}):
+${achs.map(a => `- ${a.title} [${a.category}] (${a.date || 'Recent'})`).join('\n') || 'None'}
+
+Recorded Projects (${projs.length}):
+${projs.map(p => `- ${p.title} (Tech: ${(p.techStack || []).join(', ')})`).join('\n') || 'None'}
+
+Faculty Feedback Received (${fb.length}):
+${fb.map(f => `- From ${f.facultyName || 'Faculty'}: "${f.comment || f.text || ''}"`).join('\n') || 'None'}
+
+Generate a JSON object matching this schema:
+{
+  "summaryText": "A factual, professional 2-sentence monthly progress summary recapping achievements added, projects updated, and mentorship interactions in ${monthName}.",
+  "achievementsAdded": ${achs.length},
+  "achievementTitles": ${JSON.stringify(achs.slice(0, 3).map(a => a.title))},
+  "projectsUpdated": ${projs.length},
+  "projectTitles": ${JSON.stringify(projs.slice(0, 3).map(p => p.title))},
+  "feedbackReceived": ${fb.length},
+  "highlights": ["3-4 factual bullet points describing specific milestones, credentials, or project advances achieved during this period"],
+  "nextMilestones": ["2-3 actionable developmental guidance suggestions for the upcoming month based on current progress"],
+  "lastActivityFormatted": "Recently updated"
+}
+Return only valid JSON.`;
+
+      try {
+        const result = await callGemini({
+          prompt,
+          systemInstruction: 'You are an academic progress evaluator AI for Ascend Student Performance Portal. Output valid JSON only.',
+          customKey: apiKey,
+          jsonMode: true,
+        });
+        if (result && result.success && result.data) {
+          generated = result.data;
+          isLiveGemini = true;
+          modelUsed = result.modelUsed;
+        }
+      } catch (gemErr) {
+        console.warn('[Gemini Monthly Progress Error]:', gemErr.message);
+      }
+    }
+
+    if (!generated) {
+      generated = synthesizeMonthlyProgressFallback(student, monthKey, monthName, achs, projs, fb);
+    }
+
+    // Save into sData.monthlySummaries
+    if (!Array.isArray(sData.monthlySummaries)) sData.monthlySummaries = [];
+    const existingIdx = sData.monthlySummaries.findIndex(m => m.monthKey === monthKey);
+    const summaryRecord = {
+      month: monthName,
+      monthKey,
+      achievementsAdded: generated.achievementsAdded !== undefined ? generated.achievementsAdded : achs.length,
+      achievementTitles: generated.achievementTitles || achs.slice(0, 3).map(a => a.title),
+      projectsUpdated: generated.projectsUpdated !== undefined ? generated.projectsUpdated : projs.length,
+      projectTitles: generated.projectTitles || projs.slice(0, 3).map(p => p.title),
+      feedbackReceived: generated.feedbackReceived !== undefined ? generated.feedbackReceived : fb.length,
+      profileDetailsUpdated: true,
+      lastActivityDate: new Date().toISOString().split('T')[0],
+      lastActivityFormatted: generated.lastActivityFormatted || 'Recently updated',
+      reviewedByStudent: false,
+      reviewedAt: null,
+      summaryText: generated.summaryText,
+      highlights: generated.highlights || [],
+      nextMilestones: generated.nextMilestones || [],
+      generatedWithGemini: true,
+      isLiveGemini,
+      modelUsed,
+      generatedAt: new Date().toISOString(),
+    };
+
+    if (existingIdx !== -1) {
+      sData.monthlySummaries[existingIdx] = {
+        ...sData.monthlySummaries[existingIdx],
+        ...summaryRecord,
+      };
+    } else {
+      sData.monthlySummaries.unshift(summaryRecord);
+    }
+
+    // Synchronize with faculty cohort records if available
+    if (db.facultyData && Array.isArray(db.facultyData.students)) {
+      const fStu = db.facultyData.students.find(s => s.id === userId || (student.email && s.email === student.email));
+      if (fStu) {
+        fStu.latestMonthlySummary = generated.summaryText;
+        fStu.monthlyReviewed = false;
+        fStu.monthlySummaries = sData.monthlySummaries;
+      }
+    }
+
+    writeDB(db);
+
+    res.json({
+      success: true,
+      summary: summaryRecord,
+      monthlySummaries: sData.monthlySummaries,
+      isLiveGemini,
+      modelUsed,
+      message: isLiveGemini
+        ? 'Monthly progress summary successfully generated with Google Gemini AI!'
+        : 'Monthly progress summary synthesized using Ascend AI Engine.',
+    });
+  } catch (err) {
+    console.error('[Generate Monthly Progress Error]:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Faculty Data API ──────────────────────────────────────────
 app.get('/api/faculty/data', (req, res) => {
   try {
@@ -1115,7 +1645,9 @@ app.get('/api/faculty/data', (req, res) => {
       const initials = user.name
         ? user.name.split(' ').filter(Boolean).map(p => p[0]).slice(0, 2).join('').toUpperCase()
         : 'ST';
-      const classId = user.classId || 'class-cse-5a';
+      const classInfo = mapDegreeToClassInfo(sInfo.degree || user.degree || user.program);
+      const classId = (user.classId && user.classId !== 'class-cse-5a') ? user.classId : classInfo.classId;
+      const className = classInfo.className;
 
       return {
         id: user.id,
@@ -1124,12 +1656,12 @@ app.get('/api/faculty/data', (req, res) => {
         email: user.email,
         initials: initials,
         rollNo: sInfo.rollNumber || `STU-${1000 + idx + 1}`,
-        program: sInfo.degree || 'B.Tech in Computer Science',
-        department: sInfo.department || 'Computer Science & Engineering',
-        semester: sInfo.year ? sInfo.year * 2 - 1 : 5,
+        program: sInfo.degree || user.degree || classInfo.program,
+        department: sInfo.department || classInfo.department,
+        semester: sInfo.year ? sInfo.year * 2 - 1 : 3,
         section: 'Section A',
         classId: classId,
-        className: 'B.Tech CSE · Semester 5 · Section A',
+        className: className,
         status: user.isVerified ? 'Good Standing' : 'Pending Verification',
         achievementsCount: achs.length,
         skillsCount: Object.values(sData.skills || {}).flat().length || 0,
@@ -1223,6 +1755,10 @@ app.get('/api/faculty/data', (req, res) => {
     const recentUpdates = [];
     studentUsers.forEach(u => {
       const sData = db.studentData && db.studentData[u.id] ? db.studentData[u.id] : {};
+      const sInfo = sData.student || {};
+      const uClassInfo = mapDegreeToClassInfo(sInfo.degree || u.degree || u.program);
+      const uClassId = (u.classId && u.classId !== 'class-cse-5a') ? u.classId : uClassInfo.classId;
+
       const achs = Array.isArray(sData.achievements) ? sData.achievements : [];
       achs.forEach(a => {
         recentUpdates.push({
@@ -1231,7 +1767,7 @@ app.get('/api/faculty/data', (req, res) => {
           studentName: u.name,
           studentInitials: u.name.split(' ').filter(Boolean).map(p => p[0]).slice(0, 2).join('').toUpperCase(),
           rollNo: `STU-${u.id.slice(-4)}`,
-          classId: 'class-cse-5a',
+          classId: uClassId,
           itemType: a.category || 'Certification',
           actionType: 'added',
           title: a.title,
@@ -1248,7 +1784,7 @@ app.get('/api/faculty/data', (req, res) => {
           studentName: u.name,
           studentInitials: u.name.split(' ').filter(Boolean).map(p => p[0]).slice(0, 2).join('').toUpperCase(),
           rollNo: `STU-${u.id.slice(-4)}`,
-          classId: 'class-cse-5a',
+          classId: uClassId,
           itemType: 'Project',
           actionType: 'added',
           title: p.title,
@@ -1269,15 +1805,16 @@ app.get('/api/faculty/data', (req, res) => {
         email: '',
         role: 'faculty',
         designation: 'Faculty Advisor',
-        department: 'Computer Science & Engineering',
+        department: 'Department of Computer Applications',
         institution: 'University',
+        handledClasses: ['BCA-CC', 'BCA-DS', 'BSc-Cyber', 'MBA', 'BBA-Aviation', 'BSc-AIML'],
       },
-      classes: (Array.isArray(facultyData.classes) && facultyData.classes.length > 0)
-        ? facultyData.classes
-        : [
-            { id: 'all', name: 'All Registered Students', shortName: 'All Students', program: 'All Programmes', department: 'All Departments', semester: 'All', section: 'All', academicYear: '2026–27', studentCount: dynamicStudents.length },
-            { id: 'class-cse-5a', name: 'B.Tech CSE · Semester 5 · Section A', shortName: 'CSE · Sem 5 · Sec A', program: 'B.Tech CSE', department: 'Computer Science & Engineering', semester: 5, section: 'Section A', academicYear: '2026–27', studentCount: dynamicStudents.length },
-          ],
+      classes: CANONICAL_CLASSES.map(c => ({
+        ...c,
+        studentCount: c.id === 'all'
+          ? dynamicStudents.length
+          : dynamicStudents.filter(s => s.classId === c.id).length,
+      })),
       students: dynamicStudents,
       recentUpdates: recentUpdates,
       evaluations: facultyData.evaluations || [],
@@ -1290,7 +1827,7 @@ app.get('/api/faculty/data', (req, res) => {
         if (!n.fromRole && n.mentorTitle) n.fromRole = n.mentorTitle;
         if (!n.recommendedNextStep && n.nextSteps) n.recommendedNextStep = n.nextSteps;
         if (!n.message && n.feedbackText) n.message = n.feedbackText;
-        if (!n.classId) n.classId = 'class-cse-5a';
+        if (!n.classId || n.classId === 'class-cse-5a') n.classId = 'class-bca-cc';
         if (!n.followUpState) n.followUpState = n.followUpDate ? 'scheduled' : 'none';
         return n;
       }),
@@ -1348,7 +1885,7 @@ app.post('/api/faculty/feedback', (req, res) => {
       fromId: facultyUser.id || 'usr-fac',
       fromName: facultyUser.name || 'Faculty Advisor',
       fromRole: facultyUser.designation || 'Faculty Advisor',
-      classId: classId || 'class-cse-5a',
+      classId: (classId && classId !== 'class-cse-5a') ? classId : 'class-bca-cc',
       category: category || 'General',
       message: feedbackText || '',
       recommendedNextStep: nextSteps || '',
@@ -1427,10 +1964,7 @@ app.post('/api/faculty/classes', (req, res) => {
     const db = readDB();
     if (!db.facultyData) db.facultyData = {};
     if (!Array.isArray(db.facultyData.classes) || db.facultyData.classes.length === 0) {
-      db.facultyData.classes = [
-        { id: 'all', name: 'All Registered Students', shortName: 'All Students', program: 'All Programmes', department: 'All Departments', semester: 'All', section: 'All', academicYear: '2026–27', studentCount: 0 },
-        { id: 'class-cse-5a', name: 'B.Tech CSE · Semester 5 · Section A', shortName: 'CSE · Sem 5 · Sec A', program: 'B.Tech CSE', department: 'Computer Science & Engineering', semester: 5, section: 'Section A', academicYear: '2026–27', studentCount: 0 },
-      ];
+      db.facultyData.classes = CANONICAL_CLASSES.map(c => ({ ...c }));
     }
 
     const payload = req.body || {};
@@ -1439,7 +1973,7 @@ app.post('/api/faculty/classes', (req, res) => {
       name: payload.name || 'New Class',
       shortName: payload.shortName || payload.name || 'New Class',
       program: payload.program || 'General',
-      department: payload.department || 'Computer Science & Engineering',
+      department: payload.department || 'Department of Computer Applications',
       semester: payload.semester !== undefined ? payload.semester : 1,
       section: payload.section || 'Section A',
       academicYear: payload.academicYear || '2026–27',
@@ -1460,10 +1994,7 @@ app.put('/api/faculty/classes/:id', (req, res) => {
     const db = readDB();
     if (!db.facultyData) db.facultyData = {};
     if (!Array.isArray(db.facultyData.classes) || db.facultyData.classes.length === 0) {
-      db.facultyData.classes = [
-        { id: 'all', name: 'All Registered Students', shortName: 'All Students', program: 'All Programmes', department: 'All Departments', semester: 'All', section: 'All', academicYear: '2026–27', studentCount: 0 },
-        { id: 'class-cse-5a', name: 'B.Tech CSE · Semester 5 · Section A', shortName: 'CSE · Sem 5 · Sec A', program: 'B.Tech CSE', department: 'Computer Science & Engineering', semester: 5, section: 'Section A', academicYear: '2026–27', studentCount: 0 },
-      ];
+      db.facultyData.classes = CANONICAL_CLASSES.map(c => ({ ...c }));
     }
 
     const classId = req.params.id;

@@ -165,27 +165,13 @@ function renderGoals() {
   const categoriesCovered = [...primaryCats, ...additionalCats].filter(cat => safeAchievements.some(a => matchCategory(a.category, cat))).length;
 
   return `
-    <!-- Portfolio Header with Add & View All Actions -->
+    <!-- Portfolio Header -->
     <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-4);flex-wrap:wrap;margin-bottom:var(--sp-6);">
       <div>
         <h1 style="font-size:var(--text-2xl);font-weight:700;letter-spacing:-0.025em;color:var(--c-text);margin:0;">Portfolio Overview</h1>
         <div style="font-size:var(--text-sm);color:var(--c-text-2);margin-top:4px;">
           Your self-submitted portfolio records — distinct achievements, practical projects, and public portfolio.
         </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:var(--sp-2);flex-wrap:wrap;">
-        <button class="btn btn-outline btn-sm" onclick="AscendViews.openPublicPortfolioModal ? AscendViews.openPublicPortfolioModal() : AscendApp.navigate('public-portfolio')" title="Preview your public portfolio as seen by external recruiters">
-          ${Icons.globe} View Public Portfolio
-        </button>
-        <button class="btn btn-outline btn-sm" onclick="AscendViews.downloadPortfolio ? AscendViews.downloadPortfolio() : null" title="Download created portfolio">
-          ${Icons.download} Download Portfolio
-        </button>
-        <button class="btn btn-outline btn-sm" onclick="AscendApp.navigate('achievements')">
-          ${Icons.award} All Achievements
-        </button>
-        <button class="btn btn-primary btn-sm" onclick="AscendApp.navigate('achievements');setTimeout(()=>AscendUI.openModal('add-achievement-modal'),200)">
-          ${Icons.plus} Add Achievement
-        </button>
       </div>
     </div>
 
@@ -221,6 +207,9 @@ function renderGoals() {
           <button class="btn btn-primary btn-sm" onclick="AscendViews.openPublicPortfolioModal ? AscendViews.openPublicPortfolioModal() : AscendApp.navigate('public-portfolio')">
             ${Icons.eye} Preview
           </button>
+          <button class="btn btn-outline btn-sm" onclick="AscendViews.generatePortfolioWithGemini ? AscendViews.generatePortfolioWithGemini() : AscendApp.navigate('profile')" style="display:inline-flex;align-items:center;gap:5px;border-color:var(--c-primary);color:var(--c-primary);background:#F0F6FF;font-weight:600;" title="Synthesize your portfolio headline, bio, and career goals using Gemini AI">
+            ${Icons.sparkle} Generate with Gemini
+          </button>
           <button class="btn btn-outline btn-sm" id="goals-download-portfolio-btn" onclick="AscendViews.downloadPortfolio ? AscendViews.downloadPortfolio() : null" title="Download created portfolio">
             ${Icons.download} Download
           </button>
@@ -238,19 +227,6 @@ function renderGoals() {
         <div class="portfolio-privacy-note">
           <span style="color:var(--c-slate);display:inline-flex;">${Icons.lock}</span>
           <span>Confidential evidence documents private by default</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Status Strip: Achievements -->
-    <div class="portfolio-status-strip" style="display:flex;gap:var(--sp-3);margin-bottom:var(--sp-6);">
-      <div class="card" style="padding:var(--sp-3) var(--sp-4);display:flex;align-items:center;gap:var(--sp-3);min-width:220px;">
-        <div style="width:34px;height:34px;border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;background:var(--c-primary-light);color:var(--c-primary);flex-shrink:0;">
-          ${Icons.award}
-        </div>
-        <div style="min-width:0;">
-          <div style="font-size:var(--text-xl);font-weight:700;color:var(--c-primary);line-height:1;">${totalCount}</div>
-          <div style="font-size:var(--text-xs);color:var(--c-text-2);font-weight:500;margin-top:2px;">Achievements</div>
         </div>
       </div>
     </div>

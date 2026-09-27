@@ -35,7 +35,13 @@ function loadClassesFromStorage() {
     const raw = localStorage.getItem(FACULTY_CLASSES_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        if (parsed.some(c => c.id === 'class-cse-5a')) {
+          localStorage.removeItem(FACULTY_CLASSES_STORAGE_KEY);
+          return null;
+        }
+        return parsed;
+      }
     }
   } catch (e) {}
   return null;
@@ -44,8 +50,8 @@ function loadClassesFromStorage() {
 let FACULTY_CLASSES = loadClassesFromStorage() || [
   {
     id: 'all',
-    name: 'All Registered Students',
-    shortName: 'All Students',
+    name: 'All Classes',
+    shortName: 'All Classes',
     program: 'All Programmes',
     department: 'All Departments',
     semester: 'All',
@@ -54,12 +60,67 @@ let FACULTY_CLASSES = loadClassesFromStorage() || [
     studentCount: 0,
   },
   {
-    id: 'class-cse-5a',
-    name: 'B.Tech CSE · Semester 5 · Section A',
-    shortName: 'CSE · Sem 5 · Sec A',
-    program: 'B.Tech CSE',
-    department: 'Computer Science & Engineering',
-    semester: 5,
+    id: 'class-bca-cc',
+    name: 'BCA-CC',
+    shortName: 'BCA-CC',
+    program: 'BCA-CC',
+    department: 'Department of Computer Applications',
+    semester: 3,
+    section: 'Section A',
+    academicYear: '2026–27',
+    studentCount: 0,
+  },
+  {
+    id: 'class-bca-ds',
+    name: 'BCA-DS',
+    shortName: 'BCA-DS',
+    program: 'BCA-DS',
+    department: 'Department of Computer Applications',
+    semester: 3,
+    section: 'Section A',
+    academicYear: '2026–27',
+    studentCount: 0,
+  },
+  {
+    id: 'class-bsc-cyber',
+    name: 'BSc-Cyber',
+    shortName: 'BSc-Cyber',
+    program: 'BSc-Cyber',
+    department: 'Department of Computer Science',
+    semester: 3,
+    section: 'Section A',
+    academicYear: '2026–27',
+    studentCount: 0,
+  },
+  {
+    id: 'class-mba',
+    name: 'MBA',
+    shortName: 'MBA',
+    program: 'MBA',
+    department: 'Department of Management Studies',
+    semester: 1,
+    section: 'Section A',
+    academicYear: '2026–27',
+    studentCount: 0,
+  },
+  {
+    id: 'class-bba-aviation',
+    name: 'BBA-Aviation',
+    shortName: 'BBA-Aviation',
+    program: 'BBA-Aviation',
+    department: 'Department of Aviation & Management',
+    semester: 1,
+    section: 'Section A',
+    academicYear: '2026–27',
+    studentCount: 0,
+  },
+  {
+    id: 'class-bsc-aiml',
+    name: 'BSc-AIML',
+    shortName: 'BSc-AIML',
+    program: 'BSc-AIML',
+    department: 'Department of Computer Science',
+    semester: 3,
     section: 'Section A',
     academicYear: '2026–27',
     studentCount: 0,
@@ -580,7 +641,7 @@ let FACULTY_NOTIFICATIONS = [
 ];
 
 /* ── Active Selected Class State ─────────────────────────────── */
-let activeSelectedClassId = 'class-cse-5a';
+let activeSelectedClassId = 'all';
 
 /* ── Ascend Faculty Data Export ──────────────────────────────── */
 window.AscendFacultyData = {
@@ -672,7 +733,7 @@ window.AscendFacultyData = {
           if (!n.fromRole && n.mentorTitle) n.fromRole = n.mentorTitle;
           if (!n.recommendedNextStep && n.nextSteps) n.recommendedNextStep = n.nextSteps;
           if (!n.message && n.feedbackText) n.message = n.feedbackText;
-          if (!n.classId) n.classId = 'class-cse-5a';
+          if (!n.classId || n.classId === 'class-cse-5a') n.classId = 'class-bca-cc';
           if (!n.followUpState) n.followUpState = n.followUpDate ? 'scheduled' : 'none';
           return n;
         });
@@ -969,7 +1030,7 @@ window.AscendFacultyData = {
         feedbackText: feedbackData.message,
         category: feedbackData.category,
         nextSteps: feedbackData.recommendedNextStep,
-        classId: feedbackData.classId || activeSelectedClassId || 'class-cse-5a',
+        classId: (feedbackData.classId && feedbackData.classId !== 'class-cse-5a') ? feedbackData.classId : (activeSelectedClassId && activeSelectedClassId !== 'class-cse-5a' ? activeSelectedClassId : 'class-bca-cc'),
         followUpDate: feedbackData.followUpDate || null,
       }),
     }).catch(e => console.warn('Could not persist feedback:', e));

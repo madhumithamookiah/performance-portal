@@ -134,7 +134,7 @@ function renderFacultyStudents() {
   const classes = getClasses();
   let selectedClassId = window.AscendFacultyData.selectedClassId;
   if (!selectedClassId) {
-    selectedClassId = 'class-cse-5a';
+    selectedClassId = 'all';
   }
   const selectedClass = classes.find(c => c.id === selectedClassId) || classes[0];
   const students = getStudents(selectedClass.id);
@@ -258,7 +258,7 @@ function renderFacultyStudents() {
         <select class="form-input form-select" id="fstu-class-select" style="min-width:260px;font-weight:600;font-size:var(--text-xs);" onchange="FacultyViews.onStudentsClassChange(this.value)" aria-label="Select assigned class">
           ${classes.map(c => `
             <option value="${c.id}" ${c.id === selectedClass.id ? 'selected' : ''}>
-              ${c.name}${c.id === 'class-cse-5a' ? ' (Default)' : ''}
+              ${c.name}
             </option>`).join('')}
         </select>
       </div>

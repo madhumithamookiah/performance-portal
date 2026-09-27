@@ -426,23 +426,63 @@
             <span style="font-size:11px;color:var(--c-text-3);" id="role-sec-sub">Used for your student portfolio</span>
           </div>
 
-          <!-- Degree field (Student only) -->
+          <!-- Class dropdown (Student only) -->
           <div class="form-group" id="field-degree">
-            <label class="form-label" for="reg-degree">Course / Degree Program <span class="required">*</span></label>
-            <input class="form-input" id="reg-degree" type="text" list="degree-presets" placeholder="e.g. B.Tech in Computer Science">
-            <datalist id="degree-presets">
-              <option value="B.Tech in Computer Science">
-              <option value="B.Tech in Information Technology">
-              <option value="B.Tech in Artificial Intelligence & Data Science">
-              <option value="B.Tech in Electronics & Communication">
-              <option value="B.Tech in Mechanical Engineering">
-              <option value="B.Tech in Civil Engineering">
-              <option value="BCA (Bachelor of Computer Applications)">
-              <option value="MCA (Master of Computer Applications)">
-              <option value="M.Tech in Computer Science">
-              <option value="B.Sc in Computer Science">
-            </datalist>
-            <div class="form-error" id="err-degree" style="display:none;" role="alert">Please enter your course / degree.</div>
+            <label class="form-label" for="reg-degree">Select Class / Degree Program <span class="required">*</span></label>
+            <select class="form-input form-select" id="reg-degree" required aria-required="true">
+              <option value="" disabled selected>-- Select your class --</option>
+              <option value="BCA-CC">BCA-CC (Cloud Computing)</option>
+              <option value="BCA-DS">BCA-DS (Data Science)</option>
+              <option value="BSc-Cyber">BSc-Cyber (Cyber Security)</option>
+              <option value="MBA">MBA (Master of Business Administration)</option>
+              <option value="BBA-Aviation">BBA-Aviation (Aviation Management)</option>
+              <option value="BSc-AIML">BSc-AIML (AI &amp; Machine Learning)</option>
+            </select>
+            <div class="form-error" id="err-degree" style="display:none;" role="alert">Please select your class.</div>
+          </div>
+
+          <!-- Classes Handled Dropdown (Faculty only) -->
+          <div class="form-group" id="field-faculty-classes" style="display:none;">
+            <label class="form-label" for="reg-faculty-classes-btn">Classes Handled by You <span class="required">*</span></label>
+            <div class="dropdown-multiselect" id="faculty-classes-dropdown-wrap" style="position:relative;">
+              <button type="button" class="form-input form-select" id="reg-faculty-classes-btn" onclick="toggleFacultyClassesMenu(event)" style="text-align:left;display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:#fff;min-height:42px;">
+                <span id="faculty-classes-summary" style="color:var(--c-text-3);">Select classes handled…</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div id="faculty-classes-menu" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--c-surface);border:1.5px solid var(--c-border);border-radius:var(--r-md);box-shadow:var(--shadow-md);z-index:200;padding:8px;max-height:240px;overflow-y:auto;">
+                <div style="padding:4px 8px 8px;border-bottom:1px solid var(--c-border-subtle);display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-size:11px;font-weight:700;color:var(--c-text-2);text-transform:uppercase;">Classes Handled</span>
+                  <button type="button" class="btn btn-ghost btn-sm" onclick="toggleAllFacultyClasses(event)" style="padding:2px 6px;font-size:11px;height:auto;" id="btn-toggle-all-classes">Select All</button>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:4px;padding-top:6px;">
+                  <label style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-weight:600;" class="faculty-class-opt">
+                    <input type="checkbox" name="faculty-handled-class" value="BCA-CC" onchange="updateFacultyClassesSummary()">
+                    <span>BCA-CC (Cloud Computing)</span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-weight:600;" class="faculty-class-opt">
+                    <input type="checkbox" name="faculty-handled-class" value="BCA-DS" onchange="updateFacultyClassesSummary()">
+                    <span>BCA-DS (Data Science)</span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-weight:600;" class="faculty-class-opt">
+                    <input type="checkbox" name="faculty-handled-class" value="BSc-Cyber" onchange="updateFacultyClassesSummary()">
+                    <span>BSc-Cyber (Cyber Security)</span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-weight:600;" class="faculty-class-opt">
+                    <input type="checkbox" name="faculty-handled-class" value="MBA" onchange="updateFacultyClassesSummary()">
+                    <span>MBA (Master of Business Administration)</span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-weight:600;" class="faculty-class-opt">
+                    <input type="checkbox" name="faculty-handled-class" value="BBA-Aviation" onchange="updateFacultyClassesSummary()">
+                    <span>BBA-Aviation (Aviation Management)</span>
+                  </label>
+                  <label style="display:flex;align-items:center;gap:10px;padding:6px 8px;border-radius:4px;cursor:pointer;font-size:13px;font-weight:600;" class="faculty-class-opt">
+                    <input type="checkbox" name="faculty-handled-class" value="BSc-AIML" onchange="updateFacultyClassesSummary()">
+                    <span>BSc-AIML (AI &amp; Machine Learning)</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="form-error" id="err-faculty-classes" style="display:none;" role="alert">Please select at least one class handled by you.</div>
           </div>
 
           <!-- Designation field (Faculty only) -->
@@ -605,6 +645,7 @@
     const secTitle = document.getElementById('role-sec-title');
     const secSub = document.getElementById('role-sec-sub');
     const fieldDegree = document.getElementById('field-degree');
+    const fieldFacultyClasses = document.getElementById('field-faculty-classes');
     const fieldDesignation = document.getElementById('field-designation');
     const fieldYears = document.getElementById('field-student-years');
     const idLabel = document.getElementById('label-roll-id');
@@ -614,6 +655,7 @@
       if (secTitle) secTitle.textContent = 'Academic Details';
       if (secSub) secSub.textContent = 'Used for your student portfolio';
       if (fieldDegree) fieldDegree.style.display = 'block';
+      if (fieldFacultyClasses) fieldFacultyClasses.style.display = 'none';
       if (fieldDesignation) fieldDesignation.style.display = 'none';
       if (fieldYears) fieldYears.style.display = 'grid';
       if (idLabel) idLabel.innerHTML = 'Roll Number / Student ID <span style="font-size:11px;color:var(--c-text-3);font-weight:normal;">(optional)</span>';
@@ -622,19 +664,87 @@
       if (secTitle) secTitle.textContent = 'Faculty & Mentor Details';
       if (secSub) secSub.textContent = 'Used for class mentoring & student tracking';
       if (fieldDegree) fieldDegree.style.display = 'none';
+      if (fieldFacultyClasses) fieldFacultyClasses.style.display = 'block';
       if (fieldDesignation) fieldDesignation.style.display = 'block';
       if (fieldYears) fieldYears.style.display = 'none';
       if (idLabel) idLabel.innerHTML = 'Faculty ID / Employee Code <span style="font-size:11px;color:var(--c-text-3);font-weight:normal;">(optional)</span>';
       if (idInput) idInput.placeholder = 'e.g. FAC-CSE-042';
       const desigInput = document.getElementById('reg-designation');
       if (desigInput && !desigInput.value) desigInput.value = 'Associate Professor & Faculty Advisor';
+      updateFacultyClassesSummary();
     }
 
     // Reset role-specific field validation errors
     document.getElementById('err-degree')?.style.setProperty('display', 'none');
     document.getElementById('reg-degree')?.classList.remove('error');
+    document.getElementById('err-faculty-classes')?.style.setProperty('display', 'none');
+    document.getElementById('reg-faculty-classes-btn')?.classList.remove('error');
     document.getElementById('err-designation')?.style.setProperty('display', 'none');
     document.getElementById('reg-designation')?.classList.remove('error');
+  }
+
+  /* ── Faculty Classes Handled Dropdown Functions ────────── */
+  function toggleFacultyClassesMenu(e) {
+    if (e) e.stopPropagation();
+    const menu = document.getElementById('faculty-classes-menu');
+    if (!menu) return;
+    const isHidden = menu.style.display === 'none' || !menu.style.display;
+    menu.style.display = isHidden ? 'block' : 'none';
+    if (isHidden) {
+      setTimeout(() => {
+        const closeMenu = (evt) => {
+          if (!document.getElementById('faculty-classes-dropdown-wrap')?.contains(evt.target)) {
+            menu.style.display = 'none';
+            document.removeEventListener('click', closeMenu);
+          }
+        };
+        document.addEventListener('click', closeMenu);
+      }, 0);
+    }
+  }
+
+  function updateFacultyClassesSummary() {
+    const checked = Array.from(document.querySelectorAll('input[name="faculty-handled-class"]:checked')).map(cb => cb.value);
+    const label = document.getElementById('faculty-classes-summary');
+    const btn = document.getElementById('reg-faculty-classes-btn');
+    const toggleBtn = document.getElementById('btn-toggle-all-classes');
+    
+    if (checked.length === 0) {
+      if (label) {
+        label.textContent = 'Select classes handled…';
+        label.style.color = 'var(--c-text-3)';
+      }
+      if (toggleBtn) toggleBtn.textContent = 'Select All';
+    } else if (checked.length === 6) {
+      if (label) {
+        label.textContent = 'All 6 classes selected (BCA-CC, BCA-DS, BSc-Cyber, MBA, BBA-Aviation, BSc-AIML)';
+        label.style.color = 'var(--c-text)';
+      }
+      if (toggleBtn) toggleBtn.textContent = 'Deselect All';
+    } else {
+      if (label) {
+        label.textContent = checked.join(', ');
+        label.style.color = 'var(--c-text)';
+      }
+      if (toggleBtn) toggleBtn.textContent = 'Select All';
+    }
+
+    if (checked.length > 0) {
+      btn?.classList.remove('error');
+      const err = document.getElementById('err-faculty-classes');
+      if (err) err.style.display = 'none';
+    }
+  }
+
+  function toggleAllFacultyClasses(e) {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    const checkboxes = Array.from(document.querySelectorAll('input[name="faculty-handled-class"]'));
+    const allChecked = checkboxes.length > 0 && checkboxes.every(cb => cb.checked);
+    checkboxes.forEach(cb => { cb.checked = !allChecked; });
+    updateFacultyClassesSummary();
   }
 
   /* ── Tab switching ─────────────────────────────────────── */
@@ -1054,10 +1164,10 @@
     let valid = true;
 
     // Clear previous errors
-    ['reg-fullname','reg-email','reg-password','reg-confirm','reg-degree','reg-designation','reg-department'].forEach(id => {
+    ['reg-fullname','reg-email','reg-password','reg-confirm','reg-degree','reg-designation','reg-department','reg-faculty-classes-btn'].forEach(id => {
       document.getElementById(id)?.classList.remove('error');
     });
-    ['err-fullname','err-email','err-password','err-confirm','err-degree','err-designation','err-department','err-terms'].forEach(id => {
+    ['err-fullname','err-email','err-password','err-confirm','err-degree','err-designation','err-department','err-terms','err-faculty-classes'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
     });
@@ -1068,6 +1178,7 @@
     const confirm        = document.getElementById('reg-confirm').value;
     const role           = currentSelectedRole;
     const degree         = document.getElementById('reg-degree')?.value.trim();
+    const handledClasses = Array.from(document.querySelectorAll('input[name="faculty-handled-class"]:checked')).map(cb => cb.value);
     const designation    = document.getElementById('reg-designation')?.value.trim();
     const department     = document.getElementById('reg-department')?.value.trim();
     const institution    = document.getElementById('reg-institution')?.value.trim() || 'Delhi Institute of Technology';
@@ -1098,6 +1209,11 @@
     if (role === 'student' && !degree) {
       document.getElementById('reg-degree')?.classList.add('error');
       document.getElementById('err-degree').style.display = 'flex';
+      valid = false;
+    }
+    if (role === 'faculty' && handledClasses.length === 0) {
+      document.getElementById('reg-faculty-classes-btn')?.classList.add('error');
+      document.getElementById('err-faculty-classes').style.display = 'flex';
       valid = false;
     }
     if (role === 'faculty' && !designation) {
@@ -1136,6 +1252,7 @@
           password: pass,
           role,
           degree: role === 'student' ? degree : '',
+          handledClasses: role === 'faculty' ? handledClasses : [],
           designation: role === 'faculty' ? (designation || 'Faculty Advisor') : '',
           department,
           institution,

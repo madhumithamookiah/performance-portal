@@ -312,10 +312,11 @@ function submitComposeFeedback() {
     return;
   }
 
+  const targetStudent = (window.AscendFacultyData.students || []).find(s => s.id === studentId);
   window.AscendFacultyData.sendFeedback({
     toStudentId: studentId,
     toStudentName: studentName,
-    classId: window.AscendFacultyData.selectedClassId || 'class-cse-5a',
+    classId: (targetStudent && targetStudent.classId) || (window.AscendFacultyData.selectedClassId !== 'all' ? window.AscendFacultyData.selectedClassId : 'class-bca-cc'),
     category,
     message,
     recommendedNextStep: nextStep,
