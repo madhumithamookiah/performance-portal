@@ -2622,14 +2622,19 @@
   },
   "facultyData": {
     "facultyUser": {
-      "id": "usr-1789930577411-mrwr",
-      "name": "Sai preethi",
-      "title": "Dr.",
-      "email": "saipreethignanasekar.clg@gmail.com",
+      "id": "usr-1790500988772-0u2u",
+      "name": "Dr. Test Faculty",
+      "title": "Prof.",
+      "email": "testfac_1790500988577@univ.edu",
       "role": "faculty",
-      "designation": "Associate Professor",
+      "designation": "Associate Professor & Faculty Advisor",
       "department": "Department of Computer Applications",
-      "institution": "Vels Institute of Technology"
+      "institution": "Delhi Institute of Technology",
+      "handledClasses": [
+        "BCA-CC",
+        "BSc-Cyber",
+        "BSc-AIML"
+      ]
     },
     "classes": [
       {

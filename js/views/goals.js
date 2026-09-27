@@ -324,11 +324,6 @@ function renderGoals() {
     </div>
 
     <style>
-      @media (max-width: 480px) {
-        .portfolio-status-strip .card {
-          width: 100% !important;
-        }
-      }
     </style>`;
 }
 
