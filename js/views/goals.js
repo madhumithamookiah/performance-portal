@@ -207,9 +207,6 @@ function renderGoals() {
           <button class="btn btn-primary btn-sm" onclick="AscendViews.openPublicPortfolioModal ? AscendViews.openPublicPortfolioModal() : AscendApp.navigate('public-portfolio')">
             ${Icons.eye} Preview
           </button>
-          <button class="btn btn-outline btn-sm" onclick="AscendViews.generatePortfolioWithGemini ? AscendViews.generatePortfolioWithGemini() : AscendApp.navigate('profile')" style="display:inline-flex;align-items:center;gap:5px;border-color:var(--c-primary);color:var(--c-primary);background:#F0F6FF;font-weight:600;" title="Synthesize your portfolio headline, bio, and career goals using Gemini AI">
-            ${Icons.sparkle} Generate with Gemini
-          </button>
           <button class="btn btn-outline btn-sm" id="goals-download-portfolio-btn" onclick="AscendViews.downloadPortfolio ? AscendViews.downloadPortfolio() : null" title="Download created portfolio">
             ${Icons.download} Download
           </button>

@@ -1095,51 +1095,6 @@ function renderStudentSettings() {
         </form>
       </div>
 
-      <!-- 2. Google Gemini AI Integration -->
-      <div class="card" style="margin-bottom:var(--sp-5);border-left:4px solid var(--c-primary);">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-3);flex-wrap:wrap;gap:8px;">
-          <div>
-            <div style="font-size:var(--text-base);font-weight:700;color:var(--c-text);display:flex;align-items:center;gap:6px;">
-              <span style="color:var(--c-primary);display:inline-flex;">${Icons.sparkle}</span>
-              Google Gemini AI Integration
-            </div>
-            <div style="font-size:var(--text-xs);color:var(--c-text-2);margin-top:2px;">
-              Automatically generate student portfolio bio, custom headlines, career interests, and monthly progress recaps.
-            </div>
-          </div>
-          <span id="gemini-status-badge" class="badge" style="background:#E8F0FE;color:#1A73E8;border:1px solid #C2D8FF;font-size:11px;font-weight:600;">
-            Checking status...
-          </span>
-        </div>
-
-        <div style="background:var(--c-bg);padding:14px 16px;border-radius:var(--r-md);border:1px solid var(--c-border);margin-bottom:var(--sp-3);">
-          <div style="font-size:12.5px;color:var(--c-text-2);line-height:1.5;">
-            Connect your Google Gemini API key to activate live generative AI synthesis across your student portfolio and factual monthly activity tracking.
-            Get your key for free at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" style="color:var(--c-primary);font-weight:600;">Google AI Studio</a>.
-          </div>
-        </div>
-
-        <form onsubmit="event.preventDefault(); window.AscendViews.saveGeminiApiKey();" style="display:flex;flex-direction:column;gap:var(--sp-3);">
-          <div class="form-group">
-            <label class="form-label" for="gemini-api-key-input">Gemini API Key</label>
-            <div class="password-wrap" style="position:relative;display:flex;align-items:center;">
-              <input class="form-input" id="gemini-api-key-input" type="password" placeholder="AIzaSy..." style="font-family:'Roboto Mono',monospace;letter-spacing:1px;padding-right:40px;">
-              <button type="button" class="password-toggle" onclick="AscendViews.toggleGeminiKeyVisibility()" aria-label="Show/hide key" style="position:absolute;right:10px;background:none;border:none;cursor:pointer;color:var(--c-text-3);">
-                ${Icons.eye}
-              </button>
-            </div>
-            <div class="form-hint" id="gemini-key-hint">Enter your key above to save it to your local environment.</div>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;justify-content:flex-end;flex-wrap:wrap;">
-            <button type="button" class="btn btn-outline btn-sm" onclick="AscendViews.testGeminiConnection()">
-              Test Connection
-            </button>
-            <button type="submit" class="btn btn-primary btn-sm" id="btn-save-gemini-key">
-              ${Icons.sparkle} Save Gemini API Key
-            </button>
-          </div>
-        </form>
-      </div>
 
       <!-- 3. Notification Preferences -->
       <div class="card" style="margin-bottom:var(--sp-5);">

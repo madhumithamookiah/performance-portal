@@ -46,9 +46,6 @@ function renderMonthlyProgress() {
             <button class="btn btn-outline btn-sm" onclick="AscendApp.navigate('dashboard')">
               Back to Dashboard
             </button>
-            <button class="btn btn-outline btn-sm" id="btn-gemini-monthly" onclick="AscendViews.generateMonthlyProgressWithGemini('${activeSummary.monthKey}')" style="display:inline-flex;align-items:center;gap:6px;border-color:var(--c-primary);color:var(--c-primary);background:#F0F6FF;font-weight:600;" title="Synthesize monthly progress automatically using Gemini AI">
-              ${Icons.sparkle} Generate with Gemini
-            </button>
             <button class="btn btn-primary btn-sm" onclick="AscendApp.navigate('achievements');setTimeout(()=>AscendUI.openModal('add-achievement-modal'),200)">
               ${Icons.plus} Add Completed Work
             </button>
@@ -132,10 +129,6 @@ function renderMonthlyProgress() {
                 <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--c-primary);display:inline-flex;align-items:center;gap:5px;">
                   ${Icons.sparkle} Factual Progress Summary
                 </span>
-                ${activeSummary.generatedWithGemini ? `
-                  <span class="badge" style="background:#E8F0FE;color:#1A73E8;border:1px solid #C2D8FF;font-size:10.5px;padding:2px 8px;display:inline-flex;align-items:center;gap:4px;">
-                    ${Icons.sparkle} Generated with Gemini
-                  </span>` : ''}
               </div>
               <div style="font-size:var(--text-sm);font-weight:600;color:var(--c-text);line-height:1.6;">
                 &ldquo;${activeSummary.summaryText}&rdquo;

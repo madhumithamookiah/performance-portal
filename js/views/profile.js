@@ -195,9 +195,6 @@ function renderProfile() {
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--sp-3);flex-wrap:wrap;gap:8px;">
             <div style="font-size:var(--text-sm);font-weight:600;">About &amp; Career Trajectory</div>
             <div style="display:flex;align-items:center;gap:6px;">
-              <button class="btn btn-outline btn-sm" id="btn-gemini-portfolio" onclick="AscendViews.generatePortfolioWithGemini()" style="display:inline-flex;align-items:center;gap:5px;border-color:var(--c-primary);color:var(--c-primary);background:#F0F6FF;padding:3px 10px;font-size:11.5px;font-weight:600;" title="Synthesize your headline, bio, and portfolio automatically with Gemini AI">
-                ${Icons.sparkle} Generate with Gemini
-              </button>
               <button class="btn btn-ghost btn-sm" onclick="AscendViews.openEditProfileModal()" aria-label="Edit bio and career interests">
                 ${Icons.edit} Edit
               </button>
@@ -584,9 +581,6 @@ function renderProfile() {
               </div>
             </div>
             <div style="display:flex;gap:var(--sp-2);flex-wrap:wrap;align-items:center;">
-              <button class="btn btn-outline btn-sm" id="btn-gemini-portfolio-hero" onclick="AscendViews.generatePortfolioWithGemini()" style="display:inline-flex;align-items:center;gap:6px;border-color:var(--c-primary);color:var(--c-primary);background:#F0F6FF;font-weight:600;" title="Synthesize your portfolio headline, bio, and career goals using Gemini AI">
-                ${Icons.sparkle} Generate with Gemini
-              </button>
               <button class="btn btn-outline btn-sm" onclick="AscendViews.openEditProfileModal()">
                 ${Icons.edit} Edit profile
               </button>
