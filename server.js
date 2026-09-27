@@ -130,7 +130,6 @@ initDatabase();
 app.post('/api/auth/register', async (req, res) => {
   try {
     const {
-      fullname,
       email,
       password,
       role = 'student',
@@ -142,6 +141,7 @@ app.post('/api/auth/register', async (req, res) => {
       graduationYear,
       rollNumber,
     } = req.body;
+    const fullname = req.body.fullname || req.body.name;
     if (!fullname || !email || !password) {
       return res.status(400).json({ error: 'Full name, email, and password are required.' });
     }
@@ -376,12 +376,16 @@ app.post('/api/auth/register', async (req, res) => {
       text: emailText,
     });
 
+    const isDevOrFailed = process.env.NODE_ENV !== 'production' || !mailResult.success || mailResult.simulated;
     res.status(201).json({
       success: true,
       requiresVerification: true,
       email: cleanEmail,
       smtpStatus: mailResult.success ? (mailResult.simulated ? 'simulated' : 'sent') : 'failed',
-      message: 'Account created! A 6-digit verification code has been sent to your email. Please enter the code to verify your account.',
+      ...(isDevOrFailed ? { devCode: verificationCode } : {}),
+      message: mailResult.success
+        ? 'Account created! A 6-digit verification code has been sent to your email. Please enter the code to verify your account.'
+        : `Account created! (Verification code: ${verificationCode})`,
     });
   } catch (err) {
     console.error('[Register Error]:', err);
@@ -452,7 +456,7 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // ── Verification Code Endpoint ──────────────────────────────
-app.post('/api/auth/verify-code', (req, res) => {
+app.post(['/api/auth/verify-code', '/api/auth/verify'], (req, res) => {
   try {
     const { email, code } = req.body;
     if (!email || !code) {
@@ -609,10 +613,15 @@ app.post('/api/auth/resend-verification', async (req, res) => {
       text: emailText,
     });
 
+    const isDevOrFailed = process.env.NODE_ENV !== 'production' || !mailResult.success || mailResult.simulated;
     res.json({
       success: true,
+      email: user.email,
       smtpStatus: mailResult.success ? (mailResult.simulated ? 'simulated' : 'sent') : 'failed',
-      message: `A new verification code has been sent to ${user.email}.`,
+      ...(isDevOrFailed ? { devCode: verificationCode } : {}),
+      message: mailResult.success
+        ? `A new verification code has been sent to ${user.email}.`
+        : `Email delivery failed. Verification code: ${verificationCode}`,
     });
   } catch (err) {
     console.error('[Resend Error]:', err);

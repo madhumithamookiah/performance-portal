@@ -541,7 +541,7 @@
       </div>
 
       <!-- Top KPI Stats Grid -->
-      <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-bottom:28px;">
+      <div class="stats-grid admin-kpi-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;">
         <div class="stat-card" style="cursor:pointer;" onclick="AscendApp.navigate('admin-students')">
           <div class="stat-label" style="display:flex;justify-content:space-between;align-items:center;">
             <span>Enrolled Students</span>
@@ -600,7 +600,7 @@
         <div style="font-size:14px;font-weight:700;color:var(--c-text);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:12px;">
           Administrative Sections
         </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">
+        <div class="admin-kpi-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">
           <div class="card" style="padding:16px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:all 0.15s ease;"
                onclick="AscendApp.navigate('admin-projects')" onmouseover="this.style.borderColor='var(--c-primary)'" onmouseout="this.style.borderColor='var(--c-border)'">
             <div style="width:40px;height:40px;border-radius:10px;background:#E8F0FE;color:#1A73E8;display:flex;align-items:center;justify-content:center;flex-shrink:0;">

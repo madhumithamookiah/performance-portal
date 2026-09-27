@@ -73,13 +73,16 @@
 
     settings: {
       render: () => {
+        if (currentRole === 'admin') {
+          return (window.AdminViews && window.AdminViews.settings) ? window.AdminViews.settings() : window.AscendViews.settings();
+        }
         if (currentRole === 'faculty') {
           return (window.FacultyViews && window.FacultyViews.settings) ? window.FacultyViews.settings() : window.AscendViews.settings();
         }
         return window.AscendViews.settings();
       },
       init: () => {},
-      title: () => (currentRole === 'faculty' ? 'Faculty Settings' : 'Settings'),
+      title: () => (currentRole === 'admin' ? 'Admin Settings' : (currentRole === 'faculty' ? 'Faculty Settings' : 'Settings')),
       role: 'all',
     },
     'public-portfolio': {
@@ -132,6 +135,44 @@
       title: 'Faculty Dashboard',
       role: 'faculty',
     },
+
+    // Administration Oversight Routes
+    'admin-dashboard': {
+      render: () => window.AdminViews ? window.AdminViews.dashboard() : '<div class="card p-6">Loading Academic Oversight Console…</div>',
+      init: () => {},
+      title: 'Academic Oversight Console',
+      role: 'admin',
+    },
+    'admin-projects': {
+      render: () => window.AdminViews ? window.AdminViews.projects() : '<div class="card p-6">Loading Student Projects…</div>',
+      init: () => {},
+      title: 'Student Projects Directory',
+      role: 'admin',
+    },
+    'admin-achievements': {
+      render: () => window.AdminViews ? window.AdminViews.achievements() : '<div class="card p-6">Loading Student Achievements…</div>',
+      init: () => {},
+      title: 'Student Achievements & Credentials',
+      role: 'admin',
+    },
+    'admin-faculty': {
+      render: () => window.AdminViews ? window.AdminViews.faculty() : '<div class="card p-6">Loading Faculty Responsiveness…</div>',
+      init: () => {},
+      title: 'Faculty Responsiveness & Monitoring',
+      role: 'admin',
+    },
+    'admin-students': {
+      render: () => window.AdminViews ? window.AdminViews.students() : '<div class="card p-6">Loading Student Directory…</div>',
+      init: () => {},
+      title: 'Student Directory & Portfolios',
+      role: 'admin',
+    },
+    'admin-users': {
+      render: () => window.AdminViews ? window.AdminViews.users() : '<div class="card p-6">Loading User Accounts…</div>',
+      init: () => {},
+      title: 'User Accounts & Role Management',
+      role: 'admin',
+    },
   };
 
   /* ── Navigation Configurations by Role ───────────────────── */
@@ -171,6 +212,25 @@
         { id: 'settings', label: 'Settings', iconKey: 'settings' },
       ],
     },
+    admin: {
+      sectionLabel: 'Administration Console',
+      items: [
+        { id: 'admin-dashboard',    label: 'Overview',      iconKey: 'grid' },
+        { id: 'admin-projects',     label: 'Projects',      iconKey: 'folder' },
+        { id: 'admin-achievements', label: 'Achievements',  iconKey: 'award' },
+        { id: 'admin-faculty',      label: 'Faculty',       iconKey: 'shieldCheck' },
+        { id: 'admin-students',     label: 'Students',      iconKey: 'users' },
+        { id: 'admin-users',        label: 'User Accounts', iconKey: 'userCheck' },
+        { id: 'settings',           label: 'Settings',      iconKey: 'settings' },
+      ],
+      bottomItems: [
+        { id: 'admin-dashboard',    label: 'Overview',      iconKey: 'grid' },
+        { id: 'admin-projects',     label: 'Projects',      iconKey: 'folder' },
+        { id: 'admin-achievements', label: 'Awards',        iconKey: 'award' },
+        { id: 'admin-faculty',      label: 'Faculty',       iconKey: 'shieldCheck' },
+        { id: 'admin-students',     label: 'Students',      iconKey: 'users' },
+      ],
+    },
   };
 
   /* ── User Information by Role ────────────────────────────── */
@@ -180,6 +240,11 @@
       sessionUser = JSON.parse(sessionStorage.getItem('ascend_user') || 'null');
     } catch (e) {}
 
+    if (currentRole === 'admin') {
+      const name = (sessionUser && sessionUser.name) ? sessionUser.name : 'System Administrator';
+      const initials = name.split(' ').filter(Boolean).map(p => p[0]).slice(0, 2).join('').toUpperCase() || 'AD';
+      return { name, initials, sub: 'Administrator' };
+    }
     if (currentRole === 'faculty') {
       const f = window.AscendFacultyData ? window.AscendFacultyData.facultyUser : { name: 'Faculty Advisor', initials: 'FA', designation: 'Faculty Advisor' };
       const name = (sessionUser && sessionUser.role === 'faculty') ? sessionUser.name : f.name;
@@ -213,13 +278,17 @@
     if (!routes[viewId]) {
       console.warn(`AscendApp: unknown view "${viewId}"`);
       // Fallback
-      viewId = (currentRole === 'faculty') ? 'faculty-dashboard' : 'dashboard';
+      viewId = (currentRole === 'admin') ? 'admin-dashboard' : ((currentRole === 'faculty') ? 'faculty-dashboard' : 'dashboard');
     }
 
     // Role synchronization based on route:
     const targetRole = routes[viewId].role;
     let roleChanged = false;
-    if (targetRole === 'faculty' && currentRole !== 'faculty') {
+    if (targetRole === 'admin' && currentRole !== 'admin') {
+      currentRole = 'admin';
+      sessionStorage.setItem('ascend_role', 'admin');
+      roleChanged = true;
+    } else if (targetRole === 'faculty' && currentRole !== 'faculty') {
       currentRole = 'faculty';
       sessionStorage.setItem('ascend_role', 'faculty');
       roleChanged = true;
