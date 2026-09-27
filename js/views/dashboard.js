@@ -115,8 +115,11 @@ function renderDashboard() {
       </div>
     </div>
 
-    <!-- ── Compact Monthly Activity Update Card ────────────────────────── -->
+    <!-- ── Compact "This month" Card ──────────────────────────────── -->
     ${renderStudentMonthlyUpdateCard()}
+
+    <!-- ── Published Semester Evaluation Card (Only when published) ─── -->
+    ${renderPublishedSemesterEvalCard()}
 
     <!-- Top Row: Factual Portfolio Overview + Add Achievement CTA -->
     <div class="dash-top-row" style="display:grid;grid-template-columns:1.2fr 1fr;gap:var(--sp-5);margin-bottom:var(--sp-6);">
@@ -259,6 +262,11 @@ function renderStudentMonthlyUpdateCard() {
   const isReviewed = !!summary.reviewedByStudent;
   const reviewedText = summary.reviewedAt ? `Reviewed on ${formatDate(summary.reviewedAt)}` : 'Marked as reviewed';
 
+  // Constructive reminder based on activity level
+  const reminderText = summary.achievementsAdded === 0 && summary.projectsUpdated === 0
+    ? 'No portfolio activity has been recorded this month. Add completed work when you are ready.'
+    : `Your ${summary.month} progress summary is ready. Add any completed work from this month.`;
+
   return `
     <div class="card" id="student-monthly-update-card" style="padding:18px 20px;margin-bottom:var(--sp-6);background:var(--c-surface);border:1.5px solid var(--c-border);border-left:4px solid var(--c-primary);border-radius:var(--r-md);box-shadow:0 1px 3px rgba(0,0,0,0.04);">
       <!-- Top Row: Icon + Title + Month Selector + Status Badge -->
@@ -269,7 +277,7 @@ function renderStudentMonthlyUpdateCard() {
           </div>
           <div>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-              <span style="font-size:var(--text-base);font-weight:700;color:var(--c-text);">Monthly Activity Summary</span>
+              <span style="font-size:var(--text-base);font-weight:700;color:var(--c-text);">This Month &bull; Activity Record</span>
               <select class="form-input form-select" id="student-month-select"
                 style="padding:3px 26px 3px 10px;font-size:12px;font-weight:600;width:auto;border-radius:var(--r-sm);height:auto;"
                 onchange="AscendViews.onStudentChangeMonth(this.value)">
@@ -296,10 +304,13 @@ function renderStudentMonthlyUpdateCard() {
         </div>
       </div>
 
-      <!-- Factual Summary Callout -->
+      <!-- Factual Summary Callout with Reminder -->
       <div style="padding:12px 14px;background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--r-md);margin-bottom:12px;">
         <div style="font-size:var(--text-sm);font-weight:600;color:var(--c-text);line-height:1.5;">
           ${summary.summaryText}
+        </div>
+        <div style="font-size:12px;color:var(--c-primary);font-weight:500;margin-top:4px;display:flex;align-items:center;gap:6px;">
+          ${Icons.bell || Icons.clock} ${reminderText}
         </div>
         <!-- Factual breakdown pills -->
         <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;">
@@ -324,8 +335,8 @@ function renderStudentMonthlyUpdateCard() {
           ${isReviewed ? `${Icons.check} ${reviewedText}` : 'Please review and confirm your monthly portfolio records before month-end.'}
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
-          <button class="btn btn-outline btn-sm" onclick="AscendApp.navigate('goals')">
-            Review your progress ${Icons.chevronRight}
+          <button class="btn btn-outline btn-sm" onclick="AscendApp.navigate('monthly-progress')">
+            View monthly summary ${Icons.chevronRight}
           </button>
           ${!isReviewed ? `
             <button class="btn btn-primary btn-sm" onclick="AscendViews.onStudentReviewMonth('${summary.monthKey}')">
@@ -335,6 +346,124 @@ function renderStudentMonthlyUpdateCard() {
               ${Icons.check} Confirmed
             </button>`}
         </div>
+      </div>
+    </div>`;
+}
+
+/* ── Published Semester Evaluation Card (Only when published) ─── */
+function renderPublishedSemesterEvalCard() {
+  const { Icons, formatDate } = window.AscendUI;
+  const currentStudentId = window.AscendData?.student?.id;
+
+  // Retrieve published evaluations: check AscendData and AscendFacultyData
+  let evals = Array.isArray(window.AscendData?.evaluations) ? window.AscendData.evaluations : [];
+  
+  if (evals.length === 0 && window.AscendFacultyData && Array.isArray(window.AscendFacultyData.evaluations)) {
+    evals = window.AscendFacultyData.evaluations.filter(e => 
+      e.status === 'published' && (!currentStudentId || e.studentId === currentStudentId || e.studentName === window.AscendData?.student?.name)
+    );
+  }
+
+  // Strictly filter for published status: never show draft evaluations to students
+  const publishedEval = evals.find(e => e.status === 'published');
+  if (!publishedEval) return '';
+
+  const scores = publishedEval.scores || {};
+  const criteriaLabels = {
+    technical: 'Technical Competency',
+    projectAbility: 'Project Ability',
+    communication: 'Communication',
+    leadership: 'Collaboration & Leadership',
+    careerPreparedness: 'Career Preparedness',
+  };
+
+  const levelBadge = (lvl) => {
+    const map = {
+      'Outstanding':        { bg: 'rgba(26, 115, 232, 0.12)', text: '#1A73E8', border: 'rgba(26, 115, 232, 0.3)' },
+      'Strong':             { bg: 'rgba(21, 87, 208, 0.12)',  text: '#1557D0', border: 'rgba(21, 87, 208, 0.3)' },
+      'Meets Expectations': { bg: 'rgba(46, 125, 50, 0.12)',  text: '#2E7D32', border: 'rgba(46, 125, 50, 0.3)' },
+      'Proficient':         { bg: 'rgba(46, 125, 50, 0.12)',  text: '#2E7D32', border: 'rgba(46, 125, 50, 0.3)' },
+      'Developing':         { bg: 'rgba(217, 119, 6, 0.12)',  text: '#D97706', border: 'rgba(217, 119, 6, 0.3)' },
+      'Emerging':           { bg: 'rgba(107, 114, 128, 0.12)', text: '#4B5563', border: 'rgba(107, 114, 128, 0.3)' },
+    };
+    const c = map[lvl] || { bg: 'var(--c-bg)', text: 'var(--c-text-2)', border: 'var(--c-border)' };
+    return `<span class="badge" style="background:${c.bg};color:${c.text};border:1px solid ${c.border};font-weight:600;font-size:11px;">${lvl || 'Not rated'}</span>`;
+  };
+
+  const pubDate = publishedEval.publishedAt || publishedEval.date || publishedEval.createdAt;
+  const formattedDate = pubDate ? formatDate(pubDate) : 'Recently';
+
+  return `
+    <div class="card" id="student-published-eval-card" style="padding:22px 24px;margin-bottom:var(--sp-6);background:var(--c-surface);border:1.5px solid #C2D8FF;border-left:4px solid #1A73E8;border-radius:var(--r-md);box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+      <!-- Header -->
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+        <div style="display:flex;align-items:flex-start;gap:12px;">
+          <div style="width:40px;height:40px;border-radius:var(--r-md);background:rgba(26,115,232,0.1);color:#1A73E8;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            ${Icons.award || Icons.fileText}
+          </div>
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span style="font-size:var(--text-lg);font-weight:700;color:var(--c-text);">Published Semester Evaluation</span>
+              <span class="badge" style="background:#E8F0FE;color:#1A73E8;border:1px solid #C2D8FF;font-weight:600;font-size:11px;">
+                ${publishedEval.evaluationPeriod || publishedEval.semester || 'Semester Evaluation'}
+              </span>
+            </div>
+            <div style="font-size:12px;color:var(--c-text-3);margin-top:3px;">
+              Evaluator: <strong>${publishedEval.evaluatorName || 'Faculty Advisor'}</strong>${publishedEval.evaluatorTitle ? ` (${publishedEval.evaluatorTitle})` : ''} &bull; Published on ${formattedDate}
+            </div>
+          </div>
+        </div>
+        <div>
+          <button class="btn btn-outline btn-sm" onclick="AscendApp.navigate('evaluations')">
+            View full evaluation ${Icons.chevronRight}
+          </button>
+        </div>
+      </div>
+
+      <!-- Rubric Summary (5 Criteria) -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:10px;margin-bottom:16px;">
+        ${Object.keys(criteriaLabels).map(key => {
+          const item = scores[key] || {};
+          const lvl = typeof item === 'string' ? item : (item.level || 'Proficient');
+          return `
+            <div style="padding:10px 12px;background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--r-sm);">
+              <div style="font-size:11px;font-weight:600;color:var(--c-text-3);margin-bottom:4px;">${criteriaLabels[key]}</div>
+              <div>${levelBadge(lvl)}</div>
+            </div>`;
+        }).join('')}
+      </div>
+
+      <!-- Strengths, Priority Growth Area & Next Steps -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:12px;padding:14px;background:var(--c-bg);border:1px solid var(--c-border);border-radius:var(--r-md);">
+        ${publishedEval.strengths || publishedEval.overallSummary ? `
+          <div>
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#1A73E8;margin-bottom:4px;">
+              Strengths Noted
+            </div>
+            <div style="font-size:var(--text-xs);color:var(--c-text);line-height:1.5;">
+              ${publishedEval.strengths || publishedEval.overallSummary}
+            </div>
+          </div>` : ''}
+
+        ${publishedEval.priorityGrowthArea || publishedEval.growthArea ? `
+          <div>
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#D97706;margin-bottom:4px;">
+              Priority Growth Area
+            </div>
+            <div style="font-size:var(--text-xs);color:var(--c-text);line-height:1.5;">
+              ${publishedEval.priorityGrowthArea || publishedEval.growthArea}
+            </div>
+          </div>` : ''}
+
+        ${publishedEval.recommendedNextSteps || publishedEval.nextSteps ? `
+          <div>
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:#059669;margin-bottom:4px;">
+              Recommended Next Steps
+            </div>
+            <div style="font-size:var(--text-xs);color:var(--c-text);line-height:1.5;">
+              ${publishedEval.recommendedNextSteps || publishedEval.nextSteps}
+            </div>
+          </div>` : ''}
       </div>
     </div>`;
 }
@@ -364,6 +493,8 @@ async function onStudentReviewMonth(monthKey) {
 window.AscendViews = window.AscendViews || {};
 Object.assign(window.AscendViews, {
   dashboard: renderDashboard,
+  renderStudentMonthlyUpdateCard,
+  renderPublishedSemesterEvalCard,
   onStudentChangeMonth,
   onStudentReviewMonth,
 });

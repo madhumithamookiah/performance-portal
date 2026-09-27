@@ -560,8 +560,8 @@ let FACULTY_NOTIFICATIONS = [
   {
     id: 'f-notif-1',
     type: 'eval_due',
-    title: 'Semester evaluations due',
-    message: 'Formal Semester 5 evaluations are due for 2 students in Class CS-A.',
+    title: 'Semester evaluations deadline',
+    message: '8 semester evaluations are due for B.Tech CSE · Semester 5 · Section A.',
     formattedDate: 'Today',
     isRead: false,
     actionView: 'faculty-evaluations',
@@ -569,23 +569,23 @@ let FACULTY_NOTIFICATIONS = [
   },
   {
     id: 'f-notif-2',
-    type: 'inactive_students',
-    title: '30-day activity notice',
-    message: '2 students have not recorded any portfolio activity in the past 30 days.',
+    type: 'monthly_summary',
+    title: 'September progress summaries ready',
+    message: 'Factual monthly activity records are compiled for all 7 students in B.Tech CSE · Semester 5 · Section A.',
     formattedDate: 'Yesterday',
     isRead: false,
     actionView: 'faculty-dashboard',
-    actionLabel: 'View dashboard',
+    actionLabel: 'Review summaries',
   },
   {
     id: 'f-notif-3',
-    type: 'monthly_summary',
-    title: 'September summaries generated',
-    message: 'Monthly activity records have been generated for all 6 students in Class CS-A.',
+    type: 'inactive_students',
+    title: 'Portfolio activity notice',
+    message: 'Rohan Sharma has had no portfolio updates logged in 33 days.',
     formattedDate: '3 days ago',
     isRead: false,
     actionView: 'faculty-students',
-    actionLabel: 'View directory',
+    actionLabel: 'View student',
   },
 ];
 
@@ -1036,11 +1036,17 @@ window.AscendFacultyData = {
         lastUpdated: new Date().toISOString().slice(0, 10),
         publishedAt: isPublish ? new Date().toISOString().slice(0, 10) : null,
         scores: scoreData.scores || {},
+        strengths: scoreData.strengths || '',
+        priorityGrowthArea: scoreData.priorityGrowthArea || '',
+        recommendedNextSteps: scoreData.recommendedNextSteps || '',
         overallSummary: scoreData.overallSummary || '',
       };
       EVALUATIONS.unshift(evalItem);
     } else if (evalItem) {
       if (scoreData && scoreData.scores) evalItem.scores = scoreData.scores;
+      if (scoreData && scoreData.strengths !== undefined) evalItem.strengths = scoreData.strengths;
+      if (scoreData && scoreData.priorityGrowthArea !== undefined) evalItem.priorityGrowthArea = scoreData.priorityGrowthArea;
+      if (scoreData && scoreData.recommendedNextSteps !== undefined) evalItem.recommendedNextSteps = scoreData.recommendedNextSteps;
       if (scoreData && scoreData.overallSummary !== undefined) evalItem.overallSummary = scoreData.overallSummary;
       if (scoreData && scoreData.period) evalItem.evaluationPeriod = scoreData.period;
       evalItem.lastUpdated = new Date().toISOString().slice(0, 10);

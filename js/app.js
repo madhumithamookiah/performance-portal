@@ -61,18 +61,22 @@
       role: 'student',
     },
 
+    'monthly-progress': {
+      render: () => window.AscendViews.monthlyProgress ? window.AscendViews.monthlyProgress() : '<div class="card p-6">Loading Monthly Progress…</div>',
+      init: () => {},
+      title: 'Monthly Progress Summaries',
+      role: 'student',
+    },
+
     settings: {
       render: () => {
-        if (currentRole === 'admin') {
-          return (window.AdminViews && window.AdminViews.settings) ? window.AdminViews.settings() : window.AscendViews.settings();
-        }
         if (currentRole === 'faculty') {
           return (window.FacultyViews && window.FacultyViews.settings) ? window.FacultyViews.settings() : window.AscendViews.settings();
         }
         return window.AscendViews.settings();
       },
       init: () => {},
-      title: () => (currentRole === 'admin' ? 'Admin Settings' : (currentRole === 'faculty' ? 'Faculty Settings' : 'Settings')),
+      title: () => (currentRole === 'faculty' ? 'Faculty Settings' : 'Settings'),
       role: 'all',
     },
     'public-portfolio': {
@@ -122,44 +126,6 @@
       title: 'Faculty Dashboard',
       role: 'faculty',
     },
-
-    // Admin Routes
-    'admin-dashboard': {
-      render: () => window.AdminViews ? window.AdminViews.dashboard() : '<div class="card p-6">Loading Academic Overview…</div>',
-      init: () => {},
-      title: 'Academic Oversight Overview',
-      role: 'admin',
-    },
-    'admin-projects': {
-      render: () => window.AdminViews ? window.AdminViews.projects() : '<div class="card p-6">Loading Student Projects…</div>',
-      init: () => {},
-      title: 'Student Projects Directory',
-      role: 'admin',
-    },
-    'admin-achievements': {
-      render: () => window.AdminViews ? window.AdminViews.achievements() : '<div class="card p-6">Loading Student Achievements…</div>',
-      init: () => {},
-      title: 'Student Achievements & Credentials',
-      role: 'admin',
-    },
-    'admin-faculty': {
-      render: () => window.AdminViews ? window.AdminViews.faculty() : '<div class="card p-6">Loading Faculty Oversight…</div>',
-      init: () => {},
-      title: 'Faculty Responsiveness & Monitoring',
-      role: 'admin',
-    },
-    'admin-students': {
-      render: () => window.AdminViews ? window.AdminViews.students() : '<div class="card p-6">Loading Student Directory…</div>',
-      init: () => {},
-      title: 'Student Directory & Portfolios',
-      role: 'admin',
-    },
-    'admin-users': {
-      render: () => window.AdminViews ? window.AdminViews.users() : '<div class="card p-6">Loading User Accounts…</div>',
-      init: () => {},
-      title: 'Institutional User Accounts',
-      role: 'admin',
-    },
   };
 
   /* ── Navigation Configurations by Role ───────────────────── */
@@ -168,6 +134,7 @@
       sectionLabel: 'Student Portal',
       items: [
         { id: 'dashboard', label: 'Dashboard', iconKey: 'home' },
+        { id: 'monthly-progress', label: 'Monthly Progress', iconKey: 'clock' },
         { id: 'profile', label: 'My Profile', iconKey: 'user' },
         { id: 'projects', label: 'Projects', iconKey: 'folder' },
         { id: 'achievements', label: 'Achievements', iconKey: 'award' },
@@ -177,11 +144,11 @@
         { id: 'settings', label: 'Settings', iconKey: 'settings' },
       ],
       bottomItems: [
-        { id: 'dashboard',    label: 'Home',        iconKey: 'home' },
-        { id: 'projects',     label: 'Projects',    iconKey: 'folder' },
-        { id: 'achievements', label: 'Achievements', iconKey: 'award' },
-        { id: 'goals',        label: 'Portfolio',    iconKey: 'target' },
-        { id: 'profile',      label: 'Profile',      iconKey: 'user' },
+        { id: 'dashboard',        label: 'Home',        iconKey: 'home' },
+        { id: 'monthly-progress', label: 'Progress',    iconKey: 'clock' },
+        { id: 'projects',         label: 'Projects',    iconKey: 'folder' },
+        { id: 'achievements',     label: 'Awards',      iconKey: 'award' },
+        { id: 'profile',          label: 'Profile',     iconKey: 'user' },
       ],
     },
     faculty: {
@@ -201,25 +168,6 @@
         { id: 'settings', label: 'Settings', iconKey: 'settings' },
       ],
     },
-    admin: {
-      sectionLabel: 'Institution Administration',
-      items: [
-        { id: 'admin-dashboard', label: 'Academic Overview', iconKey: 'grid' },
-        { id: 'admin-projects', label: 'Student Projects', iconKey: 'folder' },
-        { id: 'admin-achievements', label: 'Achievements & Certs', iconKey: 'award' },
-        { id: 'admin-faculty', label: 'Faculty Oversight', iconKey: 'users' },
-        { id: 'admin-students', label: 'Student Directory', iconKey: 'graduationCap' },
-        { id: 'admin-users', label: 'User Accounts', iconKey: 'shieldCheck' },
-        { id: 'settings', label: 'Admin Settings', iconKey: 'settings' },
-      ],
-      bottomItems: [
-        { id: 'admin-dashboard', label: 'Overview', iconKey: 'grid' },
-        { id: 'admin-projects', label: 'Projects', iconKey: 'folder' },
-        { id: 'admin-achievements', label: 'Certs', iconKey: 'award' },
-        { id: 'admin-faculty', label: 'Faculty', iconKey: 'users' },
-        { id: 'admin-users', label: 'Users', iconKey: 'shieldCheck' },
-      ],
-    },
   };
 
   /* ── User Information by Role ────────────────────────────── */
@@ -229,10 +177,6 @@
       sessionUser = JSON.parse(sessionStorage.getItem('ascend_user') || 'null');
     } catch (e) {}
 
-    if (currentRole === 'admin') {
-      const name = (sessionUser && sessionUser.role === 'admin') ? sessionUser.name : 'System Administrator';
-      return { name, initials: 'AD', sub: 'Administrator' };
-    }
     if (currentRole === 'faculty') {
       const f = window.AscendFacultyData ? window.AscendFacultyData.facultyUser : { name: 'Faculty Advisor', initials: 'FA', designation: 'Faculty Advisor' };
       const name = (sessionUser && sessionUser.role === 'faculty') ? sessionUser.name : f.name;
@@ -266,17 +210,13 @@
     if (!routes[viewId]) {
       console.warn(`AscendApp: unknown view "${viewId}"`);
       // Fallback
-      viewId = (currentRole === 'admin') ? 'admin-dashboard' : ((currentRole === 'faculty') ? 'faculty-dashboard' : 'dashboard');
+      viewId = (currentRole === 'faculty') ? 'faculty-dashboard' : 'dashboard';
     }
 
     // Role synchronization based on route:
     const targetRole = routes[viewId].role;
     let roleChanged = false;
-    if (targetRole === 'admin' && currentRole !== 'admin') {
-      currentRole = 'admin';
-      sessionStorage.setItem('ascend_role', 'admin');
-      roleChanged = true;
-    } else if (targetRole === 'faculty' && currentRole !== 'faculty') {
+    if (targetRole === 'faculty' && currentRole !== 'faculty') {
       currentRole = 'faculty';
       sessionStorage.setItem('ascend_role', 'faculty');
       roleChanged = true;

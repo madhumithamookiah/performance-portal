@@ -929,11 +929,11 @@ function renderStudentSettings() {
 
   const studentPrefs = student.notificationPreferences || {};
   const notifPrefs = [
-    { id: 'sw-stu-feedback',    key: 'feedback',    label: 'New mentor feedback received',       defaultChecked: true,  desc: 'Get notified when an advisor leaves guidance on your profile' },
-    { id: 'sw-stu-eval',       key: 'evaluations', label: 'Faculty evaluations published',       defaultChecked: true,  desc: 'Alerts when semester rubric evaluations are available' },
-    { id: 'sw-stu-reminder',   key: 'reminders',   label: 'Portfolio review reminders',          defaultChecked: false, desc: 'Bi-weekly reminders to keep portfolio items up to date' },
-    { id: 'sw-stu-portfolio',  key: 'portfolio',   label: 'Public portfolio link access alerts', defaultChecked: false, desc: 'Notify when someone views your public portfolio link' },
-    { id: 'sw-stu-digest',     key: 'digest',      label: 'Weekly progress digest',              defaultChecked: false, desc: 'Summary of achievements, feedback, and skills recorded' },
+    { id: 'sw-stu-monthly',    key: 'monthlySummary',    label: 'Monthly progress summary ready',          defaultChecked: true,  desc: 'Notification when your factual monthly activity record has been compiled' },
+    { id: 'sw-stu-reminder',   key: 'monthEndReminder',  label: 'Month-end portfolio activity reminder',    defaultChecked: true,  desc: 'Constructive reminder to add any completed work or achievements before month-end' },
+    { id: 'sw-stu-eval',       key: 'evaluations',       label: 'Semester evaluation published',            defaultChecked: true,  desc: 'Alert when a faculty advisor publishes a formal semester evaluation and recommendations' },
+    { id: 'sw-stu-feedback',   key: 'feedback',          label: 'Mentor feedback & guidance',              defaultChecked: true,  desc: 'Notification when faculty adds mentorship guidance notes or next steps' },
+    { id: 'sw-stu-portfolio',  key: 'portfolio',         label: 'Public portfolio link access alerts',      defaultChecked: false, desc: 'Notify when someone views your public portfolio link' },
   ];
 
   const is2FA = !!student.twoFactorEnabled;
@@ -1102,11 +1102,11 @@ function renderFacultySettings() {
 
   const facultyPrefs = facultyUser.notificationPreferences || {};
   const notifPrefs = [
-    { id: 'sw-fac-portfolio', key: 'portfolio', label: 'Student portfolio additions',             defaultChecked: true,  desc: 'Alert when an assigned student adds a new certification, project, or achievement' },
-    { id: 'sw-fac-feedback',  key: 'feedback',  label: 'Student feedback requests',               defaultChecked: true,  desc: 'Notify when a student requests mentorship guidance or replies to action items' },
-    { id: 'sw-fac-deadline',  key: 'deadline',  label: 'Scheduled evaluation deadline reminders', defaultChecked: true,  desc: 'Timely reminders for upcoming semester rubric evaluation deadlines' },
-    { id: 'sw-fac-attention', key: 'attention', label: 'Student attention alerts',                defaultChecked: true,  desc: 'Flag when a student is inactive for 30+ days or has incomplete profile setup' },
-    { id: 'sw-fac-digest',    key: 'digest',    label: 'Weekly cohort summary digest',            defaultChecked: false, desc: 'Receive an aggregated email summary of class activity every Monday morning' },
+    { id: 'sw-fac-monthly',   key: 'monthlySummariesReady', label: 'Monthly student activity records compiled',   defaultChecked: true,  desc: 'Alert when monthly factual summaries are ready across your assigned cohorts' },
+    { id: 'sw-fac-deadline',  key: 'deadline',              label: 'Semester evaluation deadline reminders',     defaultChecked: true,  desc: 'Timely reminders for upcoming semester rubric evaluation deadlines' },
+    { id: 'sw-fac-attention', key: 'inactiveStudents',      label: 'Student inactivity alerts (30+ days)',        defaultChecked: true,  desc: 'Flag when an assigned student has no recorded portfolio activity in 30 or more days' },
+    { id: 'sw-fac-portfolio', key: 'portfolio',             label: 'Student portfolio additions',                 defaultChecked: true,  desc: 'Alert when an assigned student adds a new certification, project, or achievement' },
+    { id: 'sw-fac-feedback',  key: 'feedback',              label: 'Student feedback requests',                   defaultChecked: true,  desc: 'Notify when a student requests mentorship guidance or replies to action items' },
   ];
 
   return `

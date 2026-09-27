@@ -790,7 +790,32 @@ function renderStudentDetailMonthlyActivitySection(s) {
             No portfolio additions or project updates were recorded in ${currentSummary.month}.
           </div>`}
       </div>
+
+      <!-- Direct Faculty Actions for Monthly Activity -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:var(--sp-4);padding-top:var(--sp-3);border-top:1px solid var(--c-border);">
+        <div style="font-size:11.5px;color:var(--c-text-3);">
+          Faculty oversight &bull; Use monthly progress records to guide student or initiate semester evaluation
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button class="btn btn-outline btn-sm" onclick="FacultyViews.openDetailFeedbackModal('${s.id}')">
+            ${Icons.messageSquare} Give Guidance / Feedback
+          </button>
+          <button class="btn btn-primary btn-sm" onclick="FacultyViews.startEvaluationForStudent('${s.id}')">
+            ${Icons.plus} Begin Semester Evaluation
+          </button>
+        </div>
+      </div>
     </div>`;
+}
+
+function startEvaluationForStudent(studentId) {
+  window._newEvalStudentId = studentId;
+  AscendApp.navigate('faculty-evaluations');
+  setTimeout(() => {
+    if (window.FacultyViews && window.FacultyViews.openCreateEvalModal) {
+      window.FacultyViews.openCreateEvalModal(studentId);
+    }
+  }, 150);
 }
 
 function onSelectStudentDetailMonth(monthKey) {
@@ -813,6 +838,7 @@ Object.assign(window.FacultyViews, {
   submitDetailFeedback,
   openDetailNewEvalModal,
   openStudentDetail,
+  startEvaluationForStudent,
   onSelectStudentDetailMonth,
   updateDetailNextStepLabel() {
     const catEl = document.getElementById('fsd-fb-category');

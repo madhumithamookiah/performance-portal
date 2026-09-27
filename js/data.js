@@ -50,7 +50,30 @@
     portfolioInsights: { views: 0, downloads: 0, shares: 0 },
     goals: [],
     feedback: [],
-    evaluations: [],
+    evaluations: [
+      {
+        id: 'eval-aarav-sem4',
+        studentId: 'stu-aarav-001',
+        studentName: 'Aarav Sharma',
+        semester: 'Semester 4 · Spring 2026',
+        evaluationPeriod: 'Semester 4 · Spring 2026',
+        evaluatorName: 'Dr. Ramesh Kumar',
+        evaluatorTitle: 'Associate Professor & Faculty Mentor',
+        publishedAt: '2026-05-15T10:00:00.000Z',
+        status: 'published',
+        scores: {
+          technical: { level: 'Proficient', comment: 'Strong proficiency in Python, algorithms, and cloud foundations.' },
+          projectAbility: { level: 'Outstanding', comment: 'Exceptional delivery on Ascend Distributed File System project beyond coursework scope.' },
+          communication: { level: 'Proficient', comment: 'Technical README and architecture presentations were structured and clear.' },
+          leadership: { level: 'Developing', comment: 'Encouraged to take more initiative in cross-team code reviews and peer study sessions.' },
+          careerPreparedness: { level: 'Proficient', comment: 'Portfolio demonstrates strong alignment with backend and cloud engineering internships.' },
+        },
+        strengths: 'Outstanding problem solving, consistent cloud certification milestones, and thorough project execution.',
+        priorityGrowthArea: 'Collaborative team leadership and open-source contributions.',
+        recommendedNextSteps: 'Complete AWS Certified Solutions Architect and submit project write-up for the annual student tech symposium.',
+        overallSummary: 'Aarav demonstrated consistent technical excellence throughout Semester 4. His project depth and certifications show strong potential for cloud systems roles.',
+      }
+    ],
     activity: [],
     monthlyData: [0, 0, 0, 0, 0, 0],
     profileChecklist: [],
@@ -112,30 +135,30 @@
       {
         id: 'notif-monthly-ready',
         type: 'monthly_summary',
-        title: 'Monthly summary ready',
-        message: 'Your September activity summary is ready. Review your portfolio and add any completed work from this month.',
+        title: 'Monthly progress summary ready',
+        message: 'Your September progress summary is ready. Add any completed work from this month.',
         date: '2026-09-18T09:00:00.000Z',
         formattedDate: '3 days ago',
         isRead: false,
-        actionView: 'dashboard',
-        actionLabel: 'Review your progress',
+        actionView: 'monthly-progress',
+        actionLabel: 'View monthly summary',
       },
       {
         id: 'notif-month-end-reminder',
         type: 'month_end_reminder',
-        title: 'Month-end portfolio reminder',
-        message: 'Reminder: Review your portfolio activity before month-end and record any completed certifications or projects.',
+        title: 'Portfolio activity reminder',
+        message: 'No portfolio activity has been recorded this month. Add completed work when you are ready.',
         date: '2026-09-20T14:30:00.000Z',
         formattedDate: 'Yesterday',
         isRead: false,
-        actionView: 'goals',
-        actionLabel: 'View portfolio',
+        actionView: 'achievements',
+        actionLabel: 'Add achievement',
       },
       {
         id: 'notif-eval-published',
         type: 'eval_published',
         title: 'Semester evaluation published',
-        message: 'Your Semester 5 evaluation has been published. Review your faculty feedback and recommended next steps.',
+        message: 'Your Semester 5 evaluation has been published by your faculty advisor. Review your evaluation and recommended next steps.',
         date: '2026-09-19T16:00:00.000Z',
         formattedDate: '2 days ago',
         isRead: false,
@@ -160,7 +183,9 @@
         this.portfolioInsights = data.portfolioInsights || this.portfolioInsights;
         this.goals = Array.isArray(data.goals) ? data.goals : [];
         this.feedback = Array.isArray(data.feedback) ? data.feedback : [];
-        this.evaluations = Array.isArray(data.evaluations) ? data.evaluations : [];
+        if (Array.isArray(data.evaluations) && data.evaluations.length > 0) {
+          this.evaluations = data.evaluations;
+        }
         if (Array.isArray(data.monthlySummaries) && data.monthlySummaries.length > 0) {
           this.monthlySummaries = data.monthlySummaries;
         }
